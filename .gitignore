@@ -1,0 +1,8 @@
+/target
+/output
+/*.log
+/*.out
+/*.txt
+/.idea/
+/*.iml
+.Rproj.user
