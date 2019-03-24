@@ -3,7 +3,7 @@ test/output
 /output
 /*.log
 /*.out
-/*.txt
 /.idea/
 /*.iml
+.DS_Store
 .Rproj.user
