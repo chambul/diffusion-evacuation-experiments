@@ -25,6 +25,7 @@ package io.github.agentsoz.dee;
 
 import io.github.agentsoz.ees.Run;
 import io.github.agentsoz.util.TestUtils;
+import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
 import org.matsim.testcases.MatsimTestUtils;
@@ -32,7 +33,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * @author dsingh
+ * @author dsingh, Chaminda Bulumulla
  *
  */
 public class SituationAwarenessDiffusionTest {
