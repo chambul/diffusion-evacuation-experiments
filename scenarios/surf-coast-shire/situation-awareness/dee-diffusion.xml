@@ -56,6 +56,12 @@
       <opt id="outputDir">test/output/io/github/agentsoz/dee/SituationAwarenessDiffusionTest/testDiffusingBlockagePerceptsDuringDailyPlan/matsim</opt>
       <!-- MATSim XML config XML file relative to examples/bushfire directory -->
       <opt id="configXml">scenarios/surf-coast-shire/situation-awareness/scenario_matsim_main-dee.xml</opt>
+      <!-- Congestion parameters used by vehicles to decide if they are stuck in congestion. See issues
+     https://github.com/agentsoz/bdi-abm-integration/issues/8 and
+     https://github.com/agentsoz/bdi-abm-integration/issues/35 -->
+      <opt id="congestionEvaluationInterval">180</opt>
+      <opt id="congestionToleranceThreshold">0.33</opt>
+      <opt id="congestionReactionProbability">0.0</opt> <!-- disable congestion replanning -->
     </model>
 
     <model id="disruption">
