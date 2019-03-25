@@ -35,7 +35,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.PrintStream;
-import java.net.SocketOption;
 
 @AgentInfo(hasGoals = {"io.github.agentsoz.ees.agents.bushfire.GoalDoNothing"})
 public class BushfireAgentV1 extends BushfireAgent {
@@ -135,7 +134,7 @@ public class BushfireAgentV1 extends BushfireAgent {
 
     private void broadcastToSocialNetwork(String content) {
         String[] msg = {content, String.valueOf(getId())};
-        DataServer.getInstance(Run.DATASERVER).publish(PerceptList.BROADCAST_MSG, msg);
+        DataServer.getInstance(Run.DATASERVER).publish(PerceptList.SOCIAL_NETWORK_BROADCAST_MSG, msg);
     }
 
     /**

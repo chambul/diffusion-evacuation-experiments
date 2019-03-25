@@ -41,19 +41,20 @@ public class SituationAwarenessDiffusionTest {
 	
 	private static final Logger log = LoggerFactory.getLogger(SituationAwarenessDiffusionTest.class) ;
 
-	@Rule public MatsimTestUtils utils = new MatsimTestUtils() ;
+	public MatsimTestUtils utils = new MatsimTestUtils() ;
 
 
 	@Test
 	public void testDiffusingBlockagePerceptsDuringDailyPlan() {
 
-		utils.getOutputDirectory(); // creates a clean one so need to call this first
+		utils.setTestClassAndMethod(this.getClass(),"testDiffusingBlockagePerceptsDuringDailyPlan"); // set test class and method name
+
 		String[] args = {
-				"--config", "scenarios/surf-coast-shire/situation-awareness/main-config-diffusion.xml",
+				"--config", "scenarios/surf-coast-shire/situation-awareness/dee-diffusion.xml",
 		};
 		Run.main(args);
 
-//		final String actualEventsFilename = utils.getOutputDirectory() + "/output_events.xml.gz";
+		final String actualEventsFilename = utils.getorSetOutputDirectory() + "/output_events.xml.gz";
 //		final String primaryExpectedEventsFilename = utils.getInputDirectory() + "/output_events.xml.gz";
 //		TestUtils.comparingDepartures(primaryExpectedEventsFilename,actualEventsFilename,10.);
 //		TestUtils.comparingArrivals(primaryExpectedEventsFilename,actualEventsFilename,10.);

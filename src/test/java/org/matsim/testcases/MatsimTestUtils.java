@@ -60,7 +60,7 @@ import java.security.Permission;
  *
  * @author mrieser
  */
-public class MatsimTestUtils extends TestWatchman {
+public class MatsimTestUtils{
 
 	/** A constant for the exactness when comparing doubles. */
 	public static final double EPSILON = 1e-10;
@@ -93,26 +93,31 @@ public class MatsimTestUtils extends TestWatchman {
 		MatsimRandom.reset();
 	}
 
-	/**
-	 * Loads a configuration from file (or the default config if <code>configfile</code> is <code>null</code>).
-	 *
-	 * @param configfile The path/filename of a configuration file, or null to load the default configuration.
-	 * @return The loaded configuration.
-	 */
-	public Config loadConfig(final String configfile) {
-		Config config;
-		if (configfile != null) {
-			config = ConfigUtils.loadConfig(configfile);
-		} else {
-			config = new Config();
-			config.addCoreModules();
-		}
-		this.outputDirectory = getOutputDirectory();
-		config.controler().setOutputDirectory(this.outputDirectory);
-		return config;
-	}
+//	/**
+//	 * Loads a configuration from file (or the default config if <code>configfile</code> is <code>null</code>).
+//	 *
+//	 * @param configfile The path/filename of a configuration file, or null to load the default configuration.
+//	 * @return The loaded configuration.
+//	 */
+//	public Config loadConfig(final String configfile) {
+//		Config config;
+//		if (configfile != null) {
+//			config = ConfigUtils.loadConfig(configfile);
+//		} else {
+//			config = new Config();
+//			config.addCoreModules();
+//		}
+//		this.outputDirectory = getOutputDirectory();
+//		config.controler().setOutputDirectory(this.outputDirectory);
+//		return config;
+//	}
 
-	private void createOutputDirectory() {
+	public  void setTestClassAndMethod(Class cls, String methodName) {
+		this.testClass = cls;
+		this.testMethodName = methodName;
+
+	}
+	public void createOutputDirectory() {
 		if ((!this.outputDirCreated) && (this.outputDirectory != null)) {
 			File directory = new File(this.outputDirectory);
 			if (directory.exists()) {
@@ -128,14 +133,14 @@ public class MatsimTestUtils extends TestWatchman {
 	 *
 	 * @return path to the output directory for this test
 	 */
-	public String getOutputDirectory() {
+	public String getorSetOutputDirectory() {
 
 		if (this.outputDirectory == null) {
 			this.outputDirectory = "test/output/" +
 					this.testClass.getCanonicalName().replace('.', '/') + "/" +
-					getMethodName() + "/" + "matsim" + "/";
+					this.testMethodName + "/" + "matsim" + "/";
 		}
-		createOutputDirectory();
+		//createOutputDirectory();
 		return this.outputDirectory;
 	}
 
@@ -146,7 +151,9 @@ public class MatsimTestUtils extends TestWatchman {
 	 */
 	public String getInputDirectory() {
 		if (this.inputDirectory == null) {
-			this.inputDirectory = getClassInputDirectory() + getMethodName() + "/";
+			this.inputDirectory = "test/input/" +
+					this.testClass.getCanonicalName().replace('.', '/') + "/" +
+					this.testMethodName + "/";
 		}
 		return this.inputDirectory;
 	}
@@ -155,82 +162,82 @@ public class MatsimTestUtils extends TestWatchman {
 	 *
 	 * @return path to the input directory for this test
 	 */
-	public String getClassInputDirectory() {
-		if (this.classInputDirectory == null) {
-			this.classInputDirectory = "test/input/" + this.testClass.getCanonicalName().replace('.', '/') + "/";
-		}
-		return this.classInputDirectory;
-	}
-	/**
-	 * Returns the path to the input directory two levels above the default input directory for this test including a trailing slash as directory delimiter.
-	 *
-	 * @return path to the input directory for this test
-	 */
-	public String getPackageInputDirectory() {
-		if (this.packageInputDirectory == null) {
-			String classDirectory = getClassInputDirectory();
-			this.packageInputDirectory = classDirectory.substring(0, classDirectory.lastIndexOf('/'));
-			this.packageInputDirectory = this.packageInputDirectory.substring(0, this.packageInputDirectory.lastIndexOf('/') + 1);
-		}
-		return this.packageInputDirectory;
-	}
-
-	/**
-	 * @return the name of the currently-running test method
-	 */
-	public String getMethodName() {
-		if (this.testMethodName == null) {
-			throw new RuntimeException("MatsimTestUtils.getMethodName() can only be used in actual test, not in constructor or elsewhere!");
-		}
-		return this.testMethodName;
-	}
-
-	/**
-	 * Initializes MatsimTestUtils without requiring the method of a class to be a JUnit test.
-	 * This should be used for "fixtures" only that provide a scenario common to several
-	 * test cases.
-	 */
-	public void initWithoutJUnitForFixture(Class fixture, Method method){
-		this.testClass = fixture;
-		this.testMethodName = method.getName();
-	}
-
-	/* inspired by
-	 * @see org.junit.rules.TestName#starting(org.junit.runners.model.FrameworkMethod)
-	 */
-	@Override
-	public void starting(FrameworkMethod method) {
-		super.starting(method);
-		this.testClass = method.getMethod().getDeclaringClass();
-		this.testMethodName = method.getName();
-	}
-
-	@Override
-	public void finished(FrameworkMethod method) {
-		super.finished(method);
-		this.testClass = null;
-		this.testMethodName = null;
-	}
-
-
-	public static class ExitTrappedException extends SecurityException {
-		private static final long serialVersionUID = 1L;
-	}
-
-  public static void forbidSystemExitCall() {
-    final SecurityManager securityManager = new SecurityManager() {
-      @Override
-			public void checkPermission(Permission permission) {
-      	if (permission.getName().startsWith("exitVM")) {
-          throw new ExitTrappedException();
-        }
-      }
-    };
-    System.setSecurityManager(securityManager);
-  }
-
-  public static void enableSystemExitCall() {
-    System.setSecurityManager(null);
-  }
+//	public String getClassInputDirectory() {
+//		if (this.classInputDirectory == null) {
+//			this.classInputDirectory = "test/input/" + this.testClass.getCanonicalName().replace('.', '/') + "/";
+//		}
+//		return this.classInputDirectory;
+//	}
+//	/**
+//	 * Returns the path to the input directory two levels above the default input directory for this test including a trailing slash as directory delimiter.
+//	 *
+//	 * @return path to the input directory for this test
+//	 */
+//	public String getPackageInputDirectory() {
+//		if (this.packageInputDirectory == null) {
+//			String classDirectory = getClassInputDirectory();
+//			this.packageInputDirectory = classDirectory.substring(0, classDirectory.lastIndexOf('/'));
+//			this.packageInputDirectory = this.packageInputDirectory.substring(0, this.packageInputDirectory.lastIndexOf('/') + 1);
+//		}
+//		return this.packageInputDirectory;
+//	}
+//
+//	/**
+//	 * @return the name of the currently-running test method
+//	 */
+//	public String getMethodName() {
+//		if (this.testMethodName == null) {
+//			throw new RuntimeException("MatsimTestUtils.getMethodName() can only be used in actual test, not in constructor or elsewhere!");
+//		}
+//		return this.testMethodName;
+//	}
+//
+//	/**
+//	 * Initializes MatsimTestUtils without requiring the method of a class to be a JUnit test.
+//	 * This should be used for "fixtures" only that provide a scenario common to several
+//	 * test cases.
+//	 */
+//	public void initWithoutJUnitForFixture(Class fixture, Method method){
+//		this.testClass = fixture;
+//		this.testMethodName = method.getName();
+//	}
+//
+//	/* inspired by
+//	 * @see org.junit.rules.TestName#starting(org.junit.runners.model.FrameworkMethod)
+//	 */
+//	@Override
+//	public void starting(FrameworkMethod method) {
+//		super.starting(method);
+//		this.testClass = method.getMethod().getDeclaringClass();
+//		this.testMethodName = method.getName();
+//	}
+//
+//	@Override
+//	public void finished(FrameworkMethod method) {
+//		super.finished(method);
+//		this.testClass = null;
+//		this.testMethodName = null;
+//	}
+//
+//
+//	public static class ExitTrappedException extends SecurityException {
+//		private static final long serialVersionUID = 1L;
+//	}
+//
+//  public static void forbidSystemExitCall() {
+//    final SecurityManager securityManager = new SecurityManager() {
+//      @Override
+//			public void checkPermission(Permission permission) {
+//      	if (permission.getName().startsWith("exitVM")) {
+//          throw new ExitTrappedException();
+//        }
+//      }
+//    };
+//    System.setSecurityManager(securityManager);
+//  }
+//
+//  public static void enableSystemExitCall() {
+//    System.setSecurityManager(null);
+//  }
 
 }

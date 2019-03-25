@@ -55,7 +55,7 @@
       <!-- MATSim output directory relative to examples/bushfire directory (will overrule the setting in MATSim config) -->
       <opt id="outputDir">test/output/io/github/agentsoz/dee/SituationAwarenessDiffusionTest/testDiffusingBlockagePerceptsDuringDailyPlan/matsim</opt>
       <!-- MATSim XML config XML file relative to examples/bushfire directory -->
-      <opt id="configXml">scenarios/surf-coast-shire/situation-awareness/scenario_matsim_main.xml</opt>
+      <opt id="configXml">scenarios/surf-coast-shire/situation-awareness/scenario_matsim_main-dee.xml</opt>
     </model>
 
     <model id="disruption">

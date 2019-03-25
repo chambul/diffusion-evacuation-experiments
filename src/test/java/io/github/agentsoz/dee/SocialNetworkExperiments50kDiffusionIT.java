@@ -46,13 +46,13 @@ public class SocialNetworkExperiments50kDiffusionIT {
     @Test
     public void testSocialNetwork50kDiffusion() {
 
-        utils.getOutputDirectory(); // creates a clean one so need to call this first
+        utils.setTestClassAndMethod(this.getClass(), "testSocialNetwork50kDiffusion"); // set test class and method name
         String[] args = {
                 "--config", "scenarios/surf-coast-shire/typical-summer-weekday-50k/social_network_experiments_diffusion.xml",
         };
         Run.main(args);
 
-//        final String actualEventsFilename = utils.getOutputDirectory() + "/output_events.xml.gz";
+        final String actualEventsFilename = utils.getorSetOutputDirectory() + "/output_events.xml.gz";
 //        final String primaryExpectedEventsFilename = utils.getInputDirectory() + "/output_events.xml.gz";
 //        TestUtils.comparingDepartures(primaryExpectedEventsFilename,actualEventsFilename,5.);
 //        TestUtils.comparingArrivals(primaryExpectedEventsFilename,actualEventsFilename,5.);

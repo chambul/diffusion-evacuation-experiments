@@ -41,19 +41,22 @@ public class SituationAwarenessTest {
 	
 	private static final Logger log = LoggerFactory.getLogger(SituationAwarenessTest.class) ;
 
-	@Rule public MatsimTestUtils utils = new MatsimTestUtils() ;
-
+	//@Rule public MatsimTestUtils utils = new MatsimTestUtils() ;
+	public MatsimTestUtils utils = new MatsimTestUtils() ;
 
 	@Test
 	public void testBlockagePerceptsDuringDailyPlan() {
 
-		utils.getOutputDirectory(); // creates a clean one so need to call this first
+		utils.setTestClassAndMethod(this.getClass(),"testBlockagePerceptsDuringDailyPlan"); // set test class and method name
+	//	utils.getorSetOutputDirectory(); // set output dir path
+	//	utils.createOutputDirectory(); // output dir is created by matsim based on config outdir
+
 		String[] args = {
 				"--config", "scenarios/surf-coast-shire/situation-awareness/ees.xml",
 		};
 		Run.main(args);
 
-		final String actualEventsFilename = utils.getOutputDirectory() + "/output_events.xml.gz";
+		final String actualEventsFilename = utils.getorSetOutputDirectory() + "/output_events.xml.gz";
 		final String primaryExpectedEventsFilename = utils.getInputDirectory() + "/output_events.xml.gz";
 		TestUtils.comparingDepartures(primaryExpectedEventsFilename,actualEventsFilename,10.);
 		TestUtils.comparingArrivals(primaryExpectedEventsFilename,actualEventsFilename,10.);
