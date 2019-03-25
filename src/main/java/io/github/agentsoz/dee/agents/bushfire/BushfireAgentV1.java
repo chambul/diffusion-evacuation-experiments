@@ -46,7 +46,7 @@ import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 
-@AgentInfo(hasGoals = {"io.github.agentsoz.ees.agents.bushfire.GoalActNow"})
+@AgentInfo(hasGoals = {"io.github.agentsoz.ees.agents.bushfire.GoalActNow","io.github.agentsoz.abmjill.genact.EnvironmentAction"})
 public class BushfireAgentV1 extends BushfireAgent {
 
 
@@ -309,7 +309,7 @@ public class BushfireAgentV1 extends BushfireAgent {
                     actionState == ActionContent.State.FAILED ||
                     actionState == ActionContent.State.DROPPED) {
                 memorise(MemoryEventType.BELIEVED.name(), MemoryEventValue.LAST_ENV_ACTION_STATE.name() + "=" + actionState.name());
-//                setActiveEnvironmentAction(null); // remove the action
+                setActiveEnvironmentAction(null); // remove the action
                 // Wake up the agent that was waiting for external action to finish
                 // FIXME: BDI actions put agent in suspend, which won't work for multiple intention stacks
                 suspend(false);
@@ -330,6 +330,10 @@ public class BushfireAgentV1 extends BushfireAgent {
 
     public void setEnvironmentActionInterface(EnvironmentActionInterface envActInterface) {
         this.envActionInterface = envActInterface;
+    }
+
+    public EnvironmentActionInterface getEnvironmentActionInterface() {
+        return envActionInterface;
     }
 
     class Prefix {
