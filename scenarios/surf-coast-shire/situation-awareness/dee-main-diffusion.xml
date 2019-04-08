@@ -66,7 +66,7 @@
 
     <model id="disruption">
       <!-- Disruptions JSON file relative to examples/bushfire directory -->
-      <opt id="fileJson">scenarios/surf-coast-shire/situation-awareness/scenario_disruptions.json</opt>
+      <opt id="fileJson">scenarios/surf-coast-shire/situation-awareness/scenario_disruptions_gross.json</opt>
     </model>
 
     <model id="diffusion">
