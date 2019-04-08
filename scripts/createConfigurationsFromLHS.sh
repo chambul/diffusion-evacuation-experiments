@@ -38,7 +38,7 @@ return
 
 if [ $# -ne 2 ]; then
  	printf " This script creates configurations for batch run. Enter following args: \n";
-	printf " 1. scenario = sn/bl(baseline)/bc(Broadcast)  2. regex (fem2) / sub scenario directory name (fem1)\n ";
+	printf " 1. scenario = sn/bl(baseline)/bc(Broadcast)  2. timeStamp/ output directory \n ";
   >&2
   exit 1
  fi
@@ -50,7 +50,9 @@ printf "\n\n createConfigurationsFromLHS.sh script started.... \n"
 batchRunMainConfig="./configs/batch-run-main-config.xml"
 
 # set the python di using bash xml_grep : python functions doesnt work until the path is set
-path=`xml_grep "local-python-path" $batchRunMainConfig --text_only`
+#path=`xml_grep "local-python-path" $batchRunMainConfig --text_only`
+
+path=python #FIXME hardcorded because xml_grep does not work in mac.
 #printf "setting local-python-path: $path \n "
 export PYTHONPATH="${PYTHONPATH}:$path"
 
@@ -73,13 +75,17 @@ if [ $scenario == "sn" ];
 then
 expMainConfig=$(getSingleTagValue $batchRunMainConfig "sn-main") # original main configuration file
 expDiffusionConfig=$(getSingleTagValue $batchRunMainConfig "sn-diffusion") # original diffusion configuration file
-LatinHyperSamplesDir=$(getSingleTagValue $batchRunMainConfig "latinHypercube-dir") # LHS dir.
 lhs=$(getSingleTagValue $batchRunMainConfig "sn-lhs")
-fi
 
-if [ $scenario == "bl" ];
+elif [ $scenario == "bl" ];
 then
 expMainConfig=$(getSingleTagValue $batchRunMainConfig "bl-main") # original diffusion configuration file
+elif [[ $scenario == "bc" ]]; then
+  printf " currently not implemented for broadcast scenario. \n" ;
+  exit 1;
+else
+  printf "scenario option $scenario is unknown, aborting!";
+  exit 1;
 fi
 
 
@@ -87,9 +93,9 @@ fi
 printf " cofiguration files and directory paths (relatives directories from script dir) : \n"
 printf "batch run main configuration file= $batchRunMainConfig  \n"
 printf "scenario/case = $scenario  \n"
-printf "original main configuration file (from LHS dir) = $expMainConfig \n"
-printf "original diffusion configuration file (from LHS dir) = $expDiffusionConfig \n"
-printf "Latin Hypercube dir = $LatinHyperSamplesDir \n"
+printf "original main configuration file = $expMainConfig \n"
+printf "original diffusion configuration file  = $expDiffusionConfig \n"
+printf "original diffusion configuration file name = $expDiffusionConfig \n"
 printf "lhs file-name = $lhs \n"
 printf "configuration files will be created at = $outDir \n"
 
@@ -97,119 +103,67 @@ printf "configuration files will be created at = $outDir \n"
 while true; do
     read -p "Do you wish to continue?" yn
     case $yn in
-        [Yy]* ) make install; break;;
+        [Yy]* ) break;;
         [Nn]* ) exit;;
         * ) echo "Please answer yes or no.";;
     esac
 done
 
-#changing directory !!! do not read any configs after here
-cd $LatinHyperSamplesDir
 
-#0. copy hawkesbury.xml file - working
-cp $expMainConfig .
+#1. copy configurations to outDir.
+#cp $expMainConfig  $outDir/
+ssconvert $lhs $outDir/samples.csv #1. export the excel file to a csv file and remove formatting - ssconvert is a commandline utlity of  Gnumeric application
 
-#1. export the excel file to a csv file and remove formatting - ssconvert is a commandline utlity of  Gnumeric application
-ssconvert $lhs samples.csv
+
+#cd $outDir
+
+
 
 #2. remove unwanted rows - working
-sed -e '1,4d' samples.csv  > modified-samples.csv
+sed -e '1,4d' $outDir/samples.csv  > $outDir/modified-samples.csv
 
 # 3. and extract the specific columns
-INPUT=modified-samples.csv
+INPUT=$outDir/modified-samples.csv
 OLDIFS=$IFS
 IFS=,
 [ ! -f $INPUT ] && { echo "$INPUT file not found"; exit 99; }
 
-################## scenario2 ######################
-if [ $scenario -eq "2" ];
+
+################## scenario SN######################
+if [ $scenario == "sn" ];
 then
 	sample=0
 	while read col1 col2 col3 col4 col5 col6 col7 col8
 	do
 		let "sample++"
 
-		dependants=$col2 #&& echo $dependants
-		pickupT=$col3
-		SclDistance=$col4 #&& echo $SclDistance
-		relsDistance=`expr $col4 \* 1000` #&& echo $relsDistance
+		links=$col2 #&& echo $dependants
+		prob=$col3
+		step=$col4 #&& echo $SclDistance
+
 
 		#4. modify the parameters in the configuration file
 		# find the mathing string in each line and replace the entire lines and write to a new file
 
-                #set the scenario in addition to the lhs parameters
 
+              # copy the new config file to a new dir
+              mkdir -p $outDir/sample$sample
 
-		sed -e 's/.*\skids=.*/\tkids="'$dependants'"/g;
-		s/.*\srelatives=.*/\trelatives="'$dependants'"/g;
-                s/.*\sscenarioType=.*/\tscenarioType="'$scenario'"/g;
-	 	s/.*\max_pickuptime_for_kids_and_rels=.*/\tmax_pickuptime_for_kids_and_rels="'$pickupT'"/g;
-		s/.*max_distance_to_relatives=.*/\tmax_distance_to_relatives="'$relsDistance'"/g;
-		s/.*max_distance_to_school=.*/\tmax_distance_to_school="'$SclDistance'"/g'  $expMainConfig > $sample.xml
+		sed -e 's/avg_links=.*/avg_links="'$links'"/g;
+		s|>[0-9,.]*</diffusion_probability>|>'$prob'</diffusion_probability>|g; #change delimiter
+	 	s|>[0-9]*</step_size>|>'$step'</step_size>|g'  $expDiffusionConfig > $outDir/sample$sample/$(basename $expDiffusionConfig)
 
-		#5. copy the new config file to a new dir
-		mkdir -p $outConfigDir/s$scenario/$timeStamp/sample$sample
-	  	mv $sample.xml $outConfigDir/s$scenario/$timeStamp/sample$sample/hawkesbury.xml
+# copy in main configuration
+cp $expMainConfig $outDir/sample$sample/
 
+#record the diff
+diff $expDiffusionConfig $outDir/sample$sample/$(basename $expDiffusionConfig) >> $outDir/diffusion_config_diffs.txt
 
 done < $INPUT
 IFS=$OLDIFS
 
 fi
 
-################## scenario3 ######################
-if [ $scenario -eq "3" ];
-then
-	sample=0
-	while read col1 col2 col3 col4 col5 col6 col7 col8
-	do
-		let "sample++"
-
-		avgLinks=$col2 #&& echo $dependants
-		turn=$col3 #&& echo $turn
-		seed=$col4 #&& echo $SclDistance
-		low=$col5 #&& echo $vol
-		#type=$col6 #&& echo $type
-
-
-		#set the scenario and network type in addition to the lhs parameters
-
-
-		#4. modify the parameters in the configuration file
-		# find the mathing string in each line and replace the entire lines and write to a new file
-
-		sed -e 's/.*\savg_links=.*/\tavg_links="'$avgLinks'"/g;
-		s/.*\sdiff_turn=.*/\tdiff_turn="'$turn'"/g;
-	 	s/.*\diff_seed=.*/\tdiff_seed="'$seed'"/g;
-		s/.*mean_act_threshold=.*/\tmean_act_threshold="'$low'"/g;
-                s/.*\sscenarioType=.*/\tscenarioType="'$scenario'"/g' $expMainConfig > $sample.xml
-		#s/.*networkType=.*/\tnetworkType="'$network'"/g'
-
-
-		#5. copy the new config file to a new dir
-		mkdir -p $outConfigDir/s$scenario/$timeStamp/sample$sample
-	  	mv $sample.xml $outConfigDir/s$scenario/$timeStamp/sample$sample/hawkesbury.xml
-
-
-done < $INPUT
-IFS=$OLDIFS
-
-fi
 
 
 printf "generated $sample number of samples \n"
-
-
-# TESTED configurations:
-#	config path
-#	scenario2:
-#		lhs parameters checked in sample1 and sample17
-#
-#	scenario3 :
-#		scenarioType tested
-#		lhs config 1 and 17 checked values of all parameters
-#		random and sw network types checked
-#
-#		changed  sw network lhs file paramters and checked
-#		chagned random network paramter(diffusion turn) and then cheked
-# ran with run-sim main script, one sample and checked the configs with the lhs excel sheet.
