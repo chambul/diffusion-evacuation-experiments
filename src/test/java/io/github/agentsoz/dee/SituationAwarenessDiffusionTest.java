@@ -50,7 +50,7 @@ public class SituationAwarenessDiffusionTest {
 		utils.setTestClassAndMethod(this.getClass(),"testDiffusingBlockagePerceptsDuringDailyPlan"); // set test class and method name
 
 		String[] args = {
-				"--config", "scenarios/surf-coast-shire/situation-awareness/dee-diffusion.xml",
+				"--config", "scenarios/surf-coast-shire/situation-awareness/dee-main-diffusion-test.xml",
 		};
 		Run.main(args);
 
