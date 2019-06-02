@@ -46,11 +46,29 @@ import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 
+
+/**
+ *  Methods that are used in ees.BushfireAgent but not used in dee.BushfireAgentV1:
+ *  checkBarometersAndTriggerResponseAsNeeded
+ *  isInitialResponseThresholdBreached
+ *  isFinalResponseThresholdBreached
+ *  triggerResponse
+ *  updateResponseBarometerSocialMessage
+ *  updateResponseBarometerFieldOfViewPercept
+ *  updateResponseBarometerMessages
+ *  Init/ parseArgs
+ *  Class DependantInfo
+ */
+
 @AgentInfo(hasGoals = {"io.github.agentsoz.ees.agents.bushfire.GoalActNow","io.github.agentsoz.abmjill.genact.EnvironmentAction"})
 public class BushfireAgentV1 extends BushfireAgent {
 
 
     private final Logger logger = LoggerFactory.getLogger("io.github.agentsoz.dee");
+
+//    static final String LOCATION_HOME = "home";
+//    static final String LOCATION_EVAC_PREFERRED = "evac";
+//    static final String LOCATION_INVAC_PREFERRED = "invac";
 
     private PrintStream writer = null;
     private QueryPerceptInterface queryInterface;
@@ -59,6 +77,18 @@ public class BushfireAgentV1 extends BushfireAgent {
     private BushfireAgentV1.Prefix prefix = new BushfireAgentV1.Prefix();
 
     //defaults
+//    private DependentInfo dependentInfo = null;
+//    private double initialResponseThreshold = 0.5;
+//    private double finalResponseThreshold = 0.5;
+//    private double responseBarometerMessages = 0.0;
+//    private double responseBarometerFieldOfView = 0.0;
+//    private double responseBarometerSocialMessage = 0.0;
+//    private boolean sharesInfoWithSocialNetwork = false;
+//    private boolean willGoHomeAfterVisitingDependents = false;
+//    private boolean willGoHomeBeforeLeaving = false;
+//    private double smokeVisualValue = 0.3;
+//    private double fireVisualValue = 1.0;
+//    private double socialMessageEvacNowValue = 0.3;
 
     enum MemoryEventType {
         BELIEVED,
@@ -87,6 +117,10 @@ public class BushfireAgentV1 extends BushfireAgent {
         messagesShared = new HashSet<>();
     }
 
+//    DependentInfo getDependentInfo() {
+//        return dependentInfo;
+//    }
+
     public Map<String, Location> getLocations() {
         return locations;
     }
@@ -94,6 +128,10 @@ public class BushfireAgentV1 extends BushfireAgent {
     public void setLocations(Map<String, Location> locations) {
         this.locations = locations;
     }
+
+//    double getResponseBarometer() {
+//        return responseBarometerMessages + responseBarometerFieldOfView + responseBarometerSocialMessage;
+//    }
 
 //    boolean getWillGoHomeAfterVisitingDependents()
 //    {
@@ -120,12 +158,14 @@ public class BushfireAgentV1 extends BushfireAgent {
         return lastEnvironmentActionStatus;
     }
 
-
+    /**
+     * Called by the Jill model when starting a new agent.
+     * There is no separate initialisation call prior to this, so all
+     * agent initialisation should be done here (using params).
+     */
     @Override
     public void start(PrintStream writer, String[] params) {
-
         this.writer = writer;
-
         //parseArgs(params);
         // Create a new belief set to store memory
         BeliefSetField[] fields = {
@@ -142,6 +182,12 @@ public class BushfireAgentV1 extends BushfireAgent {
         } catch (BeliefBaseException e) {
             throw new RuntimeException(e);
         }
+
+        // perceive congestion and blockage events always
+        post(new EnvironmentAction(
+                Integer.toString(getId()),
+                ActionList.PERCEIVE,
+                new Object[] {PerceptList.BLOCKED, PerceptList.CONGESTION}));
     }
 
     /**
@@ -151,22 +197,30 @@ public class BushfireAgentV1 extends BushfireAgent {
     public void finish() {
     }
 
+    /**
+     * Called by the Jill model with the status of a BDI percept
+     * for this agent, coming from the ABM environment.
+     */
     @Override
     public void handlePercept(String perceptID, Object parameters) {
 
         // save it to memory
         memorise(MemoryEventType.PERCEIVED.name(), perceptID + ":" +parameters.toString());
 
-
         if (perceptID == null || perceptID.isEmpty()) {
             return;
-        }
+        } // first process time percept as other percepts are using current time.
         else if (perceptID.equals(PerceptList.TIME)) {
             if (parameters instanceof Double) {
                 time = (double) parameters;
             }
             return;
         }
+//        else if (perceptID.equals(PerceptList.EMERGENCY_MESSAGE)) {
+//            updateResponseBarometerMessages(parameters);
+//        } else if (perceptID.equals(PerceptList.SOCIAL_NETWORK_MSG)) {
+//            updateResponseBarometerSocialMessage(parameters);
+//        }
 //        else if (perceptID.equals(PerceptList.FIELD_OF_VIEW)) {
 //          //  updateResponseBarometerFieldOfViewPercept(parameters);
 //            if (PerceptList.SIGHTED_FIRE.equalsIgnoreCase(parameters.toString())) {
@@ -177,7 +231,7 @@ public class BushfireAgentV1 extends BushfireAgent {
         }
         else if (perceptID.equals(PerceptList.BLOCKED)) {
             if (activeEnvironmentAction == null) {
-                replanCurrentDriveTo(MATSimEvacModel.EvacRoutingMode.carGlobalInformation); //FIXME change routing mode to FreeSpeed
+                replanCurrentDriveTo(MATSimEvacModel.EvacRoutingMode.carGlobalInformation); //FIXME check routing mode
             }
         }
 
@@ -191,7 +245,9 @@ public class BushfireAgentV1 extends BushfireAgent {
 
     private void handleSocialPercept(String perceptID, Object parameters) {
 
-
+//        if (!sharesInfoWithSocialNetwork) {
+//            return;
+//        }
         // Spread EVACUATE_NOW if haven't done so already
         if (perceptID.equals(PerceptList.EMERGENCY_MESSAGE) &&
                 !messagesShared.contains(EmergencyMessage.EmergencyMessageType.EVACUATE_NOW.name()) &&
@@ -207,12 +263,6 @@ public class BushfireAgentV1 extends BushfireAgent {
                 shareWithSocialNetwork(blockedMsg);
                 messagesShared.add(blockedMsg);
             }
-        }
-
-        //test broadcast messages //FIXME remove after social network broadcasting is tested fully
-        if (getTime() == 40159.0) {
-            log("spread test broadcasting");
-            broadcastToSocialNetwork("Test-broadcast-msg");
         }
 
     }
@@ -317,6 +367,36 @@ public class BushfireAgentV1 extends BushfireAgent {
         }
     }
 
+    /**
+     * BDI-ABM agent init function; Not used by Jill.
+     * Use {@link #start(PrintStream, String[])} instead
+     * to perform any agent specific initialisation.
+     */
+//    @Override
+//    public void init(String[] args) {
+//        parseArgs(args);
+//    }
+
+    /**
+     * BDI-ABM agent start function; Not used by Jill.
+     * Use {@link #start(PrintStream, String[])} instead
+     * to perform agent startup.
+     */
+    @Override
+    public void start() {
+        logger.warn("{} using a stub for io.github.agentsoz.bdiabm.Agent.start()", logPrefix());
+    }
+
+    /**
+     * BDI-ABM agent kill function; Not used by Jill.
+     * Use {@link #finish()} instead
+     * to perform agent termination.
+     */
+
+    @Override
+    public void kill() {
+        logger.warn("{} using a stub for io.github.agentsoz.bdiabm.Agent.kill()", logPrefix());
+    }
 
     @Override
     public void setQueryPerceptInterface(QueryPerceptInterface queryInterface) {
@@ -336,9 +416,13 @@ public class BushfireAgentV1 extends BushfireAgent {
         return envActionInterface;
     }
 
+    private double getTime() {
+        return time;
+    }
+
     class Prefix {
         public String toString() {
-            return String.format("Time %05.0f Resident %-9s : ", getTime(), getId());
+            return String.format("Time %05.0f BushfireAgentV1 %-9s : ", getTime(), getId());
         }
     }
 
@@ -350,12 +434,5 @@ public class BushfireAgentV1 extends BushfireAgent {
     private void log(String msg) {
         writer.println(logPrefix() + msg);
     }
-
-    private double getTime() {
-        return time;
-    }
-
-
-
-
+    
 }
