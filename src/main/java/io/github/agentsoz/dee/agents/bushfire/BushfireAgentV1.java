@@ -56,7 +56,6 @@ import java.util.Set;
  *  updateResponseBarometerSocialMessage
  *  updateResponseBarometerFieldOfViewPercept
  *  updateResponseBarometerMessages
- *  Init/ parseArgs
  *  Class DependantInfo
  */
 
@@ -75,6 +74,8 @@ public class BushfireAgentV1 extends BushfireAgent {
     private EnvironmentActionInterface envActionInterface;
     private double time = -1;
     private BushfireAgentV1.Prefix prefix = new BushfireAgentV1.Prefix();
+    private double distanceFromTheBlockageThreshold;
+    private int blockageRecencyThreshold;
 
     //defaults
 //    private DependentInfo dependentInfo = null;
@@ -166,7 +167,7 @@ public class BushfireAgentV1 extends BushfireAgent {
     @Override
     public void start(PrintStream writer, String[] params) {
         this.writer = writer;
-        //parseArgs(params);
+        parseArgs(params);
         // Create a new belief set to store memory
         BeliefSetField[] fields = {
                 new BeliefSetField("event", String.class, false),
@@ -372,10 +373,10 @@ public class BushfireAgentV1 extends BushfireAgent {
      * Use {@link #start(PrintStream, String[])} instead
      * to perform any agent specific initialisation.
      */
-//    @Override
-//    public void init(String[] args) {
-//        parseArgs(args);
-//    }
+    @Override
+    public void init(String[] args) {
+        parseArgs(args);
+    }
 
     /**
      * BDI-ABM agent start function; Not used by Jill.
@@ -416,6 +417,42 @@ public class BushfireAgentV1 extends BushfireAgent {
         return envActionInterface;
     }
 
+    private void parseArgs(String[] args) {
+        if (args != null) {
+            for (int i = 0; i < args.length; i++) {
+                switch (args[i]) {
+                    case "distanceFromTheBlockageThreshold":
+                        if(i+1<args.length) {
+                            i++ ;
+                            try {
+                                distanceFromTheBlockageThreshold = Double.parseDouble(args[i]);
+                                logger.trace("distanceFromTheBlockageThreshold: {}",distanceFromTheBlockageThreshold);
+                            } catch (Exception e) {
+                                logger.error("Could not parse double '"+ args[i] + "'", e);
+                            }
+
+                        }
+                        break;
+                    case "blockageRecencyThreshold":
+                        if(i+1<args.length) {
+                            i++ ;
+                            try {
+                                blockageRecencyThreshold = Integer.parseInt(args[i]);
+                                logger.trace("blockageRecencyThreshold: {}",blockageRecencyThreshold);
+                            } catch (Exception e) {
+                                logger.error("Could not parse int '"+ args[i] + "'", e);
+                            }
+
+                        }
+                        break;
+                    default:
+                        // ignore other options
+                        break;
+                }
+            }
+        }
+    }
+
     private double getTime() {
         return time;
     }
@@ -434,5 +471,5 @@ public class BushfireAgentV1 extends BushfireAgent {
     private void log(String msg) {
         writer.println(logPrefix() + msg);
     }
-    
+
 }
