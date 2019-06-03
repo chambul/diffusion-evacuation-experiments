@@ -1,0 +1,60 @@
+2019-06-03 19:39:36,825  WARN ConfigConsistencyCheckerImpl:61 AnalyzedModes in travelTimeCalculator config is not superset of network routing modes.  Will fail later except when defined by other means.
+2019-06-03 19:39:37,303  WARN MGC:174 Assuming that coordinates are in longitude first notation, i.e. (longitude, latitude).
+2019-06-03 19:39:38,499  WARN MGC:174 Assuming that coordinates are in longitude first notation, i.e. (longitude, latitude).
+2019-06-03 19:39:39,891  INFO QNetsimEngine:506 Assigned 6095 nodes and 11588 links to QSimEngineRunner #0
+2019-06-03 19:39:39,920  INFO QNetsimEngine:346 SIMULATION (QNetsimEngine) AT 00:00:00 : #links=0 #nodes=0
+2019-06-03 19:39:39,925  INFO QSim:505 SIMULATION (NEW QSim) AT 00:00:00 : #Veh=10 lost=0 simT=0.0s realT=2s; (s/r): 0.0
+2019-06-03 19:39:40,016  WARN NetworkChangeEventsEngine:67 add within-day network change event:org.matsim.core.network.NetworkChangeEvent@53b36b5
+2019-06-03 19:39:40,017  WARN NetworkChangeEventsEngine:74 network change event not yet in central data structure; adding it
+2019-06-03 19:39:40,019  WARN NetworkChangeEventsEngine:67 add within-day network change event:org.matsim.core.network.NetworkChangeEvent@b205cca8
+2019-06-03 19:39:40,019  WARN NetworkChangeEventsEngine:74 network change event not yet in central data structure; adding it
+2019-06-03 19:39:40,019  WARN NetworkChangeEventsEngine:67 add within-day network change event:org.matsim.core.network.NetworkChangeEvent@5c8cfec0
+2019-06-03 19:39:40,021  WARN NetworkChangeEventsEngine:74 network change event not yet in central data structure; adding it
+2019-06-03 19:39:40,021  WARN NetworkChangeEventsEngine:67 add within-day network change event:org.matsim.core.network.NetworkChangeEvent@95794b3
+2019-06-03 19:39:40,021  WARN NetworkChangeEventsEngine:74 network change event not yet in central data structure; adding it
+2019-06-03 19:39:40,440  INFO QNetsimEngine:346 SIMULATION (QNetsimEngine) AT 01:00:00 : #links=0 #nodes=0
+2019-06-03 19:39:40,440  INFO QSim:505 SIMULATION (NEW QSim) AT 01:00:00 : #Veh=10 lost=0 simT=3600.0s realT=3s; (s/r): 1200.0
+2019-06-03 19:39:40,619  INFO QNetsimEngine:346 SIMULATION (QNetsimEngine) AT 02:00:00 : #links=0 #nodes=0
+2019-06-03 19:39:40,620  INFO QSim:505 SIMULATION (NEW QSim) AT 02:00:00 : #Veh=10 lost=0 simT=7200.0s realT=3s; (s/r): 2400.0
+2019-06-03 19:39:40,815  INFO QNetsimEngine:346 SIMULATION (QNetsimEngine) AT 03:00:00 : #links=0 #nodes=0
+2019-06-03 19:39:40,816  INFO QSim:505 SIMULATION (NEW QSim) AT 03:00:00 : #Veh=10 lost=0 simT=10800.0s realT=3s; (s/r): 3600.0
+2019-06-03 19:39:41,015  INFO QNetsimEngine:346 SIMULATION (QNetsimEngine) AT 04:00:00 : #links=0 #nodes=0
+2019-06-03 19:39:41,015  INFO QSim:505 SIMULATION (NEW QSim) AT 04:00:00 : #Veh=10 lost=0 simT=14400.0s realT=3s; (s/r): 4800.0
+2019-06-03 19:39:41,216  INFO QNetsimEngine:346 SIMULATION (QNetsimEngine) AT 05:00:00 : #links=0 #nodes=0
+2019-06-03 19:39:41,216  INFO QSim:505 SIMULATION (NEW QSim) AT 05:00:00 : #Veh=10 lost=0 simT=18000.0s realT=4s; (s/r): 4500.0
+2019-06-03 19:39:41,432  INFO QNetsimEngine:346 SIMULATION (QNetsimEngine) AT 06:00:00 : #links=0 #nodes=0
+2019-06-03 19:39:41,433  INFO QSim:505 SIMULATION (NEW QSim) AT 06:00:00 : #Veh=10 lost=0 simT=21600.0s realT=4s; (s/r): 5400.0
+2019-06-03 19:39:41,619  INFO QNetsimEngine:346 SIMULATION (QNetsimEngine) AT 07:00:00 : #links=0 #nodes=0
+2019-06-03 19:39:41,619  INFO QSim:505 SIMULATION (NEW QSim) AT 07:00:00 : #Veh=10 lost=0 simT=25200.0s realT=4s; (s/r): 6300.0
+2019-06-03 19:39:41,791  INFO QNetsimEngine:346 SIMULATION (QNetsimEngine) AT 08:00:00 : #links=0 #nodes=0
+2019-06-03 19:39:41,791  INFO QSim:505 SIMULATION (NEW QSim) AT 08:00:00 : #Veh=10 lost=0 simT=28800.0s realT=4s; (s/r): 7200.0
+2019-06-03 19:39:42,146  INFO QNetsimEngine:346 SIMULATION (QNetsimEngine) AT 09:00:00 : #links=1 #nodes=1
+2019-06-03 19:39:42,149  INFO QSim:505 SIMULATION (NEW QSim) AT 09:00:00 : #Veh=10 lost=0 simT=32400.0s realT=5s; (s/r): 6480.0
+2019-06-03 19:39:42,594  INFO QNetsimEngine:346 SIMULATION (QNetsimEngine) AT 10:00:00 : #links=0 #nodes=1
+2019-06-03 19:39:42,594  INFO QSim:505 SIMULATION (NEW QSim) AT 10:00:00 : #Veh=10 lost=0 simT=36000.0s realT=5s; (s/r): 7200.0
+2019-06-03 19:39:42,888  INFO QNetsimEngine:346 SIMULATION (QNetsimEngine) AT 11:00:00 : #links=2 #nodes=1
+2019-06-03 19:39:42,888  INFO QSim:505 SIMULATION (NEW QSim) AT 11:00:00 : #Veh=10 lost=0 simT=39600.0s realT=5s; (s/r): 7920.0
+2019-06-03 19:39:43,246  INFO QNetsimEngine:346 SIMULATION (QNetsimEngine) AT 12:00:00 : #links=1 #nodes=1
+2019-06-03 19:39:43,247  INFO QSim:505 SIMULATION (NEW QSim) AT 12:00:00 : #Veh=10 lost=0 simT=43200.0s realT=6s; (s/r): 7200.0
+2019-06-03 19:39:43,525  INFO QNetsimEngine:346 SIMULATION (QNetsimEngine) AT 13:00:00 : #links=1 #nodes=1
+2019-06-03 19:39:43,525  INFO QSim:505 SIMULATION (NEW QSim) AT 13:00:00 : #Veh=10 lost=0 simT=46800.0s realT=6s; (s/r): 7800.0
+2019-06-03 19:39:43,749  INFO QNetsimEngine:346 SIMULATION (QNetsimEngine) AT 14:00:00 : #links=2 #nodes=1
+2019-06-03 19:39:43,750  INFO QSim:505 SIMULATION (NEW QSim) AT 14:00:00 : #Veh=10 lost=0 simT=50400.0s realT=6s; (s/r): 8400.0
+2019-06-03 19:39:43,952  INFO QNetsimEngine:346 SIMULATION (QNetsimEngine) AT 15:00:00 : #links=1 #nodes=1
+2019-06-03 19:39:43,953  INFO QSim:505 SIMULATION (NEW QSim) AT 15:00:00 : #Veh=10 lost=0 simT=54000.0s realT=6s; (s/r): 9000.0
+2019-06-03 19:39:44,167  INFO QNetsimEngine:346 SIMULATION (QNetsimEngine) AT 16:00:00 : #links=2 #nodes=1
+2019-06-03 19:39:44,168  INFO QSim:505 SIMULATION (NEW QSim) AT 16:00:00 : #Veh=10 lost=0 simT=57600.0s realT=7s; (s/r): 8228.57142857143
+2019-06-03 19:39:44,413  INFO QNetsimEngine:346 SIMULATION (QNetsimEngine) AT 17:00:00 : #links=2 #nodes=1
+2019-06-03 19:39:44,413  INFO QSim:505 SIMULATION (NEW QSim) AT 17:00:00 : #Veh=10 lost=0 simT=61200.0s realT=7s; (s/r): 8742.857142857143
+2019-06-03 19:39:44,658  INFO QNetsimEngine:346 SIMULATION (QNetsimEngine) AT 18:00:00 : #links=1 #nodes=2
+2019-06-03 19:39:44,658  INFO QSim:505 SIMULATION (NEW QSim) AT 18:00:00 : #Veh=9 lost=0 simT=64800.0s realT=7s; (s/r): 9257.142857142857
+2019-06-03 19:39:44,854  INFO QNetsimEngine:346 SIMULATION (QNetsimEngine) AT 19:00:00 : #links=2 #nodes=2
+2019-06-03 19:39:44,854  INFO QSim:505 SIMULATION (NEW QSim) AT 19:00:00 : #Veh=8 lost=0 simT=68400.0s realT=7s; (s/r): 9771.42857142857
+2019-06-03 19:39:45,074  INFO QNetsimEngine:346 SIMULATION (QNetsimEngine) AT 20:00:00 : #links=1 #nodes=1
+2019-06-03 19:39:45,074  INFO QSim:505 SIMULATION (NEW QSim) AT 20:00:00 : #Veh=7 lost=0 simT=72000.0s realT=7s; (s/r): 10285.714285714286
+2019-06-03 19:39:45,278  INFO QNetsimEngine:346 SIMULATION (QNetsimEngine) AT 21:00:00 : #links=1 #nodes=1
+2019-06-03 19:39:45,279  INFO QSim:505 SIMULATION (NEW QSim) AT 21:00:00 : #Veh=6 lost=0 simT=75600.0s realT=8s; (s/r): 9450.0
+2019-06-03 19:39:45,591  INFO QNetsimEngine:346 SIMULATION (QNetsimEngine) AT 22:00:00 : #links=2 #nodes=2
+2019-06-03 19:39:45,592  INFO QSim:505 SIMULATION (NEW QSim) AT 22:00:00 : #Veh=5 lost=0 simT=79200.0s realT=8s; (s/r): 9900.0
+2019-06-03 19:39:45,853  INFO QNetsimEngine:346 SIMULATION (QNetsimEngine) AT 23:00:00 : #links=1 #nodes=2
+2019-06-03 19:39:45,854  INFO QSim:505 SIMULATION (NEW QSim) AT 23:00:00 : #Veh=4 lost=0 simT=82800.0s realT=8s; (s/r): 10350.0

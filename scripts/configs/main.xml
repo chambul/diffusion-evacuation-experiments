@@ -1,49 +1,48 @@
 <!--For each analysis specifiy - scenario timestamp samples runs-->
 <!-- remote python path tag is extracted using sed in the remote server (nci). therefore do not specify or have a commented version of the same tag, since sed will extract the dir path of the commented version-->
 <setup>
-	
-	<scenario>3</scenario>
-	<timestamp>test-LTBDI</timestamp>
-	<network>sw</network>
-	<!--CHECK: samples and runs -->
-	<startSample>1</startSample>
-	<endSample>17</endSample>
-	<startRun>1</startRun>
-	<endRun>5</endRun>
-	
+
+    <scenario>3</scenario>
+    <timestamp>test-LTBDI</timestamp>
+    <network>sw</network>
+    <!--CHECK: samples and runs -->
+    <startSample>1</startSample>
+    <endSample>17</endSample>
+    <startRun>1</startRun>
+    <endRun>5</endRun>
 
 
-	<!-- other configuration files-->
-	<latinHypercube-dir>../../social-network-integration/latin-hypercube-samples</latinHypercube-dir>
-	<sn-data-dir>../../sn_model_data</sn-data-dir>
+    <!-- other configuration files-->
+    <latinHypercube-dir>../../social-network-integration/latin-hypercube-samples</latinHypercube-dir>
+    <sn-data-dir>../../sn_model_data</sn-data-dir>
 
-	<!-- scenario2 config files -->
-	<dataConfig scenario="s2">
-		gendata-s2.xml
-	</dataConfig>
+    <!-- scenario2 config files -->
+    <dataConfig scenario="s2">
+        gendata-s2.xml
+    </dataConfig>
 
-	<plotConfig scenario="s2">
-		plotdata-s2.xml
-	</plotConfig>
+    <plotConfig scenario="s2">
+        plotdata-s2.xml
+    </plotConfig>
 
-	<!-- scenario3 config files -->
-	<dataConfig scenario="s3">
-		gendata-s3.xml
-	</dataConfig>
+    <!-- scenario3 config files -->
+    <dataConfig scenario="s3">
+        gendata-s3.xml
+    </dataConfig>
 
-	<plotConfig scenario="s3">
-		plotdata-s2.xml
-	</plotConfig>
+    <plotConfig scenario="s3">
+        plotdata-s2.xml
+    </plotConfig>
 
 
-	<!--LOCAL environment setup-->
-	<local-python-path>../../experiments/scripts/python</local-python-path>
-	 <local-results>../../results</local-results> 
+    <!--LOCAL environment setup-->
+    <local-python-path>../../experiments/scripts/python</local-python-path>
+    <local-results>../../results</local-results>
 
-	<!--REMOTE environment setup-->
-	<!-- absolute paths - used to get the remote workspace and  constrcut the directory structure-->
-	 <host>cbu595@raijin.nci.org.au</host>
-	 <remote-workspace>/short/ij2/cbu595/workspace</remote-workspace> 
-	 <remote-results>/short/ij2/cbu595/workspace/results</remote-results> 
-  	 <remote-python-path>/short/ij2/cbu595/workspace/experiments/scripts/python</remote-python-path>
+    <!--REMOTE environment setup-->
+    <!-- absolute paths - used to get the remote workspace and  constrcut the directory structure-->
+    <host>cbu595@raijin.nci.org.au</host>
+    <remote-workspace>/short/ij2/cbu595/workspace</remote-workspace>
+    <remote-results>/short/ij2/cbu595/workspace/results</remote-results>
+    <remote-python-path>/short/ij2/cbu595/workspace/experiments/scripts/python</remote-python-path>
 </setup>

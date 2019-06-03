@@ -2,39 +2,39 @@
 <!-- remote python path tag is extracted using sed in the remote server (nci). therefore do not specify or have a commented version of the same tag, since sed will extract the dir path of the commented version-->
 <setup>
 
-	<scenario>sn</scenario>
-	<startSample>1</startSample>
-	<endSample>1</endSample>
-	<startRun>1</startRun>
-	<endRun>1</endRun>
-	<disruption>gross</disruption>
+    <scenario>sn</scenario>
+    <startSample>1</startSample>
+    <endSample>1</endSample>
+    <startRun>1</startRun>
+    <endRun>1</endRun>
+    <disruption>gross</disruption>
 
-	<!-- other configuration files-->
-	<config-dir>configs</config-dir>
+    <!-- other configuration files-->
+    <config-dir>configs</config-dir>
 
-	<!-- SN case config files -->
-	<scenarioSN>
-		<sn-lhs>../latin-hypercube-samples/sn-diffusion-config-settings.xls</sn-lhs>
-		<sn-main>../scenarios/surf-coast-shire/situation-awareness/dee-main-diffusion.xml</sn-main>
-		<sn-diffusion>../scenarios/surf-coast-shire/situation-awareness/scenario_diffusion_config.xml</sn-diffusion>
-	</scenarioSN>
+    <!-- SN case config files -->
+    <scenarioSN>
+        <sn-lhs>../latin-hypercube-samples/sn-diffusion-config-settings.xls</sn-lhs>
+        <sn-main>../scenarios/surf-coast-shire/situation-awareness/dee-main-diffusion.xml</sn-main>
+        <sn-diffusion>../scenarios/surf-coast-shire/situation-awareness/scenario_diffusion_config.xml</sn-diffusion>
+    </scenarioSN>
 
-	<!-- Baseline case config files -->
-	<scenarioBL>
-		<bl-main>../scenarios/surf-coast-shire/situation-awareness/dee-main.xml</bl-main>
-	</scenarioBL>
+    <!-- Baseline case config files -->
+    <scenarioBL>
+        <bl-main>../scenarios/surf-coast-shire/situation-awareness/dee-main.xml</bl-main>
+    </scenarioBL>
 
-	<!-- Broadcast case config files -->
+    <!-- Broadcast case config files -->
 
 
-	<!--LOCAL environment setup-->
-	<local-python-path>python</local-python-path>
-	<local-results>../../temp</local-results>
+    <!--LOCAL environment setup-->
+    <local-python-path>python</local-python-path>
+    <local-results>../../temp</local-results>
 
-	<!--REMOTE environment setup-->
-	<!-- absolute paths - used to get the remote workspace and  constrcut the directory structure-->
-	 <host>cbu595@raijin.nci.org.au</host>
-	 <remote-workspace>/short/ij2/cbu595/workspace</remote-workspace>
-	 <remote-results>/short/ij2/cbu595/workspace/results</remote-results>
-  	 <remote-python-path>/short/ij2/cbu595/workspace/experiments/scripts/python</remote-python-path>
+    <!--REMOTE environment setup-->
+    <!-- absolute paths - used to get the remote workspace and  constrcut the directory structure-->
+    <host>cbu595@raijin.nci.org.au</host>
+    <remote-workspace>/short/ij2/cbu595/workspace</remote-workspace>
+    <remote-results>/short/ij2/cbu595/workspace/results</remote-results>
+    <remote-python-path>/short/ij2/cbu595/workspace/experiments/scripts/python</remote-python-path>
 </setup>

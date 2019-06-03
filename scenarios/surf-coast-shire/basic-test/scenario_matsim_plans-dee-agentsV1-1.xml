@@ -3,18 +3,20 @@
 <population>
     <!-- ====================================================================== -->
 
-    <person id= "0" >
+    <person id="0">
         <attributes>
-            <attribute name="BDIAgentType" class="java.lang.String" >io.github.agentsoz.dee.agents.bushfire.BushfireAgentV1</attribute>
-            <attribute name="distanceFromTheBlockageThreshold" class="java.lang.Double" >5.0</attribute>
-            <attribute name="blockageRecencyThreshold" class="java.lang.Integer" >25</attribute>
+            <attribute name="BDIAgentType" class="java.lang.String">
+                io.github.agentsoz.dee.agents.bushfire.BushfireAgentV1
+            </attribute>
+            <attribute name="distanceFromTheBlockageThreshold" class="java.lang.Double">5.0</attribute>
+            <attribute name="blockageRecencyThreshold" class="java.lang.Integer">25</attribute>
         </attributes>
         <plan selected="yes">
-            <activity type="home" x="766728.617380239" y="5754449.11681867" end_time="09:40:00" />
-            <leg mode="car" />
-            <activity type="work" x="789872.47261438" y="5752811.26023417" end_time="16:34:00" />
-            <leg mode="car" />
-            <activity type="home" x="766728.617380239" y="5754449.11681867" />
+            <activity type="home" x="766728.617380239" y="5754449.11681867" end_time="09:40:00"/>
+            <leg mode="car"/>
+            <activity type="work" x="789872.47261438" y="5752811.26023417" end_time="16:34:00"/>
+            <leg mode="car"/>
+            <activity type="home" x="766728.617380239" y="5754449.11681867"/>
         </plan>
     </person>
 

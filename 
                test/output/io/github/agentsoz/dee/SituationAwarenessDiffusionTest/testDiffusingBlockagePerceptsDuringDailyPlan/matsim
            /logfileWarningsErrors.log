@@ -1,0 +1,11 @@
+2019-06-03 19:39:36,825  WARN ConfigConsistencyCheckerImpl:61 AnalyzedModes in travelTimeCalculator config is not superset of network routing modes.  Will fail later except when defined by other means.
+2019-06-03 19:39:37,303  WARN MGC:174 Assuming that coordinates are in longitude first notation, i.e. (longitude, latitude).
+2019-06-03 19:39:38,499  WARN MGC:174 Assuming that coordinates are in longitude first notation, i.e. (longitude, latitude).
+2019-06-03 19:39:40,016  WARN NetworkChangeEventsEngine:67 add within-day network change event:org.matsim.core.network.NetworkChangeEvent@53b36b5
+2019-06-03 19:39:40,017  WARN NetworkChangeEventsEngine:74 network change event not yet in central data structure; adding it
+2019-06-03 19:39:40,019  WARN NetworkChangeEventsEngine:67 add within-day network change event:org.matsim.core.network.NetworkChangeEvent@b205cca8
+2019-06-03 19:39:40,019  WARN NetworkChangeEventsEngine:74 network change event not yet in central data structure; adding it
+2019-06-03 19:39:40,019  WARN NetworkChangeEventsEngine:67 add within-day network change event:org.matsim.core.network.NetworkChangeEvent@5c8cfec0
+2019-06-03 19:39:40,021  WARN NetworkChangeEventsEngine:74 network change event not yet in central data structure; adding it
+2019-06-03 19:39:40,021  WARN NetworkChangeEventsEngine:67 add within-day network change event:org.matsim.core.network.NetworkChangeEvent@95794b3
+2019-06-03 19:39:40,021  WARN NetworkChangeEventsEngine:74 network change event not yet in central data structure; adding it

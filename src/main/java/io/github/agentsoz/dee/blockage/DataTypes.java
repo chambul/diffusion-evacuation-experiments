@@ -1,4 +1,4 @@
-package io.github.agentsoz.dee;
+package io.github.agentsoz.dee.blockage;
 
 /*-
  * #%L
@@ -22,15 +22,10 @@ package io.github.agentsoz.dee;
  * #L%
  */
 
-import io.github.agentsoz.ees.Run;
+public class DataTypes {
 
+    // blockage points
+    public static String GROSSMANDS = "grossmands";
+    public static String GREAT_OCEAN_ROAD = "great ocean road";
 
-public class Main {
-
-    public static void main(String args[]) {
-
-            Run.main(args);
-
-        }
-    }
-
+}

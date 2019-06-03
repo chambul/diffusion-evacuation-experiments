@@ -10,12 +10,12 @@ package org.matsim.testcases;
  * it under the terms of the GNU Lesser General Public License as
  * published by the Free Software Foundation, either version 3 of the
  * License, or (at your option) any later version.
- * 
+ *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Lesser Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU General Lesser Public
  * License along with this program.  If not, see
  * <http://www.gnu.org/licenses/lgpl-3.0.html>.
@@ -43,16 +43,10 @@ package org.matsim.testcases;
 
 
 import org.junit.Assert;
-import org.junit.rules.TestWatchman;
-import org.junit.runners.model.FrameworkMethod;
-import org.matsim.core.config.Config;
-import org.matsim.core.config.ConfigUtils;
 import org.matsim.core.gbl.MatsimRandom;
 import org.matsim.core.utils.io.IOUtils;
 
 import java.io.File;
-import java.lang.reflect.Method;
-import java.security.Permission;
 
 /**
  * Some helper methods for writing JUnit 4 tests in MATSim.
@@ -60,38 +54,44 @@ import java.security.Permission;
  *
  * @author mrieser
  */
-public class MatsimTestUtils{
+public class MatsimTestUtils {
 
-	/** A constant for the exactness when comparing doubles. */
-	public static final double EPSILON = 1e-10;
+    /**
+     * A constant for the exactness when comparing doubles.
+     */
+    public static final double EPSILON = 1e-10;
 
-	/** The default output directory, where files of this test should be written to.
-	 * Includes the trailing '/' to denote a directory. */
-	private String outputDirectory = null;
+    /**
+     * The default output directory, where files of this test should be written to.
+     * Includes the trailing '/' to denote a directory.
+     */
+    private String outputDirectory = null;
 
-	/** The default input directory, where files of this test should be read from.
-	 * Includes the trailing '/' to denote a directory. */
-	private String inputDirectory = null;
+    /**
+     * The default input directory, where files of this test should be read from.
+     * Includes the trailing '/' to denote a directory.
+     */
+    private String inputDirectory = null;
 
-	/**
-	 * The input directory one level above the default input directory. If files are
-	 * used by several test methods of a testcase they have to be stored in this directory.
-	 */
-	private String classInputDirectory = null;
-	/**
-	 * The input directory two levels above the default input directory. If files are used
-	 * by several test classes of a package they have to be stored in this directory.
-	 */
-	private String packageInputDirectory;
+    /**
+     * The input directory one level above the default input directory. If files are
+     * used by several test methods of a testcase they have to be stored in this directory.
+     */
+    private String classInputDirectory = null;
+    /**
+     * The input directory two levels above the default input directory. If files are used
+     * by several test classes of a package they have to be stored in this directory.
+     */
+    private String packageInputDirectory;
 
-	private boolean outputDirCreated = false;
+    private boolean outputDirCreated = false;
 
-	private Class<?> testClass = null;
-	private String testMethodName = null;
+    private Class<?> testClass = null;
+    private String testMethodName = null;
 
-	public MatsimTestUtils() {
-		MatsimRandom.reset();
-	}
+    public MatsimTestUtils() {
+        MatsimRandom.reset();
+    }
 
 //	/**
 //	 * Loads a configuration from file (or the default config if <code>configfile</code> is <code>null</code>).
@@ -112,56 +112,57 @@ public class MatsimTestUtils{
 //		return config;
 //	}
 
-	public  void setTestClassAndMethod(Class cls, String methodName) {
-		this.testClass = cls;
-		this.testMethodName = methodName;
+    public void setTestClassAndMethod(Class cls, String methodName) {
+        this.testClass = cls;
+        this.testMethodName = methodName;
 
-	}
-	public void createOutputDirectory() {
-		if ((!this.outputDirCreated) && (this.outputDirectory != null)) {
-			File directory = new File(this.outputDirectory);
-			if (directory.exists()) {
-				IOUtils.deleteDirectoryRecursively(directory.toPath());
-			}
-			this.outputDirCreated = directory.mkdirs();
-			Assert.assertTrue("Could not create the output directory " + this.outputDirectory, this.outputDirCreated);
-		}
-	}
+    }
 
-	/**
-	 * Returns the path to the output directory for this test including a trailing slash as directory delimiter.
-	 *
-	 * @return path to the output directory for this test
-	 */
-	public String getorSetOutputDirectory() {
+    public void createOutputDirectory() {
+        if ((!this.outputDirCreated) && (this.outputDirectory != null)) {
+            File directory = new File(this.outputDirectory);
+            if (directory.exists()) {
+                IOUtils.deleteDirectoryRecursively(directory.toPath());
+            }
+            this.outputDirCreated = directory.mkdirs();
+            Assert.assertTrue("Could not create the output directory " + this.outputDirectory, this.outputDirCreated);
+        }
+    }
 
-		if (this.outputDirectory == null) {
-			this.outputDirectory = "test/output/" +
-					this.testClass.getCanonicalName().replace('.', '/') + "/" +
-					this.testMethodName + "/" + "matsim" + "/";
-		}
-		//createOutputDirectory();
-		return this.outputDirectory;
-	}
+    /**
+     * Returns the path to the output directory for this test including a trailing slash as directory delimiter.
+     *
+     * @return path to the output directory for this test
+     */
+    public String getorSetOutputDirectory() {
 
-	/**
-	 * Returns the path to the input directory for this test including a trailing slash as directory delimiter.
-	 *
-	 * @return path to the input directory for this test
-	 */
-	public String getInputDirectory() {
-		if (this.inputDirectory == null) {
-			this.inputDirectory = "test/input/" +
-					this.testClass.getCanonicalName().replace('.', '/') + "/" +
-					this.testMethodName + "/";
-		}
-		return this.inputDirectory;
-	}
-	/**
-	 * Returns the path to the input directory one level above the default input directory for this test including a trailing slash as directory delimiter.
-	 *
-	 * @return path to the input directory for this test
-	 */
+        if (this.outputDirectory == null) {
+            this.outputDirectory = "test/output/" +
+                    this.testClass.getCanonicalName().replace('.', '/') + "/" +
+                    this.testMethodName + "/" + "matsim" + "/";
+        }
+        //createOutputDirectory();
+        return this.outputDirectory;
+    }
+
+    /**
+     * Returns the path to the input directory for this test including a trailing slash as directory delimiter.
+     *
+     * @return path to the input directory for this test
+     */
+    public String getInputDirectory() {
+        if (this.inputDirectory == null) {
+            this.inputDirectory = "test/input/" +
+                    this.testClass.getCanonicalName().replace('.', '/') + "/" +
+                    this.testMethodName + "/";
+        }
+        return this.inputDirectory;
+    }
+    /**
+     * Returns the path to the input directory one level above the default input directory for this test including a trailing slash as directory delimiter.
+     *
+     * @return path to the input directory for this test
+     */
 //	public String getClassInputDirectory() {
 //		if (this.classInputDirectory == null) {
 //			this.classInputDirectory = "test/input/" + this.testClass.getCanonicalName().replace('.', '/') + "/";

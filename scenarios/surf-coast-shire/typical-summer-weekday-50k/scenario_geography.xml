@@ -56,28 +56,28 @@
 
 -->
 <geography
-  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-  xmlns="https://github.com/agentsoz/bdi-abm-integration"
-  xsi:schemaLocation="https://github.com/agentsoz/bdi-abm-integration ../../xsd/geography.xsd">
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xmlns="https://github.com/agentsoz/bdi-abm-integration"
+        xsi:schemaLocation="https://github.com/agentsoz/bdi-abm-integration ../../xsd/geography.xsd">
 
-<coordinateSystem>utm</coordinateSystem>
+    <coordinateSystem>utm</coordinateSystem>
 
-<destinations>
-<location>
-  <name>Torquay Foreshore</name>
-  <coordinates>790771.7302,5752462.4688</coordinates>
-  <split>100.00</split>
-</location>
-</destinations>
+    <destinations>
+        <location>
+            <name>Torquay Foreshore</name>
+            <coordinates>790771.7302,5752462.4688</coordinates>
+            <split>100.00</split>
+        </location>
+    </destinations>
 
-<safelines>
-<safeline>
-  <name>Torquay</name>
-  <coordinates>790802,5752500</coordinates>
-  <coordinates>790770,5752400</coordinates>
-</safeline>
+    <safelines>
+        <safeline>
+            <name>Torquay</name>
+            <coordinates>790802,5752500</coordinates>
+            <coordinates>790770,5752400</coordinates>
+        </safeline>
 
-</safelines>
+    </safelines>
 
 
 </geography>
