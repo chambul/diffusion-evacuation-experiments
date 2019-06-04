@@ -27,11 +27,9 @@ import io.github.agentsoz.jill.lang.Goal;
 import io.github.agentsoz.jill.lang.GoalInfo;
 
 @GoalInfo(hasPlans = {
-//        "io.github.agentsoz.ees.agents.bushfire.PlanGoHomeThenLeave",
-//        "io.github.agentsoz.ees.agents.bushfire.PlanLeaveNow",
-        "io.github.agentsoz.dee.agents.bushfire.PlanDoNothing"})
-public class GoalActNow extends Goal {
-    public GoalActNow(String name) {
+        "io.github.agentsoz.dee.agents.PlanEvaluateCurrentContext"})
+public class GoalEvaluate extends Goal {
+    public GoalEvaluate(String name) {
         super(name);
     }
 }

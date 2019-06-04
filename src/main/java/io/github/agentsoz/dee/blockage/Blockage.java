@@ -30,15 +30,22 @@ public class Blockage extends Location{
 
    // private String name;
 
+
     private double lastUpdatedTime;
     private double distToBlockage; // in km?
     private boolean congestionNearBlockage;
    // private Location location;
     private double latestBlockageInfoTime;
-    private boolean recencyOfBlockage;
+    private recency  recencyOfBlockage;
     private boolean blockageInCurrentDirection;
     private boolean noBlockageImpact;
     private double reconsiderTime;
+
+    public enum recency{
+        RECENT,
+        OLD
+    }
+
 
     // contains link ids of all blockage points for referencing; so that we can include the names of the blockages in the SN information
     private static  Map<String, ArrayList<String>> allBlockagePointsWithLinks = new HashMap<String, ArrayList<String>>() {{  //#FIXME  Move this initialisation to configuration level
@@ -137,6 +144,14 @@ public class Blockage extends Location{
 //        return location;
 //    }
 
+    public recency getRecencyOfBlockage() {
+        return recencyOfBlockage;
+    }
+
+    public void setRecencyOfBlockage(recency recencyOfBlockage) {
+        this.recencyOfBlockage = recencyOfBlockage;
+    }
+
     public double getDistToBlockage() {
         return distToBlockage;
     }
@@ -145,15 +160,8 @@ public class Blockage extends Location{
         this.distToBlockage = distToBlockage;
     }
 
-    public boolean isRecencyOfBlockage() {
-        return recencyOfBlockage;
-    }
 
-    public void setRecencyOfBlockage(boolean recencyOfBlockage) {
-        this.recencyOfBlockage = recencyOfBlockage;
-    }
-
-    public double isLatestBlockageInfoTime() {
+    public double getLatestBlockageInfoTime() {
 
         return latestBlockageInfoTime;
     }

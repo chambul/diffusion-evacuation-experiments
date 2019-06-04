@@ -57,7 +57,7 @@ import java.util.*;
  * Class DependantInfo
  */
 
-@AgentInfo(hasGoals = {"io.github.agentsoz.ees.agents.bushfire.GoalActNow", "io.github.agentsoz.abmjill.genact.EnvironmentAction"})
+@AgentInfo(hasGoals = {"io.github.agentsoz.abmjill.genact.EnvironmentAction", "io.github.agentsoz.dee.agents.GoalAssessBlockageImpact","io.github.agentsoz.dee.agents.GoalEvaluate","io.github.agentsoz.dee.agents.GoalDecide"})
 public class BushfireAgentV1 extends BushfireAgent {
 
 
@@ -73,16 +73,24 @@ public class BushfireAgentV1 extends BushfireAgent {
     private EnvironmentActionInterface envActionInterface;
     private double time = -1;
     private BushfireAgentV1.Prefix prefix = new BushfireAgentV1.Prefix();
-    private double distanceFromTheBlockageThreshold;
+
+
 
     //new attributes
-    private boolean assessSituation = false;
+    private boolean assessSituation = true;
     private boolean sharedBlockageSNInfo = false; // #FIXME how to handle this for multiple blockages?
+    private int blockageRecencyThreshold;
+    private double distanceFromTheBlockageThreshold;
+    private double blockageSameDirectionAnlgeThreshold = 60.0 ;
+
+
 
     // reconsider times
     static final double RECONSIDER_LATER_TIME = 30.0;
     static final double RECONSIDER_SOONER_TIME = 5.0;
     static final double RECONSIDER_REGULAR_TIME = 10.0;
+
+
 
 
     //defaults
@@ -98,7 +106,6 @@ public class BushfireAgentV1 extends BushfireAgent {
 //    private double smokeVisualValue = 0.3;
 //    private double fireVisualValue = 1.0;
 //    private double socialMessageEvacNowValue = 0.3;
-    private int blockageRecencyThreshold;
     private Map<String, Location> locations;
     private EnvironmentAction activeEnvironmentAction;
     private ActionContent.State lastEnvironmentActionStatus;
@@ -113,6 +120,44 @@ public class BushfireAgentV1 extends BushfireAgent {
 
     }
 
+
+
+    public static double getReconsiderRegularTime() {
+        return RECONSIDER_REGULAR_TIME;
+    }
+
+    public static double getReconsiderSoonerTime() {
+        return RECONSIDER_SOONER_TIME;
+    }
+
+    public static double getReconsiderLaterTime() {
+        return RECONSIDER_LATER_TIME;
+    }
+
+    public double getDistanceFromTheBlockageThreshold() {
+        return distanceFromTheBlockageThreshold;
+    }
+
+    public double getBlockageSameDirectionAnlgeThreshold() {
+        return blockageSameDirectionAnlgeThreshold;
+    }
+
+    public void setBlockageRecencyThreshold(int blockageRecencyThreshold) {
+        this.blockageRecencyThreshold = blockageRecencyThreshold;
+    }
+
+    public int getBlockageRecencyThreshold() {
+        return blockageRecencyThreshold;
+    }
+
+    public boolean isAssessSituation() {
+        return assessSituation;
+    }
+
+    public void setAssessSituation(boolean assessSituation) {
+        this.assessSituation = assessSituation;
+    }
+
     public Map<String, Location> getLocations() {
         return locations;
     }
@@ -124,6 +169,9 @@ public class BushfireAgentV1 extends BushfireAgent {
 //    DependentInfo getDependentInfo() {
 //        return dependentInfo;
 //    }
+    public List<Blockage> getBlockageList() {
+        return blockageList;
+    }
 
     boolean isDriving() {
         return activeEnvironmentAction != null && activeEnvironmentAction.getActionID().equals(ActionList.DRIVETO);
@@ -196,10 +244,14 @@ public class BushfireAgentV1 extends BushfireAgent {
     /**
      * Called by the Jill model with the status of a BDI percept
      * for this agent, coming from the ABM environment.
+     *
+     * Seems like Time is received only when there is a another percept packaged, like blocked; otherwise agent will not recieve it
      */
     @Override
     public void handlePercept(String perceptID, Object parameters) {
 
+
+        memorise(MemoryEventType.PERCEIVED.name(), perceptID + ":" + parameters.toString());
 
         if (perceptID == null || perceptID.isEmpty()) {
             return;
@@ -213,7 +265,6 @@ public class BushfireAgentV1 extends BushfireAgent {
         }
 
         // save it to memory
-        memorise(MemoryEventType.PERCEIVED.name(), perceptID + ":" + parameters.toString());
 
 //        else if (perceptID.equals(PerceptList.EMERGENCY_MESSAGE)) {
 //            updateResponseBarometerMessages(parameters);
@@ -225,6 +276,8 @@ public class BushfireAgentV1 extends BushfireAgent {
 //            if (PerceptList.SIGHTED_FIRE.equalsIgnoreCase(parameters.toString())) {
 //                handleFireVisual();
 //            }
+
+
         if (perceptID.equals(PerceptList.ARRIVED)) {
             // do something
         } else if (perceptID.equals(PerceptList.SOCIAL_NETWORK_MSG)) {
@@ -232,11 +285,7 @@ public class BushfireAgentV1 extends BushfireAgent {
         } else if (perceptID.equals(PerceptList.CONGESTION)) {
             checkCongestionNearBlockage();
         } else if (perceptID.equals(PerceptList.BLOCKED)) {
-
-
             processBlockedPercept(parameters);
-
-
         }
 
         // handle percept spread on social network
@@ -245,6 +294,9 @@ public class BushfireAgentV1 extends BushfireAgent {
         // Now trigger a response as needed
 //        checkBarometersAndTriggerResponseAsNeeded();
 
+        if(assessSituation) {
+            post(new GoalAssessBlockageImpact("assess blockage impact"));
+        }
     }
 
     private void processBlockedPercept(Object parameters) {
@@ -588,7 +640,7 @@ public class BushfireAgentV1 extends BushfireAgent {
         }
     }
 
-    private double getTime() {
+    public double getTime() {
         return time;
     }
 
@@ -608,10 +660,15 @@ enum MemoryEventType {
 }
 
 enum MemoryEventValue {
-    DONE_FOR_NOW,
+    DONT_ASSESS,
     IS_PLAN_APPLICABLE,
     GOTO_LOCATION,
-    LAST_ENV_ACTION_STATE
+    LAST_ENV_ACTION_STATE,
+    ASSESS,
+    EVALUATE,
+    RECONSIDER_AGAIN,
+    DECIDE_BLOCKAGE_IMPACT,
+    REROUTE
 }
 
 class Prefix {

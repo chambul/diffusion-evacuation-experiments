@@ -22,6 +22,7 @@ package io.github.agentsoz.dee.agents;
  * #L%
  */
 
+import io.github.agentsoz.dee.blockage.Blockage;
 import io.github.agentsoz.jill.lang.Agent;
 import io.github.agentsoz.jill.lang.Goal;
 import io.github.agentsoz.jill.lang.Plan;
@@ -30,26 +31,43 @@ import io.github.agentsoz.jill.lang.PlanStep;
 import java.util.Map;
 
 
-public class PlanDoNothing extends Plan {
+public class PlanDontReroute extends Plan {
 
-    PlanStep[] steps = {
-            () -> {
-                ((BushfireAgentV1) getAgent()).memorise(BushfireAgentV1.MemoryEventType.DECIDED.name(), BushfireAgentV1.MemoryEventValue.DONE_FOR_NOW.name());
-            },
-    };
+    BushfireAgentV1 agent=null;
+    Blockage noImpactBlockage = null;
 
-    public PlanDoNothing(Agent agent, Goal goal, String name) {
+    public PlanDontReroute(Agent agent, Goal goal, String name) {
         super(agent, goal, name);
+        this.agent=(BushfireAgentV1) agent;
         body = steps;
     }
 
     public boolean context() {
+        boolean applicable = false;
+
+        for (Blockage blockage: agent.getBlockageList()) {
+
+            applicable = blockage.getDistToBlockage() <= agent.getDistanceFromTheBlockageThreshold() && blockage.isBlockageInCurrentDirection() == false;
+            noImpactBlockage = blockage;
+        }
+
         ((BushfireAgentV1) getAgent()).memorise(BushfireAgentV1.MemoryEventType.DECIDED.name(), BushfireAgentV1.MemoryEventValue.IS_PLAN_APPLICABLE.name()
-                + ":" + getGoal() + "|" + this.getClass().getSimpleName() + "=" + true);
-        return true;
+                + ":" + getGoal() + "|" + this.getClass().getSimpleName() + "=" + applicable);
+
+        return applicable;
     }
 
-    @Override
+    @Override  // #FIXME if more than one binding, assign them to plan variables.
     public void setPlanVariables(Map<String, Object> vars) {
     }
+
+
+    PlanStep[] steps = {
+            () -> {
+                ((BushfireAgentV1) getAgent()).memorise(BushfireAgentV1.MemoryEventType.DECIDED.name(), BushfireAgentV1.MemoryEventValue.DONT_ASSESS.name() +  ":" + getGoal() + "|" + this.getClass().getSimpleName() + "=" + true);
+                noImpactBlockage.setNoBlockageImpact(true);
+            },
+
+
+    };
 }
