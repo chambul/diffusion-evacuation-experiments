@@ -34,12 +34,14 @@ public class TestDeeUtils {
 
     private static final Logger log = LoggerFactory.getLogger(TestDeeUtils.class);
 
-    @Test
-    public  void testFindBlcokageNames (){
+//    @Test
+//    public  void testFindBlcokageNames (){
 
-        Assert.assertEquals(DataTypes.GROSSMANDS, Blockage.findBlockageNameUsingLinkId("11206"));
-        Assert.assertEquals(DataTypes.GREAT_OCEAN_ROAD, Blockage.findBlockageNameUsingLinkId("12340-12338-12336-12334-12332"));
-        Assert.assertEquals(DataTypes.GROSSMANDS, Blockage.findBlockageNameUsingLinkId("11207"));
-        Assert.assertEquals(null, Blockage.findBlockageNameUsingLinkId("12340")); // part of the compound link id
-    }
+//        Assert.assertEquals(DataTypes.GROSSMANDS, Blockage.findBlockageNameUsingLinkId("11206"));
+//        Assert.assertEquals(DataTypes.GREAT_OCEAN_ROAD, Blockage.findBlockageNameUsingLinkId("12340-12338-12336-12334-12332"));
+//        Assert.assertEquals(DataTypes.GROSSMANDS, Blockage.findBlockageNameUsingLinkId("11207"));
+//        Assert.assertEquals(null, Blockage.findBlockageNameUsingLinkId("12340")); // part of the compound link id
+//    }
+
+
 }
