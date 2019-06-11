@@ -33,13 +33,13 @@ import java.util.Map;
 
 public class PlanReconsiderAgain extends Plan {
 
-    BushfireAgentV1 agent=null;
+    TrafficAgent agent=null;
     Blockage reconsiderBlockage = null; //#FIXME for multiple blockages
     double reconsider_time;
 
     public PlanReconsiderAgain(Agent agent, Goal goal, String name) {
         super(agent, goal, name);
-        this.agent=(BushfireAgentV1) agent;
+        this.agent=(TrafficAgent) agent;
         body = steps;
     }
 
@@ -63,7 +63,7 @@ public class PlanReconsiderAgain extends Plan {
               ;
         }
 
-        ((BushfireAgentV1) getAgent()).memorise(BushfireAgentV1.MemoryEventType.DECIDED.name(), BushfireAgentV1.MemoryEventValue.IS_PLAN_APPLICABLE.name()
+        ((TrafficAgent) getAgent()).memorise(TrafficAgent.MemoryEventType.DECIDED.name(), TrafficAgent.MemoryEventValue.IS_PLAN_APPLICABLE.name()
                 + ":" + getGoal() + "|" + this.getClass().getSimpleName() + "=" + applicable);
 
         return applicable;
@@ -76,7 +76,7 @@ public class PlanReconsiderAgain extends Plan {
 
     PlanStep[] steps = {
             () -> {
-                ((BushfireAgentV1) getAgent()).memorise(BushfireAgentV1.MemoryEventType.DECIDED.name(), BushfireAgentV1.MemoryEventValue.RECONSIDER_AGAIN.name() +  ":" + getGoal() + "|" + this.getClass().getSimpleName() + "=" + reconsider_time);
+                ((TrafficAgent) getAgent()).memorise(TrafficAgent.MemoryEventType.DECIDED.name(), TrafficAgent.MemoryEventValue.RECONSIDER_AGAIN.name() +  ":" + getGoal() + "|" + this.getClass().getSimpleName() + "=" + reconsider_time);
                  reconsiderBlockage.setReconsiderTime(reconsider_time);
 
             },

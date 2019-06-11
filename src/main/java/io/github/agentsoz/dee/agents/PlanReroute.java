@@ -23,7 +23,6 @@ package io.github.agentsoz.dee.agents;
  */
 
 import io.github.agentsoz.dee.blockage.Blockage;
-import io.github.agentsoz.ees.matsim.MATSimEvacModel;
 import io.github.agentsoz.jill.lang.Agent;
 import io.github.agentsoz.jill.lang.Goal;
 import io.github.agentsoz.jill.lang.Plan;
@@ -34,12 +33,12 @@ import java.util.Map;
 
 public class PlanReroute extends Plan {
 
-    BushfireAgentV1 agent=null;
+    TrafficAgent agent=null;
     Blockage rerouteBlockage = null;
 
     public PlanReroute(Agent agent, Goal goal, String name) {
         super(agent, goal, name);
-        this.agent=(BushfireAgentV1) agent;
+        this.agent=(TrafficAgent) agent;
         body = steps;
     }
 
@@ -56,7 +55,7 @@ public class PlanReroute extends Plan {
 
         }
 
-        ((BushfireAgentV1) getAgent()).memorise(BushfireAgentV1.MemoryEventType.DECIDED.name(), BushfireAgentV1.MemoryEventValue.IS_PLAN_APPLICABLE.name()
+        ((TrafficAgent) getAgent()).memorise(TrafficAgent.MemoryEventType.DECIDED.name(), TrafficAgent.MemoryEventValue.IS_PLAN_APPLICABLE.name()
                 + ":" + getGoal() + "|" + this.getClass().getSimpleName() + "=" + applicable);
 
         return applicable;
@@ -69,7 +68,7 @@ public class PlanReroute extends Plan {
 
     PlanStep[] steps = {
             () -> {
-                ((BushfireAgentV1) getAgent()).memorise(BushfireAgentV1.MemoryEventType.ACTIONED.name(), BushfireAgentV1.MemoryEventValue.REROUTE.name() +  ":" + getGoal() + "|" + this.getClass().getSimpleName() + "=" + true);
+                ((TrafficAgent) getAgent()).memorise(TrafficAgent.MemoryEventType.ACTIONED.name(), TrafficAgent.MemoryEventValue.REROUTE.name() +  ":" + getGoal() + "|" + this.getClass().getSimpleName() + "=" + true);
                 // agent.replanCurrentDriveTo(MATSimEvacModel.EvacRoutingMode.carGlobalInformation); #FIXME uncomment
                 //#FIXME what about the reconsider time here? should we reconisder again this blockage?
             },

@@ -35,17 +35,17 @@ import java.util.Map;
 
 public class PlanEvaluateCurrentContext extends Plan {
 
-    BushfireAgentV1 agent = null;
+    TrafficAgent agent = null;
 
     public PlanEvaluateCurrentContext(Agent agent, Goal goal, String name) {
         super(agent, goal, name);
-        this.agent = (BushfireAgentV1) agent;
+        this.agent = (TrafficAgent) agent;
         body = steps;
     }
 
     public boolean context() {
 
-        agent.memorise(BushfireAgentV1.MemoryEventType.DECIDED.name(), BushfireAgentV1.MemoryEventValue.IS_PLAN_APPLICABLE.name()
+        agent.memorise(TrafficAgent.MemoryEventType.DECIDED.name(), TrafficAgent.MemoryEventValue.IS_PLAN_APPLICABLE.name()
                 + ":" + getGoal() + "|" + this.getClass().getSimpleName() + "=" + true);
 
         return true;
@@ -58,7 +58,7 @@ public class PlanEvaluateCurrentContext extends Plan {
 
     PlanStep[] steps = {
             () -> {
-                agent.memorise(BushfireAgentV1.MemoryEventType.DECIDED.name(), BushfireAgentV1.MemoryEventValue.EVALUATE.name() +  ":" + getGoal() + "|" + this.getClass().getSimpleName() + "=" + true);
+                agent.memorise(TrafficAgent.MemoryEventType.DECIDED.name(), TrafficAgent.MemoryEventValue.EVALUATE.name() +  ":" + getGoal() + "|" + this.getClass().getSimpleName() + "=" + true);
 
                 Location currentLoc = ((Location[]) agent.getQueryPerceptInterface().queryPercept( // get current location: x1,y1
                         String.valueOf(agent.getId()), PerceptList.REQUEST_LOCATION, null))[0];

@@ -39,8 +39,8 @@ public class PlanDontAssess extends Plan {
     }
 
     public boolean context() {
-        boolean applicable =  ((BushfireAgentV1) getAgent()).getBlockageList().isEmpty();
-        ((BushfireAgentV1) getAgent()).memorise(BushfireAgentV1.MemoryEventType.DECIDED.name(), BushfireAgentV1.MemoryEventValue.IS_PLAN_APPLICABLE.name()
+        boolean applicable =  ((TrafficAgent) getAgent()).getBlockageList().isEmpty();
+        ((TrafficAgent) getAgent()).memorise(TrafficAgent.MemoryEventType.DECIDED.name(), TrafficAgent.MemoryEventValue.IS_PLAN_APPLICABLE.name()
                 + ":" + getGoal() + "|" + this.getClass().getSimpleName() + "=" + applicable);
 
         return applicable;
@@ -53,8 +53,8 @@ public class PlanDontAssess extends Plan {
 
     PlanStep[] steps = {
             () -> {
-                ((BushfireAgentV1) getAgent()).memorise(BushfireAgentV1.MemoryEventType.DECIDED.name(), BushfireAgentV1.MemoryEventValue.DONT_ASSESS.name() +  ":" + getGoal() + "|" + this.getClass().getSimpleName() + "=" + true);
-                    ((BushfireAgentV1) getAgent()).setAssessSituation(false);
+                ((TrafficAgent) getAgent()).memorise(TrafficAgent.MemoryEventType.DECIDED.name(), TrafficAgent.MemoryEventValue.DONT_ASSESS.name() +  ":" + getGoal() + "|" + this.getClass().getSimpleName() + "=" + true);
+                    ((TrafficAgent) getAgent()).setAssessSituation(false);
             },
 
 

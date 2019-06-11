@@ -33,12 +33,12 @@ import java.util.Map;
 
 public class PlanDontReroute extends Plan {
 
-    BushfireAgentV1 agent=null;
+    TrafficAgent agent=null;
     Blockage noImpactBlockage = null;
 
     public PlanDontReroute(Agent agent, Goal goal, String name) {
         super(agent, goal, name);
-        this.agent=(BushfireAgentV1) agent;
+        this.agent=(TrafficAgent) agent;
         body = steps;
     }
 
@@ -51,7 +51,7 @@ public class PlanDontReroute extends Plan {
             noImpactBlockage = blockage;
         }
 
-        ((BushfireAgentV1) getAgent()).memorise(BushfireAgentV1.MemoryEventType.DECIDED.name(), BushfireAgentV1.MemoryEventValue.IS_PLAN_APPLICABLE.name()
+        ((TrafficAgent) getAgent()).memorise(TrafficAgent.MemoryEventType.DECIDED.name(), TrafficAgent.MemoryEventValue.IS_PLAN_APPLICABLE.name()
                 + ":" + getGoal() + "|" + this.getClass().getSimpleName() + "=" + applicable);
 
         return applicable;
@@ -64,7 +64,7 @@ public class PlanDontReroute extends Plan {
 
     PlanStep[] steps = {
             () -> {
-                ((BushfireAgentV1) getAgent()).memorise(BushfireAgentV1.MemoryEventType.DECIDED.name(), BushfireAgentV1.MemoryEventValue.DONT_ASSESS.name() +  ":" + getGoal() + "|" + this.getClass().getSimpleName() + "=" + true);
+                ((TrafficAgent) getAgent()).memorise(TrafficAgent.MemoryEventType.DECIDED.name(), TrafficAgent.MemoryEventValue.DONT_ASSESS.name() +  ":" + getGoal() + "|" + this.getClass().getSimpleName() + "=" + true);
                 noImpactBlockage.setNoBlockageImpact(true);
             },
 

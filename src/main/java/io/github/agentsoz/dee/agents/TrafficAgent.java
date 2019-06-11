@@ -46,7 +46,7 @@ import java.util.*;
 
 
 /**
- * Methods that are used in ees.BushfireAgent but not used in dee.BushfireAgentV1:
+ * Methods that are used in ees.BushfireAgent but not used in dee.TrafficAgent:
  * checkBarometersAndTriggerResponseAsNeeded
  * isInitialResponseThresholdBreached
  * isFinalResponseThresholdBreached
@@ -58,7 +58,7 @@ import java.util.*;
  */
 
 @AgentInfo(hasGoals = {"io.github.agentsoz.abmjill.genact.EnvironmentAction", "io.github.agentsoz.dee.agents.GoalAssessBlockageImpact","io.github.agentsoz.dee.agents.GoalEvaluate","io.github.agentsoz.dee.agents.GoalDecide"})
-public class BushfireAgentV1 extends BushfireAgent {
+public class TrafficAgent extends BushfireAgent {
 
 
     private final Logger logger = LoggerFactory.getLogger("io.github.agentsoz.dee");
@@ -72,13 +72,13 @@ public class BushfireAgentV1 extends BushfireAgent {
     private QueryPerceptInterface queryInterface;
     private EnvironmentActionInterface envActionInterface;
     private double time = -1;
-    private BushfireAgentV1.Prefix prefix = new BushfireAgentV1.Prefix();
+    private TrafficAgent.Prefix prefix = new TrafficAgent.Prefix();
 
 
 
     //new attributes
     private boolean assessSituation = true;
-    private boolean sharedBlockageSNInfo = false; // #FIXME how to handle this for multiple blockages?
+ //   private boolean sharedBlockageSNInfo = false;
     private int blockageRecencyThreshold;
     private double distanceFromTheBlockageThreshold;
     private double blockageSameDirectionAnlgeThreshold = 60.0 ;
@@ -109,13 +109,13 @@ public class BushfireAgentV1 extends BushfireAgent {
     private Map<String, Location> locations;
     private EnvironmentAction activeEnvironmentAction;
     private ActionContent.State lastEnvironmentActionStatus;
-    private Set<String> messagesShared;
+    private Set<String> blockagePointsShared; // contains a list of bloc
     private List<Blockage> blockageList;
 
-    public BushfireAgentV1(String id) {
+    public TrafficAgent(String id) {
         super(id);
         locations = new HashMap<>();
-        messagesShared = new HashSet<>();
+        blockagePointsShared = new HashSet<>();
         blockageList = new ArrayList<Blockage>();
 
     }
@@ -299,6 +299,12 @@ public class BushfireAgentV1 extends BushfireAgent {
         }
     }
 
+/*
+    Agent can receive a blocked perecpt based on several possibilities:
+    1. Agent does not know about the blockage
+    2. Agent knows about the blockage from its SN, but decides to reconsider_again/dont reroute
+
+ */
     private void processBlockedPercept(Object parameters) {
 
         //String blockedPerceptLinkID = parameters.toString();
@@ -314,28 +320,31 @@ public class BushfireAgentV1 extends BushfireAgent {
 
         if (!isBlockageExistsInBlockageList(blockageName)) { // agent does not know about the blockage
 
-            double[] cords = Blockage.findAndGetLocationOfBlockage(blockageName); // get cordinates of the blockage
-            Blockage newBlockage = new Blockage(blockageName, cords[0], cords[1]);
-
+            // double[] cords = Blockage.findAndGetLocationOfBlockage(blockageName); // get cordinates of the blockage
+            Blockage newBlockage = Blockage.createBlockageFromName(blockageName);
+            newBlockage.setLatestBlockageInfoTime(time); // update latest time to now.
             blockageList.add(newBlockage);
 
-            if (!sharedBlockageSNInfo) { // if not shared SN influence yet, do it
+            //SN tasks
+            String blockageInfo = "road blockage," + newBlockage.getName() + "," + time; // SN INFORMATION
+            shareWithSocialNetwork(blockageInfo);
+            blockagePointsShared.add(blockageName); // save blockage name as this influence is sent only once.
+        }
+        else { // agent knows about the blockage, either from SN or ABM.
 
-                String blockedMsg = "road blockage," + newBlockage.getName() + "," + time; // SN INFORMATION
-//              if (!messagesShared.contains(blockedMsg)) {
-                shareWithSocialNetwork(blockedMsg);
-                messagesShared.add(blockedMsg);
-                sharedBlockageSNInfo = true;
-//                }
-            }
+            Blockage blockage = getBlockageObjectFromName(blockageName); // get the existing blockage instance
+            blockage.setLatestBlockageInfoTime(time); //  update latest time to now.
 
-            // #FIXME needs to share latest blockage time update with social network? currently only updates own time
-            newBlockage.setLatestBlockageInfoTime(time);
+            //SN tasks
+            String blockageInfoUpdate = blockageName + time; // SN INFORMATION UPDATE, send everytime an agenr receives a blocked percept
+            shareWithSocialNetwork(blockageInfoUpdate); // no need to save as information updates are sent everytime they are received from ABM.
 
-            if(activeEnvironmentAction ==null) // Issue BDI action
-            {
+        }
+
+        //Finally, issue  a BDI action
+        if(activeEnvironmentAction ==null)
+        {
                 replanCurrentDriveTo(MATSimEvacModel.EvacRoutingMode.carGlobalInformation); //FIXME check routing mode
-            }
         }
 
 }
@@ -355,13 +364,12 @@ public class BushfireAgentV1 extends BushfireAgent {
         if (isBlockageExistsInBlockageList(blockageName)) { // normally this shouldn't be the case, otherwise agent is active in SN
             logger.warn("agent {} is already aware of the {} SN blockage information at time {}", getId(), blockageName, time);
         } else {
-            //get cordinates of the blockage point
-//                Location blockageCordinates = ((Location[])this.getQueryPerceptInterface().queryPercept(
-//                    String.valueOf(this.getId()), PerceptList.REQUEST_LOCATION, null))[0];
-            double[] cords = Blockage.findAndGetLocationOfBlockage(blockageName); // #FIXME code is a bit messy here
-            Blockage newBlockage = new Blockage(blockageName, cords[0], cords[1]);
-            blockageList.add(newBlockage);
 
+            Blockage newBlockage = Blockage.createBlockageFromName(blockageName);
+            if(newBlockage == null) {
+                logger.error("could not find the blockage point in the SN information for name {}",blockageName);
+            }
+            blockageList.add(newBlockage);
             newBlockage.setLatestBlockageInfoTime(time);
             this.assessSituation = true;
 
@@ -382,6 +390,17 @@ public class BushfireAgentV1 extends BushfireAgent {
         return result;
     }
 
+    private Blockage getBlockageObjectFromName(String name) {
+        Blockage targetBlockage = null;
+
+        for (Blockage blockage : blockageList) {
+            if (name.equals(blockage.getName())) {
+                targetBlockage = blockage;
+                break;
+            }
+        }
+        return  targetBlockage;
+    }
     private void checkCongestionNearBlockage() {
 
         if (blockageList.isEmpty()) {
@@ -390,7 +409,7 @@ public class BushfireAgentV1 extends BushfireAgent {
 
         for (Blockage blockage : blockageList) {
 
-            calcAndUpdateDistanceToBlockage(blockage);
+            calcAndUpdateDistanceToBlockage(blockage); // first update distances
             if (blockage.getDistToBlockage() <= distanceFromTheBlockageThreshold) {
                 blockage.setCongestionNearBlockage(true);
                 this.assessSituation = true;
@@ -407,7 +426,7 @@ public class BushfireAgentV1 extends BushfireAgent {
         }
 
         for (Blockage blockage : blockageList) {
-            if (time - blockage.getLastUpdatedTime() == blockage.getReconsiderTime()) {
+            if (blockage.getLastUpdatedTime() + blockage.getReconsiderTime() == time) {
 
                 calcAndUpdateDistanceToBlockage(blockage);
                 blockage.setLastUpdatedTime(time);
@@ -428,9 +447,6 @@ public class BushfireAgentV1 extends BushfireAgent {
         blockage.setDistToBlockage(dist);
     }
 
-    private void reRouteWhenBlocked() {
-
-    }
 
     // private double
 //    private void handleSocialPercept(String perceptID, Object parameters) {
@@ -440,18 +456,18 @@ public class BushfireAgentV1 extends BushfireAgent {
 ////        }
 //        // Spread EVACUATE_NOW if haven't done so already
 //        if (perceptID.equals(PerceptList.EMERGENCY_MESSAGE) &&
-//                !messagesShared.contains(EmergencyMessage.EmergencyMessageType.EVACUATE_NOW.name()) &&
+//                !blockagePointsShared.contains(EmergencyMessage.EmergencyMessageType.EVACUATE_NOW.name()) &&
 //                parameters instanceof String &&
 //                getEmergencyMessageType(parameters) == EmergencyMessage.EmergencyMessageType.EVACUATE_NOW) {
 //            shareWithSocialNetwork((String) parameters);
-//            messagesShared.add(getEmergencyMessageType(parameters).name());
+//            blockagePointsShared.add(getEmergencyMessageType(parameters).name());
 //        }
 //        // Spread BLOCKED for given blocked link if haven't already
 //        if (perceptID.equals(PerceptList.BLOCKED)) {
 //            String blockedMsg = PerceptList.BLOCKED + parameters.toString();
-//            if (!messagesShared.contains(blockedMsg)) {
+//            if (!blockagePointsShared.contains(blockedMsg)) {
 //                shareWithSocialNetwork(blockedMsg);
-//                messagesShared.add(blockedMsg);
+//                blockagePointsShared.add(blockedMsg);
 //            }
 //        }
 //
@@ -519,7 +535,7 @@ public class BushfireAgentV1 extends BushfireAgent {
         return type;
     }
 
-    private void shareWithSocialNetwork(String content) {
+    private void shareWithSocialNetwork(String content) { //#FIXME change this for multiple data types.
         String[] msg = {content, String.valueOf(getId())};
         memorise(MemoryEventType.ACTIONED.name(), PerceptList.SOCIAL_NETWORK_MSG
                 + ":" + content);
@@ -673,7 +689,7 @@ enum MemoryEventValue {
 
 class Prefix {
     public String toString() {
-        return String.format("Time %05.0f BushfireAgentV1 %-9s : ", getTime(), getId());
+        return String.format("Time %05.0f TrafficAgent %-9s : ", getTime(), getId());
     }
 }
 

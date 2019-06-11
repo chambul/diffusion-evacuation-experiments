@@ -23,7 +23,6 @@ package io.github.agentsoz.dee.blockage;
  */
 
 import io.github.agentsoz.util.Location;
-
 import java.util.*;
 
 public class Blockage extends Location{
@@ -32,7 +31,7 @@ public class Blockage extends Location{
 
 
     private double lastUpdatedTime;
-    private double distToBlockage; // in km?
+    private double distToBlockage;
     private boolean congestionNearBlockage;
    // private Location location;
     private double latestBlockageInfoTime;
@@ -48,10 +47,10 @@ public class Blockage extends Location{
 
 
     // contains link ids of all blockage points for referencing; so that we can include the names of the blockages in the SN information
-    private static  Map<String, ArrayList<String>> allBlockagePointsWithLinks = new HashMap<String, ArrayList<String>>() {{  //#FIXME  Move this initialisation to configuration level
-        put(DataTypes.GROSSMANDS, new ArrayList<String>( Arrays.asList("11206","11207") ));
-        put(DataTypes.GREAT_OCEAN_ROAD, new ArrayList<String>( Arrays.asList("12340-12338-12336-12334-12332","12331-12333-12335-12337-12339")) );
-    }};
+//    private static  Map<String, ArrayList<String>> allBlockagePointsWithLinks = new HashMap<String, ArrayList<String>>() {{  //#FIXME  Move this initialisation to configuration level
+//        put(DataTypes.GROSSMANDS, new ArrayList<String>( Arrays.asList("11206","11207") ));
+//        put(DataTypes.GREAT_OCEAN_ROAD, new ArrayList<String>( Arrays.asList("12340-12338-12336-12334-12332","12331-12333-12335-12337-12339")) );
+//    }};
 
 
     // bloclkages stored as Locations
@@ -63,21 +62,28 @@ public class Blockage extends Location{
 
     public Blockage(String name, double x, double y){
           super(name,x,y);
-//        this.name = name;
-//        location =  new Location(name,x,y);
     }
 
+    public static  Blockage createBlockageFromName(String name) { // find cords for given blockage name and return blockage object
+        Blockage newBlockage = null;
+        for (Location blockage : allBlockageLocations) {
+            if (blockage.getName().equals(name)) {
+                newBlockage =  new Blockage(name, blockage.getX(), blockage.getY());
+            }
 
-    //given a location from the blocked percept, find the appropriate blockage
+        }
+        return newBlockage;
+    }
+
+    //given a location from the blocked percept, find and return closest blockage point name based on beeline distance
     public static String getBlockageNameBasedOnBlockedPerceptCords(Location curLoc){
         String name=null;
-        double distanceTreshold = 2000.0; //2km
+        double minDistance = Double.POSITIVE_INFINITY;
 
         for(Location blockage:allBlockageLocations){
             double dist = Location.distanceBetween(curLoc,blockage);
-            if(dist <= distanceTreshold) {
+            if(dist <= minDistance) {
                 name = blockage.getName();
-                break;
             }
         }
 
@@ -86,20 +92,20 @@ public class Blockage extends Location{
 
 
     // get name of the blockage using linkid
-    public static String findBlockageNameUsingLinkId(String linkId){
-        String blockageName=null;
-        for(Map.Entry<String, ArrayList<String>> entry: allBlockagePointsWithLinks.entrySet()){
-            String  name=  entry.getKey();
-            ArrayList<String> linksList =  entry.getValue();
-
-            if(linksList.contains(linkId)){
-                blockageName = name;
-                break;
-            }
-        }
-
-        return blockageName;
-    }
+//    public static String findBlockageNameUsingLinkId(String linkId){
+//        String blockageName=null;
+//        for(Map.Entry<String, ArrayList<String>> entry: allBlockagePointsWithLinks.entrySet()){
+//            String  name=  entry.getKey();
+//            ArrayList<String> linksList =  entry.getValue();
+//
+//            if(linksList.contains(linkId)){
+//                blockageName = name;
+//                break;
+//            }
+//        }
+//
+//        return blockageName;
+//    }
 
     // find location when given blockage name
     public static double[] findAndGetLocationOfBlockage(String name){
@@ -135,14 +141,6 @@ public class Blockage extends Location{
         this.congestionNearBlockage = congestionNearBlockage;
     }
 
-//    public String getName() {
-//        return name;
-//    }
-//
-//    public Location getLocation() {
-//
-//        return location;
-//    }
 
     public recency getRecencyOfBlockage() {
         return recencyOfBlockage;

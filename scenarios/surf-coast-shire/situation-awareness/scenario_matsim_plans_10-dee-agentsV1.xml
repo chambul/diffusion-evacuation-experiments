@@ -5,7 +5,7 @@
     <person id="0">
         <attributes>
             <attribute name="BDIAgentType" class="java.lang.String">
-                io.github.agentsoz.dee.agents.BushfireAgentV1
+                io.github.agentsoz.dee.agents.TrafficAgent
             </attribute>
             <attribute name="HasDependentsAtLocation" class="java.lang.String"></attribute>
             <attribute name="InitialResponseThreshold" class="java.lang.Double">0.2</attribute>
@@ -30,7 +30,7 @@
     <person id="1">
         <attributes>
             <attribute name="BDIAgentType" class="java.lang.String">
-                io.github.agentsoz.dee.agents.BushfireAgentV1
+                io.github.agentsoz.dee.agents.TrafficAgent
             </attribute>
             <attribute name="HasDependentsAtLocation" class="java.lang.String"></attribute>
             <attribute name="InitialResponseThreshold" class="java.lang.Double">0.5</attribute>
@@ -61,7 +61,7 @@
     <person id="2">
         <attributes>
             <attribute name="BDIAgentType" class="java.lang.String">
-                io.github.agentsoz.dee.agents.BushfireAgentV1
+                io.github.agentsoz.dee.agents.TrafficAgent
             </attribute>
             <attribute name="HasDependentsAtLocation" class="java.lang.String"></attribute>
             <attribute name="InitialResponseThreshold" class="java.lang.Double">0.6</attribute>
@@ -91,7 +91,7 @@
     <person id="3">
         <attributes>
             <attribute name="BDIAgentType" class="java.lang.String">
-                io.github.agentsoz.dee.agents.BushfireAgentV1
+                io.github.agentsoz.dee.agents.TrafficAgent
             </attribute>
             <attribute name="HasDependentsAtLocation" class="java.lang.String"></attribute>
             <attribute name="InitialResponseThreshold" class="java.lang.Double">0.6</attribute>
@@ -118,7 +118,7 @@
     <person id="4">
         <attributes>
             <attribute name="BDIAgentType" class="java.lang.String">
-                io.github.agentsoz.dee.agents.BushfireAgentV1
+                io.github.agentsoz.dee.agents.TrafficAgent
             </attribute>
             <attribute name="HasDependentsAtLocation" class="java.lang.String"></attribute>
             <attribute name="InitialResponseThreshold" class="java.lang.Double">0.4</attribute>
@@ -151,7 +151,7 @@
     <person id="5">
         <attributes>
             <attribute name="BDIAgentType" class="java.lang.String">
-                io.github.agentsoz.dee.agents.BushfireAgentV1
+                io.github.agentsoz.dee.agents.TrafficAgent
             </attribute>
             <attribute name="HasDependentsAtLocation" class="java.lang.String">796661.180651232,5769248.92929532
             </attribute>
@@ -180,7 +180,7 @@
     <person id="6">
         <attributes>
             <attribute name="BDIAgentType" class="java.lang.String">
-                io.github.agentsoz.dee.agents.BushfireAgentV1
+                io.github.agentsoz.dee.agents.TrafficAgent
             </attribute>
             <attribute name="HasDependentsAtLocation" class="java.lang.String">764030.837457137,5736043.34183458
             </attribute>
@@ -209,7 +209,7 @@
     <person id="7">
         <attributes>
             <attribute name="BDIAgentType" class="java.lang.String">
-                io.github.agentsoz.dee.agents.BushfireAgentV1
+                io.github.agentsoz.dee.agents.TrafficAgent
             </attribute>
             <attribute name="HasDependentsAtLocation" class="java.lang.String"></attribute>
             <attribute name="InitialResponseThreshold" class="java.lang.Double">0.3</attribute>
@@ -239,7 +239,7 @@
     <person id="8">
         <attributes>
             <attribute name="BDIAgentType" class="java.lang.String">
-                io.github.agentsoz.dee.agents.BushfireAgentV1
+                io.github.agentsoz.dee.agents.TrafficAgent
             </attribute>
             <attribute name="HasDependentsAtLocation" class="java.lang.String"></attribute>
             <attribute name="InitialResponseThreshold" class="java.lang.Double">0.4</attribute>
@@ -268,7 +268,7 @@
     <person id="9">
         <attributes>
             <attribute name="BDIAgentType" class="java.lang.String">
-                io.github.agentsoz.dee.agents.BushfireAgentV1
+                io.github.agentsoz.dee.agents.TrafficAgent
             </attribute>
             <attribute name="HasDependentsAtLocation" class="java.lang.String"></attribute>
             <attribute name="InitialResponseThreshold" class="java.lang.Double">0.5</attribute>

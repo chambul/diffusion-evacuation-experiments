@@ -40,8 +40,8 @@ public class PlanDecideAssessment extends Plan {
     }
 
     public boolean context() {
-       boolean applicable =  ( ((BushfireAgentV1) getAgent()).getBlockageList().size() != 0);
-        ((BushfireAgentV1) getAgent()).memorise(BushfireAgentV1.MemoryEventType.DECIDED.name(), BushfireAgentV1.MemoryEventValue.IS_PLAN_APPLICABLE.name()
+       boolean applicable =  ( ((TrafficAgent) getAgent()).getBlockageList().size() != 0);
+        ((TrafficAgent) getAgent()).memorise(TrafficAgent.MemoryEventType.DECIDED.name(), TrafficAgent.MemoryEventValue.IS_PLAN_APPLICABLE.name()
                 + ":" + getGoal() + "|" + this.getClass().getSimpleName() + "=" + applicable);
 
         return applicable;
@@ -54,8 +54,8 @@ public class PlanDecideAssessment extends Plan {
 
     PlanStep[] steps = {
             () -> {
-                ((BushfireAgentV1) getAgent()).memorise(BushfireAgentV1.MemoryEventType.DECIDED.name(), BushfireAgentV1.MemoryEventValue.ASSESS.name() + getGoal() + "|" + this.getClass().getSimpleName());
-                ((BushfireAgentV1) getAgent()).setAssessSituation(false);
+                ((TrafficAgent) getAgent()).memorise(TrafficAgent.MemoryEventType.DECIDED.name(), TrafficAgent.MemoryEventValue.ASSESS.name() + getGoal() + "|" + this.getClass().getSimpleName());
+                ((TrafficAgent) getAgent()).setAssessSituation(false);
 
 
             },
@@ -66,7 +66,7 @@ public class PlanDecideAssessment extends Plan {
 
             () -> {
 
-                for (Blockage blockage: ((BushfireAgentV1) getAgent()).getBlockageList()) {
+                for (Blockage blockage: ((TrafficAgent) getAgent()).getBlockageList()) {
 
                     if (blockage.isNoBlockageImpact() == false) { // if there is a blocage impact, post decide goal
                         //subgoal(new )
