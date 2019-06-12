@@ -1,0 +1,113 @@
+package io.github.agentsoz.dee.matsim;
+
+//import io.github.agentsoz.ees.matsim.MATSimEvacModel;
+import org.matsim.api.core.v01.Scenario;
+import org.matsim.api.core.v01.population.Activity;
+import org.matsim.api.core.v01.population.Leg;
+import org.matsim.api.core.v01.population.Plan;
+import org.matsim.api.core.v01.population.PlanElement;
+import org.matsim.core.mobsim.framework.HasPerson;
+import org.matsim.core.mobsim.framework.MobsimAgent;
+import org.matsim.core.mobsim.qsim.QSim;
+import org.matsim.core.mobsim.qsim.agents.WithinDayAgentUtils;
+import org.matsim.core.network.NetworkChangeEvent;
+import org.matsim.core.router.FastAStarLandmarksFactory;
+import org.matsim.core.router.TripRouter;
+import org.matsim.core.router.util.*;
+import org.matsim.withinday.trafficmonitoring.WithinDayTravelTime;
+import org.matsim.withinday.utils.EditPlans;
+import org.matsim.withinday.utils.EditRoutes;
+import org.matsim.withinday.utils.EditTrips;
+import org.slf4j.LoggerFactory;
+
+import javax.inject.Inject;
+import java.util.Map;
+
+public final class Replanner {
+    // note that this is no longer meant to be extended for customization.  The "action recipes" now go directly into the classes
+    // that implement BDIActionHandler.  kai, nov'17
+
+    private static final org.slf4j.Logger logger = LoggerFactory.getLogger(io.github.agentsoz.ees.matsim.Replanner.class) ;
+    private final Map<String, TravelTime> travelTimes;
+
+    private EditRoutes editRoutes;
+    private EditTrips editTrips ;
+    private EditPlans editPlans ;
+
+    @Inject
+    Replanner(QSim qSim2, TripRouter tripRouter, Map<String,TravelTime> travelTimes ) {
+        Scenario scenario = qSim2.getScenario();
+        this.travelTimes = travelTimes ;
+        {
+            TravelTime travelTime = TravelTimeUtils.createFreeSpeedTravelTime();
+            TravelDisutility travelDisutility = TravelDisutilityUtils.createFreespeedTravelTimeAndDisutility(scenario.getConfig().planCalcScore());
+            LeastCostPathCalculator pathCalculator = new FastAStarLandmarksFactory().createPathCalculator(scenario.getNetwork(), travelDisutility, travelTime);
+            this.editRoutes = new EditRoutes(scenario.getNetwork(), pathCalculator, scenario.getPopulation().getFactory());
+        }
+        this.editTrips = new EditTrips(tripRouter, qSim2.getScenario() ) ;
+        this.editPlans = new EditPlans(qSim2, tripRouter, editTrips, scenario.getPopulation().getFactory() ) ;
+    }
+
+    @Deprecated // yyyy but I don't have an easy replacement yet
+    // (maybe just editTrips.replanCurrentTrip(...)?)
+    protected final void reRouteCurrentLeg(MobsimAgent agent, double now ) {
+        Plan plan = WithinDayAgentUtils.getModifiablePlan(agent) ;
+        PlanElement pe = plan.getPlanElements().get( WithinDayAgentUtils.getCurrentPlanElementIndex(agent)) ;
+        if ( !(pe instanceof Leg) ) {
+            return ;
+        }
+        int currentLinkIndex = WithinDayAgentUtils.getCurrentRouteLinkIdIndex(agent) ;
+        this.editRoutes.replanCurrentLegRoute((Leg)pe, ((HasPerson)agent).getPerson(), currentLinkIndex, now ) ;
+        WithinDayAgentUtils.resetCaches(agent);
+    }
+
+
+    public EditTrips editTrips() {
+        return editTrips;
+    }
+
+    public EditPlans editPlans() {
+        return editPlans;
+    }
+
+    public double[] getCurrentDestinationCords(MobsimAgent agent){
+        double[] cords = new double[2];
+
+        Plan plan = WithinDayAgentUtils.getModifiablePlan(agent) ;
+        PlanElement pe = plan.getPlanElements().get( WithinDayAgentUtils.getCurrentPlanElementIndex(agent) + 1) ; // assuming current plan element is a leg
+        if ( !(pe instanceof Activity) ) {
+            logger.warn("Agent {} attempting to get the destination of the current leg, but next plan element is not an activity", agent.getId().toString());
+            return null;
+        }
+        else{
+            Activity nextAct = (Activity) pe;
+            cords[0] = nextAct.getCoord().getX();
+            cords[1] = nextAct.getCoord().getY();
+
+            return  cords;
+        }
+
+    }
+
+    public String getNextLinkId(MobsimAgent agent){
+
+        Plan plan = WithinDayAgentUtils.getModifiablePlan(agent) ;
+        PlanElement pe = plan.getPlanElements().get( WithinDayAgentUtils.getCurrentPlanElementIndex(agent)) ;
+        if ( !(pe instanceof Leg) ) {
+            return  null;
+        }
+        Leg currentLeg = WithinDayAgentUtils.getModifiableCurrentLeg(agent) ;
+        int currentLinkIndex = WithinDayAgentUtils.getCurrentRouteLinkIdIndex(agent) ;
+
+        String route = currentLeg.getRoute().toString();
+        String blockedLink = route.substring(currentLinkIndex,currentLinkIndex+1);
+        return  blockedLink;
+
+        //currentLeg.getRoute().get
+
+
+    }
+
+
+}
+

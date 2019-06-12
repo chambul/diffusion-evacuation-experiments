@@ -27,6 +27,7 @@ import io.github.agentsoz.bdiabm.EnvironmentActionInterface;
 import io.github.agentsoz.bdiabm.QueryPerceptInterface;
 import io.github.agentsoz.bdiabm.data.ActionContent;
 import io.github.agentsoz.dataInterface.DataServer;
+import io.github.agentsoz.dee.DeePerceptList;
 import io.github.agentsoz.dee.blockage.Blockage;
 import io.github.agentsoz.ees.ActionList;
 import io.github.agentsoz.ees.EmergencyMessage;
@@ -73,7 +74,6 @@ public class TrafficAgent extends BushfireAgent {
     private EnvironmentActionInterface envActionInterface;
     private double time = -1;
     private TrafficAgent.Prefix prefix = new TrafficAgent.Prefix();
-
 
 
     //new attributes
@@ -266,25 +266,29 @@ public class TrafficAgent extends BushfireAgent {
 
         // save it to memory
 
-//        else if (perceptID.equals(PerceptList.EMERGENCY_MESSAGE)) {
+//        else if (perceptID.equals(DeePerceptList.EMERGENCY_MESSAGE)) {
 //            updateResponseBarometerMessages(parameters);
-//        } else if (perceptID.equals(PerceptList.SOCIAL_NETWORK_MSG)) {
+//        } else if (perceptID.equals(DeePerceptList.SOCIAL_NETWORK_MSG)) {
 //            updateResponseBarometerSocialMessage(parameters);
 //        }
-//        else if (perceptID.equals(PerceptList.FIELD_OF_VIEW)) {
+//        else if (perceptID.equals(DeePerceptList.FIELD_OF_VIEW)) {
 //          //  updateResponseBarometerFieldOfViewPercept(parameters);
-//            if (PerceptList.SIGHTED_FIRE.equalsIgnoreCase(parameters.toString())) {
+//            if (DeePerceptList.SIGHTED_FIRE.equalsIgnoreCase(parameters.toString())) {
 //                handleFireVisual();
 //            }
 
 
         if (perceptID.equals(PerceptList.ARRIVED)) {
             // do something
-        } else if (perceptID.equals(PerceptList.SOCIAL_NETWORK_MSG)) {
+        } else if (perceptID.equals(DeePerceptList.BLOCKAGE_INFLUENCE)) {
             processSNBlockageInfo(parameters);
+        } else if (perceptID.equals(DeePerceptList.BLOCKAGE_UPDATES)) {
+                processSNBlockageUpdates(parameters);
+
         } else if (perceptID.equals(PerceptList.CONGESTION)) {
             checkCongestionNearBlockage();
         } else if (perceptID.equals(PerceptList.BLOCKED)) {
+
             processBlockedPercept(parameters);
         }
 
@@ -299,12 +303,13 @@ public class TrafficAgent extends BushfireAgent {
         }
     }
 
-/*
-    Agent can receive a blocked perecpt based on several possibilities:
-    1. Agent does not know about the blockage
-    2. Agent knows about the blockage from its SN, but decides to reconsider_again/dont reroute
 
- */
+    /*
+        Agent can receive a blocked perecpt based on several possibilities:
+        1. Agent does not know about the blockage
+        2. Agent knows about the blockage from its SN, but decides to reconsider_again/dont reroute
+
+     */
     private void processBlockedPercept(Object parameters) {
 
         //String blockedPerceptLinkID = parameters.toString();
@@ -327,7 +332,7 @@ public class TrafficAgent extends BushfireAgent {
 
             //SN tasks
             String blockageInfo = "road blockage," + newBlockage.getName() + "," + time; // SN INFORMATION
-            shareWithSocialNetwork(blockageInfo);
+            sendBlockageInfluencetoSN(blockageInfo);
             blockagePointsShared.add(blockageName); // save blockage name as this influence is sent only once.
         }
         else { // agent knows about the blockage, either from SN or ABM.
@@ -337,7 +342,7 @@ public class TrafficAgent extends BushfireAgent {
 
             //SN tasks
             String blockageInfoUpdate = blockageName + time; // SN INFORMATION UPDATE, send everytime an agenr receives a blocked percept
-            shareWithSocialNetwork(blockageInfoUpdate); // no need to save as information updates are sent everytime they are received from ABM.
+            sendBlockageUpdatestoSN(blockageInfoUpdate); // no need to save as information updates are sent everytime they are received from ABM.
 
         }
 
@@ -348,6 +353,21 @@ public class TrafficAgent extends BushfireAgent {
         }
 
 }
+
+    private void processSNBlockageUpdates(Object params) { // #assume format: Blcoakge,time of type String
+        if (params == null || !(params instanceof String)) {
+            logger.error("unknown blockage update received for agent {}: null or incorrect length ", getId());
+            return;
+        }
+
+        String[] tokens = ((String) params).split(",");
+
+        String blockageName = (String) tokens[0];
+        double latestTimeFromSN = Double.valueOf(tokens[0]);
+
+        Blockage blockage =  getBlockageObjectFromName(blockageName);
+        blockage.setLatestBlockageInfoTime(latestTimeFromSN); // update most recent time received from
+    }
 
     private void processSNBlockageInfo(Object msg) {
 
@@ -455,7 +475,7 @@ public class TrafficAgent extends BushfireAgent {
 ////            return;
 ////        }
 //        // Spread EVACUATE_NOW if haven't done so already
-//        if (perceptID.equals(PerceptList.EMERGENCY_MESSAGE) &&
+//        if (perceptID.equals(DeePerceptList.EMERGENCY_MESSAGE) &&
 //                !blockagePointsShared.contains(EmergencyMessage.EmergencyMessageType.EVACUATE_NOW.name()) &&
 //                parameters instanceof String &&
 //                getEmergencyMessageType(parameters) == EmergencyMessage.EmergencyMessageType.EVACUATE_NOW) {
@@ -463,8 +483,8 @@ public class TrafficAgent extends BushfireAgent {
 //            blockagePointsShared.add(getEmergencyMessageType(parameters).name());
 //        }
 //        // Spread BLOCKED for given blocked link if haven't already
-//        if (perceptID.equals(PerceptList.BLOCKED)) {
-//            String blockedMsg = PerceptList.BLOCKED + parameters.toString();
+//        if (perceptID.equals(DeePerceptList.BLOCKED)) {
+//            String blockedMsg = DeePerceptList.BLOCKED + parameters.toString();
 //            if (!blockagePointsShared.contains(blockedMsg)) {
 //                shareWithSocialNetwork(blockedMsg);
 //                blockagePointsShared.add(blockedMsg);
@@ -535,18 +555,25 @@ public class TrafficAgent extends BushfireAgent {
         return type;
     }
 
-    private void shareWithSocialNetwork(String content) { //#FIXME change this for multiple data types.
+    private void sendBlockageInfluencetoSN(String content) {
         String[] msg = {content, String.valueOf(getId())};
-        memorise(MemoryEventType.ACTIONED.name(), PerceptList.SOCIAL_NETWORK_MSG
+        memorise(MemoryEventType.ACTIONED.name(), DeePerceptList.BLOCKAGE_INFLUENCE // blockage information
                 + ":" + content);
-        DataServer.getInstance(Run.DATASERVER).publish(PerceptList.SOCIAL_NETWORK_MSG, msg);
+        DataServer.getInstance(Run.DATASERVER).publish(DeePerceptList.BLOCKAGE_INFLUENCE, msg);
+    }
+
+    private void sendBlockageUpdatestoSN(String content) {
+        String[] msg = {content, String.valueOf(getId())};
+        memorise(MemoryEventType.ACTIONED.name(), DeePerceptList.BDI_STATE_UPDATES // blockage information
+                + ":" + content);
+        DataServer.getInstance(Run.DATASERVER).publish(DeePerceptList.BLOCKAGE_UPDATES, msg);
     }
 
     private void broadcastToSocialNetwork(String content) {
         String[] msg = {content, String.valueOf(getId())};
-        memorise(MemoryEventType.ACTIONED.name(), PerceptList.SOCIAL_NETWORK_BROADCAST_MSG
+        memorise(MemoryEventType.ACTIONED.name(), DeePerceptList.BLOCKAGE_INFO_BROADCAST
                 + ":" + content);
-        DataServer.getInstance(Run.DATASERVER).publish(PerceptList.SOCIAL_NETWORK_BROADCAST_MSG, msg);
+        DataServer.getInstance(Run.DATASERVER).publish(DeePerceptList.BLOCKAGE_INFO_BROADCAST, msg);
     }
 
     /**
@@ -660,7 +687,7 @@ public class TrafficAgent extends BushfireAgent {
         return time;
     }
 
-    String logPrefix() {
+    public String logPrefix() {
         return prefix.toString();
     }
 
