@@ -10,6 +10,7 @@
             </attribute>
             <attribute name="distanceFromTheBlockageThreshold" class="java.lang.Double">5.0</attribute>
             <attribute name="blockageRecencyThreshold" class="java.lang.Integer">25</attribute>
+            <attribute name="blockageAngleThreshold" class="java.lang.Integer">60</attribute>
         </attributes>
         <plan selected="yes">
             <activity type="home" x="778796.058093634" y="5744998.63073179" end_time="08:40:00"/>

@@ -47,14 +47,14 @@ public class Blockage extends Location{
 
 
     // contains link ids of all blockage points for referencing; so that we can include the names of the blockages in the SN information
-//    private static  Map<String, ArrayList<String>> allBlockagePointsWithLinks = new HashMap<String, ArrayList<String>>() {{  //#FIXME  Move this initialisation to configuration level
-//        put(DataTypes.GROSSMANDS, new ArrayList<String>( Arrays.asList("11206","11207") ));
-//        put(DataTypes.GREAT_OCEAN_ROAD, new ArrayList<String>( Arrays.asList("12340-12338-12336-12334-12332","12331-12333-12335-12337-12339")) );
-//    }};
+    private static  Map<String, ArrayList<String>> allBlockagePointsWithLinks = new HashMap<String, ArrayList<String>>() {{  //#FIXME  Move this initialisation to configuration level
+        put(DataTypes.GROSSMANDS, new ArrayList<String>( Arrays.asList("11206","11207") ));
+        put(DataTypes.GREAT_OCEAN_ROAD, new ArrayList<String>( Arrays.asList("12340-12338-12336-12334-12332","12331-12333-12335-12337-12339")) );
+    }};
 
 
-    // bloclkages stored as Locations
-    private static  List<Location> allBlockageLocations= new ArrayList<Location>() {{  //#FIXME  Move this initialisation to configuration level
+    // blockages stored as Locations
+    private static  List<Location> allBlockageLocations= new ArrayList<Location>() {{  //#FIXME  get the mid point of to from nodes as coords?
         add( new Location(DataTypes.GROSSMANDS,783437.6291368047,5748322.732670321) ); // from node of link 11207 - distnace is arond 550m
         add(new Location(DataTypes.GREAT_OCEAN_ROAD,788600.3567188493,5753735.008117045)); // from node of 12340-12338-12336-12334-12332 -distance is around 450m
     }};
@@ -75,37 +75,39 @@ public class Blockage extends Location{
         return newBlockage;
     }
 
+
     //given a location from the blocked percept, find and return closest blockage point name based on beeline distance
-    public static String getBlockageNameBasedOnBlockedPerceptCords(Location curLoc){
-        String name=null;
-        double minDistance = Double.POSITIVE_INFINITY;
-
-        for(Location blockage:allBlockageLocations){
-            double dist = Location.distanceBetween(curLoc,blockage);
-            if(dist <= minDistance) {
-                name = blockage.getName();
-            }
-        }
-
-        return name;
-    }
-
-
-    // get name of the blockage using linkid
-//    public static String findBlockageNameUsingLinkId(String linkId){
-//        String blockageName=null;
-//        for(Map.Entry<String, ArrayList<String>> entry: allBlockagePointsWithLinks.entrySet()){
-//            String  name=  entry.getKey();
-//            ArrayList<String> linksList =  entry.getValue();
+    @Deprecated
+//    public static String getBlockageNameBasedOnBlockedPerceptCords(Location curLoc){
+//        String name=null;
+//        double minDistance = Double.POSITIVE_INFINITY;
 //
-//            if(linksList.contains(linkId)){
-//                blockageName = name;
-//                break;
+//        for(Location blockage:allBlockageLocations){
+//            double dist = Location.distanceBetween(curLoc,blockage);
+//            if(dist <= minDistance) {
+//                name = blockage.getName();
 //            }
 //        }
 //
-//        return blockageName;
+//        return name;
 //    }
+
+
+    // get name of the blockage using linkid
+    public static String findBlockageNameFromBlockedLink(String linkId){
+        String blockageName=null;
+        for(Map.Entry<String, ArrayList<String>> entry: allBlockagePointsWithLinks.entrySet()){
+            String  name=  entry.getKey();
+            ArrayList<String> linksList =  entry.getValue();
+
+            if(linksList.contains(linkId)){
+                blockageName = name;
+                break;
+            }
+        }
+
+        return blockageName;
+    }
 
     // find location when given blockage name
     public static double[] findAndGetLocationOfBlockage(String name){

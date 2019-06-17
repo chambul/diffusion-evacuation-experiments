@@ -23,12 +23,12 @@ package io.github.agentsoz.dee.agents;
  */
 
 import io.github.agentsoz.dee.blockage.Blockage;
-import io.github.agentsoz.ees.PerceptList;
 import io.github.agentsoz.jill.lang.Agent;
 import io.github.agentsoz.jill.lang.Goal;
 import io.github.agentsoz.jill.lang.Plan;
 import io.github.agentsoz.jill.lang.PlanStep;
 import io.github.agentsoz.util.Location;
+import io.github.agentsoz.util.PerceptList;
 
 import java.util.Map;
 
@@ -36,6 +36,37 @@ import java.util.Map;
 public class PlanEvaluateCurrentContext extends Plan {
 
     TrafficAgent agent = null;
+    PlanStep[] steps = {
+            () -> {
+                agent.memorise(TrafficAgent.MemoryEventType.DECIDED.name(), TrafficAgent.MemoryEventValue.EVALUATE.name() +  ":" + getGoal() + "|" + this.getClass().getSimpleName() + "=" + true);
+
+                // get current location (from node of the link): x1,y1
+                Location currentLoc = ((Location[]) agent.getQueryPerceptInterface().queryPercept(
+                        String.valueOf(agent.getId()), PerceptList.REQUEST_LOCATION, null))[0];
+
+
+                // get destination (next activity) coords: x2,y2
+                double[] destCords =  (double[]) agent.getQueryPerceptInterface().queryPercept(
+                        String.valueOf(agent.getId()), PerceptList.REQUEST_DESTINATION_COORDINATES, null);
+                Location destination  = new Location("Dest",destCords[0],destCords[1]);
+
+                for (Blockage blockage: agent.getBlockageList()) { // list cannot be empty, tested earlier.
+
+                    if(  agent.getTime() - blockage.getLatestBlockageInfoTime() <= agent.getBlockageRecencyThreshold() ){ // evaluate recency
+                        blockage.setRecencyOfBlockage(Blockage.recency.RECENT);
+                    }
+                        double angleDif = agent.estimateBlockageInCurrentDirectionOrNot(currentLoc,destination,currentLoc,blockage);
+                    if (angleDif <= agent.getBlockageAngleThreshold()) { // consider absolute value without - or + direction
+                        blockage.setBlockageInCurrentDirection(true); // blockage  in same direction
+                        blockage.setNoBlockageImpact(false); // evaluated to find blockage impact
+                    }
+
+
+                }
+            },
+
+
+    };
 
     public PlanEvaluateCurrentContext(Agent agent, Goal goal, String name) {
         super(agent, goal, name);
@@ -56,45 +87,4 @@ public class PlanEvaluateCurrentContext extends Plan {
     }
 
 
-    PlanStep[] steps = {
-            () -> {
-                agent.memorise(TrafficAgent.MemoryEventType.DECIDED.name(), TrafficAgent.MemoryEventValue.EVALUATE.name() +  ":" + getGoal() + "|" + this.getClass().getSimpleName() + "=" + true);
-
-                Location currentLoc = ((Location[]) agent.getQueryPerceptInterface().queryPercept( // get current location: x1,y1
-                        String.valueOf(agent.getId()), PerceptList.REQUEST_LOCATION, null))[0];
-
-                //#FIXME need to get current destination cordinates from MATSim side
-                Location destLoc = ((Location[]) agent.getQueryPerceptInterface().queryPercept( // get current location: x2,y2
-                        String.valueOf(agent.getId()), PerceptList.REQUEST_LOCATION, null))[0];
-
-                // calculate angle of blockage, based on the line connecting current location and destination
-                double angle1 = Math.atan2(currentLoc.getY() - destLoc.getY(),  currentLoc.getX() - destLoc.getX());
-
-                for (Blockage blockage: agent.getBlockageList()) {
-
-                    if(  agent.getTime() - blockage.getLatestBlockageInfoTime() <= agent.getBlockageRecencyThreshold() ){ // evaluate recency
-                        blockage.setRecencyOfBlockage(Blockage.recency.RECENT);
-                    }
-
-                    //evaluate direction of line connecting current location and blockage
-                    double angle2 = Math.atan2(currentLoc.getY() - blockage.getY(), currentLoc.getX() - blockage.getX());
-                    if(Math.abs(angle1 - angle2) <= agent.getBlockageSameDirectionAnlgeThreshold()) { // abs to consider - or + directoin values
-                        blockage.setBlockageInCurrentDirection(true); // blockage  in same direction
-                        blockage.setNoBlockageImpact(false); // evaluated to find blockage impact
-                    }
-                }
-            },
-
-
-    };
-// calculate anlge between two lines
-// It is declared as double atan2(double y, double x) and converts rectangular coordinates (x,y) to the angle theta from the polar coordinates (r,theta)
-//    public static double angleBetween2Lines(Line2D line1, Line2D line2)
-//    {
-//        double angle1 = Math.atan2(line1.getY1() - line1.getY2(),
-//                line1.getX1() - line1.getX2());
-//        double angle2 = Math.atan2(line2.getY1() - line2.getY2(),
-//                line2.getX1() - line2.getX2());
-//        return angle1-angle2;
-//    }
 }

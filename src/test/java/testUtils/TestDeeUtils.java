@@ -22,12 +22,16 @@ package testUtils;
  * #L%
  */
 
+import io.github.agentsoz.dee.agents.TrafficAgent;
 import io.github.agentsoz.dee.blockage.Blockage;
 import io.github.agentsoz.dee.blockage.DataTypes;
 import org.junit.Assert;
 import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import io.github.agentsoz.util.Location;
+
+import java.awt.*;
 
 public class TestDeeUtils {
 
@@ -42,6 +46,28 @@ public class TestDeeUtils {
 //        Assert.assertEquals(DataTypes.GROSSMANDS, Blockage.findBlockageNameUsingLinkId("11207"));
 //        Assert.assertEquals(null, Blockage.findBlockageNameUsingLinkId("12340")); // part of the compound link id
 //    }
+
+    @Test
+    public void testBlockageInDirectionEstimation(){
+
+        TrafficAgent agent =  new TrafficAgent("1");
+        agent.setBlockageAngleThreshold(45);
+
+        Location line1P1 = new Location("cur", 0,0);
+        Location line1P2 = new Location("cur", 1,0);
+        Location line2P1 = new Location("cur", 1,0);
+        Location line2P2 = new Location("cur", 1,4);
+
+        double result = agent.estimateBlockageInCurrentDirectionOrNot(line1P1,line1P2,line2P1,line2P2);
+
+
+        //method2
+        double a1= agent.getAngle(new Point(0,0),new Point(1,0));
+        double a2 = agent.getAngle(new Point(1,0), new Point(1,4));
+
+        double res = a1-a2;
+
+    }
 
 
 }

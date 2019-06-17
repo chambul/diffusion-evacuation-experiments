@@ -29,21 +29,26 @@ import io.github.agentsoz.bdiabm.data.ActionContent;
 import io.github.agentsoz.dataInterface.DataServer;
 import io.github.agentsoz.dee.DeePerceptList;
 import io.github.agentsoz.dee.blockage.Blockage;
-import io.github.agentsoz.ees.ActionList;
+import io.github.agentsoz.ees.Constants;
 import io.github.agentsoz.ees.EmergencyMessage;
-import io.github.agentsoz.ees.PerceptList;
 import io.github.agentsoz.ees.Run;
 import io.github.agentsoz.ees.agents.bushfire.BushfireAgent;
-import io.github.agentsoz.ees.matsim.MATSimEvacModel;
 import io.github.agentsoz.jill.core.beliefbase.BeliefBaseException;
 import io.github.agentsoz.jill.core.beliefbase.BeliefSetField;
 import io.github.agentsoz.jill.lang.AgentInfo;
+import io.github.agentsoz.util.ActionList;
 import io.github.agentsoz.util.Location;
+import io.github.agentsoz.util.PerceptList;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.awt.*;
 import java.io.PrintStream;
 import java.util.*;
+import java.util.List;
+
+//import io.github.agentsoz.ees.ActionList;
+//import io.github.agentsoz.ees.PerceptList;
 
 
 /**
@@ -58,7 +63,7 @@ import java.util.*;
  * Class DependantInfo
  */
 
-@AgentInfo(hasGoals = {"io.github.agentsoz.abmjill.genact.EnvironmentAction", "io.github.agentsoz.dee.agents.GoalAssessBlockageImpact","io.github.agentsoz.dee.agents.GoalEvaluate","io.github.agentsoz.dee.agents.GoalDecide"})
+@AgentInfo(hasGoals = {"io.github.agentsoz.abmjill.genact.EnvironmentAction", "io.github.agentsoz.dee.agents.GoalAssessBlockageImpact", "io.github.agentsoz.dee.agents.GoalEvaluate", "io.github.agentsoz.dee.agents.GoalDecide"})
 public class TrafficAgent extends BushfireAgent {
 
 
@@ -78,19 +83,16 @@ public class TrafficAgent extends BushfireAgent {
 
     //new attributes
     private boolean assessSituation = true;
- //   private boolean sharedBlockageSNInfo = false;
+    //   private boolean sharedBlockageSNInfo = false;
     private int blockageRecencyThreshold;
     private double distanceFromTheBlockageThreshold;
-    private double blockageSameDirectionAnlgeThreshold = 60.0 ;
-
+    private int blockageAngleThreshold = 0; // degrees
 
 
     // reconsider times
     static final double RECONSIDER_LATER_TIME = 30.0;
     static final double RECONSIDER_SOONER_TIME = 5.0;
     static final double RECONSIDER_REGULAR_TIME = 10.0;
-
-
 
 
     //defaults
@@ -112,6 +114,7 @@ public class TrafficAgent extends BushfireAgent {
     private Set<String> blockagePointsShared; // contains a list of bloc
     private List<Blockage> blockageList;
 
+
     public TrafficAgent(String id) {
         super(id);
         locations = new HashMap<>();
@@ -121,6 +124,13 @@ public class TrafficAgent extends BushfireAgent {
     }
 
 
+    public void setBlockageAngleThreshold(int blockageAngleThreshold) {
+        this.blockageAngleThreshold = blockageAngleThreshold;
+    }
+
+    public int getBlockageAngleThreshold() {
+        return blockageAngleThreshold;
+    }
 
     public static double getReconsiderRegularTime() {
         return RECONSIDER_REGULAR_TIME;
@@ -136,10 +146,6 @@ public class TrafficAgent extends BushfireAgent {
 
     public double getDistanceFromTheBlockageThreshold() {
         return distanceFromTheBlockageThreshold;
-    }
-
-    public double getBlockageSameDirectionAnlgeThreshold() {
-        return blockageSameDirectionAnlgeThreshold;
     }
 
     public void setBlockageRecencyThreshold(int blockageRecencyThreshold) {
@@ -166,7 +172,7 @@ public class TrafficAgent extends BushfireAgent {
         this.locations = locations;
     }
 
-//    DependentInfo getDependentInfo() {
+    //    DependentInfo getDependentInfo() {
 //        return dependentInfo;
 //    }
     public List<Blockage> getBlockageList() {
@@ -244,7 +250,7 @@ public class TrafficAgent extends BushfireAgent {
     /**
      * Called by the Jill model with the status of a BDI percept
      * for this agent, coming from the ABM environment.
-     *
+     * <p>
      * Seems like Time is received only when there is a another percept packaged, like blocked; otherwise agent will not recieve it
      */
     @Override
@@ -283,13 +289,13 @@ public class TrafficAgent extends BushfireAgent {
         } else if (perceptID.equals(DeePerceptList.BLOCKAGE_INFLUENCE)) {
             processSNBlockageInfo(parameters);
         } else if (perceptID.equals(DeePerceptList.BLOCKAGE_UPDATES)) {
-                processSNBlockageUpdates(parameters);
+            processSNBlockageUpdates(parameters);
 
         } else if (perceptID.equals(PerceptList.CONGESTION)) {
             checkCongestionNearBlockage();
-        } else if (perceptID.equals(PerceptList.BLOCKED)) {
+        } else if (perceptID.equals(PerceptList.BLOCKED)) { // 1. current link 2. blocked link
 
-            processBlockedPercept(parameters);
+            processBlockedPercept((Object[]) parameters);
         }
 
         // handle percept spread on social network
@@ -298,7 +304,7 @@ public class TrafficAgent extends BushfireAgent {
         // Now trigger a response as needed
 //        checkBarometersAndTriggerResponseAsNeeded();
 
-        if(assessSituation) {
+        if (assessSituation) {
             post(new GoalAssessBlockageImpact("assess blockage impact"));
         }
     }
@@ -310,16 +316,17 @@ public class TrafficAgent extends BushfireAgent {
         2. Agent knows about the blockage from its SN, but decides to reconsider_again/dont reroute
 
      */
-    private void processBlockedPercept(Object parameters) {
+    private void processBlockedPercept(Object[] parameters) {
 
-        //String blockedPerceptLinkID = parameters.toString();
+        String currentLinkID = (String) parameters[0];
+        String blockedLinkID = (String) parameters[1];
 
-        Location currentLoc = ((Location[]) this.getQueryPerceptInterface().queryPercept(
-                String.valueOf(this.getId()), PerceptList.REQUEST_LOCATION, null))[0];
+//        Location currentLoc = ((Location[]) this.getQueryPerceptInterface().queryPercept(
+//                String.valueOf(this.getId()), PerceptList.REQUEST_LOCATION, null))[0];
 
-        String blockageName = Blockage.getBlockageNameBasedOnBlockedPerceptCords(currentLoc);
+        String blockageName = Blockage.findBlockageNameFromBlockedLink(blockedLinkID);
         if (blockageName == null) {
-            logger.error("no blockage name found for agent {} at time {}. Link id: {} | current Location: {}", getId(), time, parameters.toString(), currentLoc);
+            logger.error("no blockage name found for agent {} at time {}. Blocked Link id: {}", getId(), time, blockedLinkID);
             return;
         }
 
@@ -334,8 +341,7 @@ public class TrafficAgent extends BushfireAgent {
             String blockageInfo = "road blockage," + newBlockage.getName() + "," + time; // SN INFORMATION
             sendBlockageInfluencetoSN(blockageInfo);
             blockagePointsShared.add(blockageName); // save blockage name as this influence is sent only once.
-        }
-        else { // agent knows about the blockage, either from SN or ABM.
+        } else { // agent knows about the blockage, either from SN or ABM.
 
             Blockage blockage = getBlockageObjectFromName(blockageName); // get the existing blockage instance
             blockage.setLatestBlockageInfoTime(time); //  update latest time to now.
@@ -347,12 +353,11 @@ public class TrafficAgent extends BushfireAgent {
         }
 
         //Finally, issue  a BDI action
-        if(activeEnvironmentAction ==null)
-        {
-                replanCurrentDriveTo(MATSimEvacModel.EvacRoutingMode.carGlobalInformation); //FIXME check routing mode
+        if (activeEnvironmentAction == null) {
+            replanCurrentDriveTo(Constants.EvacRoutingMode.carGlobalInformation); //FIXME check routing mode
         }
 
-}
+    }
 
     private void processSNBlockageUpdates(Object params) { // #assume format: Blcoakge,time of type String
         if (params == null || !(params instanceof String)) {
@@ -365,7 +370,7 @@ public class TrafficAgent extends BushfireAgent {
         String blockageName = (String) tokens[0];
         double latestTimeFromSN = Double.valueOf(tokens[0]);
 
-        Blockage blockage =  getBlockageObjectFromName(blockageName);
+        Blockage blockage = getBlockageObjectFromName(blockageName);
         blockage.setLatestBlockageInfoTime(latestTimeFromSN); // update most recent time received from
     }
 
@@ -386,8 +391,8 @@ public class TrafficAgent extends BushfireAgent {
         } else {
 
             Blockage newBlockage = Blockage.createBlockageFromName(blockageName);
-            if(newBlockage == null) {
-                logger.error("could not find the blockage point in the SN information for name {}",blockageName);
+            if (newBlockage == null) {
+                logger.error("could not find the blockage point in the SN information for name {}", blockageName);
             }
             blockageList.add(newBlockage);
             newBlockage.setLatestBlockageInfoTime(time);
@@ -419,8 +424,9 @@ public class TrafficAgent extends BushfireAgent {
                 break;
             }
         }
-        return  targetBlockage;
+        return targetBlockage;
     }
+
     private void checkCongestionNearBlockage() {
 
         if (blockageList.isEmpty()) {
@@ -467,6 +473,42 @@ public class TrafficAgent extends BushfireAgent {
         blockage.setDistToBlockage(dist);
     }
 
+    // For three locations (cur_loc,dest,blockage) then parameters should be cur_loc,dest,cur_loc,blockage
+    public double estimateBlockageInCurrentDirectionOrNot(Location line1P1,Location line1P2, Location line2P1, Location line2P2 ) {
+
+        // calculate angle of blockage, based on the line connecting current location and destination
+        double angle1 = Math.atan2(line1P1.getY() - line1P2.getY(), line1P1.getX() - line1P2.getX());
+
+        //evaluate direction of line connecting current location and blockage
+        double angle2 = Math.atan2(line2P1.getY() - line2P2.getY(), line2P1.getX() - line2P2.getX());
+        double diffInRad = angle1 - angle2; //
+
+        return Math.toDegrees(diffInRad); //convert to degrees
+
+
+        //https://stackoverflow.com/questions/3365171/calculating-the-angle-between-two-lines-without-having-to-calculate-the-slope
+// The atan2() method returns theta of polar coordinates(distance and angle from 0,0) - a numeric value between -pi and pi.
+// calculate anlge between two lines
+// It is declared as double atan2(double y, double x) and converts rectangular coordinates (x,y) to the angle theta from the polar coordinates (r,theta)
+//    public static double angleBetween2Lines(Line2D line1, Line2D line2)
+//    {
+//        double angle1 = Math.atan2(line1.getY1() - line1.getY2(),
+//                line1.getX1() - line1.getX2());
+//        double angle2 = Math.atan2(line2.getY1() - line2.getY2(),
+//                line2.getX1() - line2.getX2());
+//        return angle1-angle2;
+//    }
+    }
+
+    public float getAngle(Point target, Point test) {
+        float angle = (float) Math.toDegrees(Math.atan2(target.y - test.y, target.x - test.x));
+
+        if(angle < 0){
+            angle += 360;
+        }
+
+        return angle;
+    }
 
     // private double
 //    private void handleSocialPercept(String perceptID, Object parameters) {
@@ -502,7 +544,7 @@ public class TrafficAgent extends BushfireAgent {
         }
     }
 
-    boolean startDrivingTo(Location location, MATSimEvacModel.EvacRoutingMode routingMode) {
+    boolean startDrivingTo(Location location, Constants.EvacRoutingMode routingMode) {
         if (location == null) return false;
         memorise(MemoryEventType.DECIDED.name(), MemoryEventValue.GOTO_LOCATION.name() + ":" + location.toString());
         double distToTravel = getTravelDistanceTo(location);
@@ -528,7 +570,7 @@ public class TrafficAgent extends BushfireAgent {
 //        replanCurrentDriveTo(MATSimEvacModel.EvacRoutingMode.carGlobalInformation);
 //    }
 
-    boolean replanCurrentDriveTo(MATSimEvacModel.EvacRoutingMode routingMode) {
+    boolean replanCurrentDriveTo(Constants.EvacRoutingMode routingMode) {
         memorise(MemoryEventType.ACTIONED.name(), ActionList.REPLAN_CURRENT_DRIVETO);
         EnvironmentAction action = new EnvironmentAction(
                 Integer.toString(getId()),
@@ -675,6 +717,18 @@ public class TrafficAgent extends BushfireAgent {
 
                         }
                         break;
+                    case "blockageAngleThreshold":
+                        if (i + 1 < args.length) {
+                            i++;
+                            try {
+                                blockageAngleThreshold = Integer.parseInt(args[i]);
+                                logger.trace("blockageAngleThreshold: {}", blockageAngleThreshold);
+                            } catch (Exception e) {
+                                logger.error("Could not parse int '" + args[i] + "'", e);
+                            }
+
+                        }
+                        break;
                     default:
                         // ignore other options
                         break;
@@ -695,29 +749,29 @@ public class TrafficAgent extends BushfireAgent {
         writer.println(logPrefix() + msg);
     }
 
-enum MemoryEventType {
-    BELIEVED,
-    PERCEIVED,
-    DECIDED,
-    ACTIONED
-}
-
-enum MemoryEventValue {
-    DONT_ASSESS,
-    IS_PLAN_APPLICABLE,
-    GOTO_LOCATION,
-    LAST_ENV_ACTION_STATE,
-    ASSESS,
-    EVALUATE,
-    RECONSIDER_AGAIN,
-    DECIDE_BLOCKAGE_IMPACT,
-    REROUTE
-}
-
-class Prefix {
-    public String toString() {
-        return String.format("Time %05.0f TrafficAgent %-9s : ", getTime(), getId());
+    enum MemoryEventType {
+        BELIEVED,
+        PERCEIVED,
+        DECIDED,
+        ACTIONED
     }
-}
+
+    enum MemoryEventValue {
+        DONT_ASSESS,
+        IS_PLAN_APPLICABLE,
+        GOTO_LOCATION,
+        LAST_ENV_ACTION_STATE,
+        ASSESS,
+        EVALUATE,
+        RECONSIDER_AGAIN,
+        DECIDE_BLOCKAGE_IMPACT,
+        REROUTE
+    }
+
+    class Prefix {
+        public String toString() {
+            return String.format("Time %05.0f TrafficAgent %-9s : ", getTime(), getId());
+        }
+    }
 
 }
