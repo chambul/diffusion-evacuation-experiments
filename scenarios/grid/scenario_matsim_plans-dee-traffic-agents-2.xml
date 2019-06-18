@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!DOCTYPE population SYSTEM "http://www.matsim.org/files/dtd/population_v6.dtd">
+<population>
+    <!-- ====================================================================== -->
+
+    <person id="0">
+        <attributes>
+            <attribute name="BDIAgentType" class="java.lang.String">
+                io.github.agentsoz.dee.agents.TrafficAgent
+            </attribute>
+            <attribute name="distanceFromTheBlockageThreshold" class="java.lang.Double">5.0</attribute>
+            <attribute name="blockageRecencyThreshold" class="java.lang.Integer">25</attribute>
+            <attribute name="blockageAngleThreshold" class="java.lang.Integer">60</attribute>
+        </attributes>
+        <plan selected="yes">
+            <activity type="home" x="0000.0" y="0000.0" end_time="01:00:00" />
+            <leg mode="car" />
+            <activity type="work" x="5000.0" y="0000.0" end_time="01:10:00" />
+            <leg mode="car" />
+            <activity type="home" x="0000.0" y="0000.0" />
+        </plan>
+    </person>
+
+    <person id="1">
+        <attributes>
+            <attribute name="BDIAgentType" class="java.lang.String">
+                io.github.agentsoz.dee.agents.TrafficAgent
+            </attribute>
+            <attribute name="distanceFromTheBlockageThreshold" class="java.lang.Double">5.0</attribute>
+            <attribute name="blockageRecencyThreshold" class="java.lang.Integer">25</attribute>
+            <attribute name="blockageAngleThreshold" class="java.lang.Integer">60</attribute>
+        </attributes>
+        <plan selected="yes">
+            <activity type="home" x="0000.0" y="0000.0" end_time="02:00:00" />
+            <leg mode="car" />
+            <activity type="work" x="5000.0" y="0000.0" end_time="02:10:00" />
+            <leg mode="car" />
+            <activity type="home" x="0000.0" y="0000.0" />
+        </plan>
+    </person>
+
+</population>
