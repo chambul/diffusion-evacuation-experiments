@@ -1,2 +1,0 @@
-Iteration	bike	car	carFreespeed	carGlobalInformation	other	pt	ride	walk
-0	0.0	1.0	0.0	0.0	0.0	0.0	0.0	0.0

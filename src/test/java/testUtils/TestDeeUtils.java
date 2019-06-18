@@ -23,15 +23,11 @@ package testUtils;
  */
 
 import io.github.agentsoz.dee.agents.TrafficAgent;
-import io.github.agentsoz.dee.blockage.Blockage;
-import io.github.agentsoz.dee.blockage.DataTypes;
 import org.junit.Assert;
 import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import io.github.agentsoz.util.Location;
-
-import java.awt.*;
 
 public class TestDeeUtils {
 
@@ -53,19 +49,16 @@ public class TestDeeUtils {
         TrafficAgent agent =  new TrafficAgent("1");
         agent.setBlockageAngleThreshold(45);
 
-        Location line1P1 = new Location("cur", 0,0);
-        Location line1P2 = new Location("cur", 1,0);
-        Location line2P1 = new Location("cur", 1,0);
-        Location line2P2 = new Location("cur", 1,4);
 
-        double result = agent.estimateBlockageInCurrentDirectionOrNot(line1P1,line1P2,line2P1,line2P2);
+        double result1 = agent.getSmallestAngleBetweenTwoLines(new Location("test",0,0),new Location("test",2,2),new Location("test",0,0),new Location("test",0,4));
+        double result2 = agent.getSmallestAngleBetweenTwoLines(new Location("test",0,0),new Location("test",2,2),new Location("test",0,0),new Location("test",-2,2));
+        double result3 = agent.getSmallestAngleBetweenTwoLines(new Location("test",0,0),new Location("test",2,2),new Location("test",0,0),new Location("test",-2,-2));
+        double result4 = agent.getSmallestAngleBetweenTwoLines(new Location("test",0,0),new Location("test",2,2),new Location("test",0,0),new Location("test",2,-2));
 
-
-        //method2
-        double a1= agent.getAngle(new Point(0,0),new Point(1,0));
-        double a2 = agent.getAngle(new Point(1,0), new Point(1,4));
-
-        double res = a1-a2;
+        Assert.assertEquals(45,result1,0.0); // anti-clockwise 45
+        Assert.assertEquals(90,result2,0.0); // anti-clockwies 90
+        Assert.assertEquals(180,result3,0.0); // opposite directions
+        Assert.assertEquals(90,result4,0.0); // clockwise 45
 
     }
 

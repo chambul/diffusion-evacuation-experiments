@@ -50,13 +50,14 @@ public class PlanEvaluateCurrentContext extends Plan {
                         String.valueOf(agent.getId()), PerceptList.REQUEST_DESTINATION_COORDINATES, null);
                 Location destination  = new Location("Dest",destCords[0],destCords[1]);
 
-                for (Blockage blockage: agent.getBlockageList()) { // list cannot be empty, tested earlier.
+                for (Blockage blockage: agent.getBlockageList()) { // list cannot be empty if agent selects this plan
 
                     if(  agent.getTime() - blockage.getLatestBlockageInfoTime() <= agent.getBlockageRecencyThreshold() ){ // evaluate recency
                         blockage.setRecencyOfBlockage(Blockage.recency.RECENT);
                     }
-                        double angleDif = agent.estimateBlockageInCurrentDirectionOrNot(currentLoc,destination,currentLoc,blockage);
-                    if (angleDif <= agent.getBlockageAngleThreshold()) { // consider absolute value without - or + direction
+
+                    double smallestAngleDif = agent.getSmallestAngleBetweenTwoLines(currentLoc,destination,currentLoc,blockage); // test blockage diraction wrt to current destination
+                    if (smallestAngleDif <= agent.getBlockageAngleThreshold()) { // consider absolute value without - or + direction
                         blockage.setBlockageInCurrentDirection(true); // blockage  in same direction
                         blockage.setNoBlockageImpact(false); // evaluated to find blockage impact
                     }

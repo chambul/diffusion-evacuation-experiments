@@ -82,7 +82,7 @@ public class TrafficAgent extends BushfireAgent {
 
 
     //new attributes
-    private boolean assessSituation = true;
+    private boolean assessSituation = false;
     //   private boolean sharedBlockageSNInfo = false;
     private int blockageRecencyThreshold;
     private double distanceFromTheBlockageThreshold;
@@ -94,6 +94,25 @@ public class TrafficAgent extends BushfireAgent {
     static final double RECONSIDER_SOONER_TIME = 5.0;
     static final double RECONSIDER_REGULAR_TIME = 10.0;
 
+
+    enum MemoryEventType {
+        BELIEVED,
+        PERCEIVED,
+        DECIDED,
+        ACTIONED
+    }
+
+    enum MemoryEventValue {
+        DONT_ASSESS,
+        IS_PLAN_APPLICABLE,
+        GOTO_LOCATION,
+        LAST_ENV_ACTION_STATE,
+        ASSESS,
+        EVALUATE,
+        RECONSIDER_AGAIN,
+        DECIDE_BLOCKAGE_IMPACT,
+        REROUTE
+    }
 
     //defaults
 //    private DependentInfo dependentInfo = null;
@@ -109,8 +128,9 @@ public class TrafficAgent extends BushfireAgent {
 //    private double fireVisualValue = 1.0;
 //    private double socialMessageEvacNowValue = 0.3;
     private Map<String, Location> locations;
-    private EnvironmentAction activeEnvironmentAction;
+    private Map<String,EnvironmentAction> activeEnvironmentActions;
     private ActionContent.State lastEnvironmentActionStatus;
+    private ActionContent.State lastDriveActionStatus;
     private Set<String> blockagePointsShared; // contains a list of bloc
     private List<Blockage> blockageList;
 
@@ -120,6 +140,7 @@ public class TrafficAgent extends BushfireAgent {
         locations = new HashMap<>();
         blockagePointsShared = new HashSet<>();
         blockageList = new ArrayList<Blockage>();
+        activeEnvironmentActions = new HashMap<>();
 
     }
 
@@ -180,11 +201,26 @@ public class TrafficAgent extends BushfireAgent {
     }
 
     boolean isDriving() {
-        return activeEnvironmentAction != null && activeEnvironmentAction.getActionID().equals(ActionList.DRIVETO);
+        return activeEnvironmentActions != null && activeEnvironmentActions.containsKey(Constants.DRIVETO);
     }
 
-    void setActiveEnvironmentAction(EnvironmentAction activeEnvironmentAction) {
-        this.activeEnvironmentAction = activeEnvironmentAction;
+    private void addActiveEnvironmentAction(EnvironmentAction activeEnvironmentAction) {
+        activeEnvironmentActions.put(activeEnvironmentAction.getActionID(), activeEnvironmentAction);
+    }
+
+    private EnvironmentAction removeActiveEnvironmentAction(String actionId) {
+        if (actionId != null && activeEnvironmentActions.containsKey(actionId)) {
+            return activeEnvironmentActions.remove(actionId);
+        }
+        return null;
+    }
+
+    public ActionContent.State getLastEnvironmentActionState() {
+        return lastEnvironmentActionStatus;
+    }
+
+    public void setLastEnvironmentActionState(ActionContent.State lastEnvironmentActionStatus) {
+        this.lastEnvironmentActionStatus = lastEnvironmentActionStatus;
     }
 
 //    double getResponseBarometer() {
@@ -200,13 +236,7 @@ public class TrafficAgent extends BushfireAgent {
 //        return willGoHomeBeforeLeaving;
 //    }
 
-    public ActionContent.State getLastEnvironmentActionState() {
-        return lastEnvironmentActionStatus;
-    }
 
-    public void setLastEnvironmentActionState(ActionContent.State lastEnvironmentActionStatus) {
-        this.lastEnvironmentActionStatus = lastEnvironmentActionStatus;
-    }
 
     /**
      * Called by the Jill model when starting a new agent.
@@ -234,10 +264,12 @@ public class TrafficAgent extends BushfireAgent {
         }
 
         // perceive congestion and blockage events always
-        post(new EnvironmentAction(
+        EnvironmentAction action = new EnvironmentAction(
                 Integer.toString(getId()),
-                ActionList.PERCEIVE,
-                new Object[]{PerceptList.BLOCKED, PerceptList.CONGESTION}));
+                Constants.PERCEIVE,
+                new Object[]{Constants.BLOCKED, Constants.CONGESTION});
+        post(action);
+        addActiveEnvironmentAction(action);
     }
 
     /**
@@ -257,7 +289,7 @@ public class TrafficAgent extends BushfireAgent {
     public void handlePercept(String perceptID, Object parameters) {
 
 
-        memorise(MemoryEventType.PERCEIVED.name(), perceptID + ":" + parameters.toString());
+
 
         if (perceptID == null || perceptID.isEmpty()) {
             return;
@@ -271,6 +303,7 @@ public class TrafficAgent extends BushfireAgent {
         }
 
         // save it to memory
+        memorise(MemoryEventType.PERCEIVED.name(), perceptID + ":" + parameters.toString());
 
 //        else if (perceptID.equals(DeePerceptList.EMERGENCY_MESSAGE)) {
 //            updateResponseBarometerMessages(parameters);
@@ -334,6 +367,9 @@ public class TrafficAgent extends BushfireAgent {
 
             // double[] cords = Blockage.findAndGetLocationOfBlockage(blockageName); // get cordinates of the blockage
             Blockage newBlockage = Blockage.createBlockageFromName(blockageName);
+            if(newBlockage == null) {
+                logger.error("Cannot create blockage instance, unknown blockage name {}", blockageName);
+            }
             newBlockage.setLatestBlockageInfoTime(time); // update latest time to now.
             blockageList.add(newBlockage);
 
@@ -353,9 +389,14 @@ public class TrafficAgent extends BushfireAgent {
         }
 
         //Finally, issue  a BDI action
-        if (activeEnvironmentAction == null) {
-            replanCurrentDriveTo(Constants.EvacRoutingMode.carGlobalInformation); //FIXME check routing mode
-        }
+        replanCurrentDriveTo(Constants.EvacRoutingMode.carGlobalInformation);
+        // perceive congestion and blockage events always
+        EnvironmentAction action = new EnvironmentAction(
+                Integer.toString(getId()),
+                Constants.PERCEIVE,
+                new Object[] {Constants.BLOCKED, Constants.CONGESTION});
+        post(action);
+        addActiveEnvironmentAction(action);
 
     }
 
@@ -473,42 +514,40 @@ public class TrafficAgent extends BushfireAgent {
         blockage.setDistToBlockage(dist);
     }
 
-    // For three locations (cur_loc,dest,blockage) then parameters should be cur_loc,dest,cur_loc,blockage
-    public double estimateBlockageInCurrentDirectionOrNot(Location line1P1,Location line1P2, Location line2P1, Location line2P2 ) {
+
+    /*
+
+        This method returns the angle between the two lines formed by the 4 locations.
+        Here, we don't care about the direction (clockwise or anti-clockwise), so need to retreive smallest angle out of the two angles between the two lines.
+
+
+       Calculation is based on: https://stackoverflow.com/questions/3365171/calculating-the-angle-between-two-lines-without-having-to-calculate-the-slope
+ The atan2() method returns theta of polar coordinates(distance r and angle theta from 0,0, anti-clockwise) - a numeric value between -pi and pi.
+
+    public static double angleBetween2Lines(Line2D line1, Line2D line2)
+    {
+        double angle1 = Math.atan2(line1.getY1() - line1.getY2(),
+                line1.getX1() - line1.getX2());
+        double angle2 = Math.atan2(line2.getY1() - line2.getY2(),
+                line2.getX1() - line2.getX2());
+        return angle1-angle2;
+    }
+     */
+    public double getSmallestAngleBetweenTwoLines(Location line1P1, Location line1P2, Location line2P1, Location line2P2 ) {
 
         // calculate angle of blockage, based on the line connecting current location and destination
         double angle1 = Math.atan2(line1P1.getY() - line1P2.getY(), line1P1.getX() - line1P2.getX());
 
         //evaluate direction of line connecting current location and blockage
         double angle2 = Math.atan2(line2P1.getY() - line2P2.getY(), line2P1.getX() - line2P2.getX());
-        double diffInRad = angle1 - angle2; //
+        double angleDiffInAntiClockwiseDirection = Math.abs(Math.toDegrees(angle1 - angle2)); // anti-clokwise angle
+        double angleDiffInClockwiseDirection = 360 - angleDiffInAntiClockwiseDirection; // clockwise angle
 
-        return Math.toDegrees(diffInRad); //convert to degrees
+        return Math.min(angleDiffInAntiClockwiseDirection,angleDiffInClockwiseDirection); // return the smallest from the two angles
 
-
-        //https://stackoverflow.com/questions/3365171/calculating-the-angle-between-two-lines-without-having-to-calculate-the-slope
-// The atan2() method returns theta of polar coordinates(distance and angle from 0,0) - a numeric value between -pi and pi.
-// calculate anlge between two lines
-// It is declared as double atan2(double y, double x) and converts rectangular coordinates (x,y) to the angle theta from the polar coordinates (r,theta)
-//    public static double angleBetween2Lines(Line2D line1, Line2D line2)
-//    {
-//        double angle1 = Math.atan2(line1.getY1() - line1.getY2(),
-//                line1.getX1() - line1.getX2());
-//        double angle2 = Math.atan2(line2.getY1() - line2.getY2(),
-//                line2.getX1() - line2.getX2());
-//        return angle1-angle2;
-//    }
     }
 
-    public float getAngle(Point target, Point test) {
-        float angle = (float) Math.toDegrees(Math.atan2(target.y - test.y, target.x - test.x));
 
-        if(angle < 0){
-            angle += 360;
-        }
-
-        return angle;
-    }
 
     // private double
 //    private void handleSocialPercept(String perceptID, Object parameters) {
@@ -544,26 +583,38 @@ public class TrafficAgent extends BushfireAgent {
         }
     }
 
-    boolean startDrivingTo(Location location, Constants.EvacRoutingMode routingMode) {
-        if (location == null) return false;
-        memorise(MemoryEventType.DECIDED.name(), MemoryEventValue.GOTO_LOCATION.name() + ":" + location.toString());
-        double distToTravel = getTravelDistanceTo(location);
-        if (distToTravel == 0.0) {
-            // already there, so no need to drive
-            return false;
-        }
-        Object[] params = new Object[4];
-        params[0] = ActionList.DRIVETO;
-        params[1] = location.getCoordinates();
-        params[2] = getTime() + 5.0; // five secs from now;
-        params[3] = routingMode;
-        memorise(MemoryEventType.ACTIONED.name(), ActionList.DRIVETO
-                + ":" + location + ":" + String.format("%.0f", distToTravel) + "m away");
-        EnvironmentAction action = new EnvironmentAction(Integer.toString(getId()), ActionList.DRIVETO, params);
-        setActiveEnvironmentAction(action); // will be reset by updateAction()
-        subgoal(action); // should be last call in any plan step
-        return true;
-    }
+//    boolean startDrivingTo(Location location, Constants.EvacRoutingMode routingMode) {
+//        if (location == null) return false;
+//        memorise(MemoryEventType.DECIDED.name(), MemoryEventValue.GOTO_LOCATION.name() + ":" + location.toString());
+//        double distToTravel = getTravelDistanceTo(location);
+//        if (distToTravel == 0.0) {
+//            // already there, so no need to drive
+//            return false;
+//        }
+//
+//        // perceive congestion and blockage events always
+//        EnvironmentAction action = new EnvironmentAction(
+//                Integer.toString(getId()),
+//                Constants.PERCEIVE,
+//                new Object[] {Constants.BLOCKED, Constants.CONGESTION});
+//        post(action);
+//        addActiveEnvironmentAction(action);
+//
+//        Object[] params = new Object[4];
+//        params[0] = Constants.DRIVETO;
+//        params[1] = location.getCoordinates();
+//        params[2] = getTime() + 5.0; // five secs from now;
+//        params[3] = routingMode;
+//        memorise(MemoryEventType.ACTIONED.name(), Constants.DRIVETO
+//                + ":"+ location + ":" + String.format("%.0f", distToTravel) + "m away");
+//        action = new EnvironmentAction(
+//                Integer.toString(getId()),
+//                Constants.DRIVETO, params);
+//        addActiveEnvironmentAction(action); // will be reset by updateAction()
+//        subgoal(action); // should be last call in any plan step
+//        return true;
+//    }
+
 
 //    private void handleFireVisual() {
 //        // Always replan when we see fire
@@ -571,12 +622,12 @@ public class TrafficAgent extends BushfireAgent {
 //    }
 
     boolean replanCurrentDriveTo(Constants.EvacRoutingMode routingMode) {
-        memorise(MemoryEventType.ACTIONED.name(), ActionList.REPLAN_CURRENT_DRIVETO);
+        memorise(MemoryEventType.ACTIONED.name(), Constants.REPLAN_CURRENT_DRIVETO);
         EnvironmentAction action = new EnvironmentAction(
                 Integer.toString(getId()),
-                ActionList.REPLAN_CURRENT_DRIVETO,
-                new Object[]{routingMode});
-        setActiveEnvironmentAction(action); // will be reset by updateAction()
+                Constants.REPLAN_CURRENT_DRIVETO,
+                new Object[] {routingMode});
+        addActiveEnvironmentAction(action); // will be reset by updateAction()
         subgoal(action); // should be last call in any plan step
         return true;
     }
@@ -625,14 +676,15 @@ public class TrafficAgent extends BushfireAgent {
     @Override
     public void updateAction(String actionID, ActionContent content) {
         logger.debug("{} received action update: {}", logPrefix(), content);
-        setLastEnvironmentActionState(content.getState()); // save the finish state of the action
-        if (content.getAction_type().equals(ActionList.DRIVETO)) {
-            ActionContent.State actionState = content.getState();
-            if (actionState == ActionContent.State.PASSED ||
-                    actionState == ActionContent.State.FAILED ||
-                    actionState == ActionContent.State.DROPPED) {
-                memorise(MemoryEventType.BELIEVED.name(), MemoryEventValue.LAST_ENV_ACTION_STATE.name() + "=" + actionState.name());
-                setActiveEnvironmentAction(null); // remove the action
+        ActionContent.State actionState = content.getState();
+        if (actionState == ActionContent.State.PASSED ||
+                actionState == ActionContent.State.FAILED ||
+                actionState == ActionContent.State.DROPPED) {
+            memorise(MemoryEventType.BELIEVED.name(), MemoryEventValue.LAST_ENV_ACTION_STATE.name() + "=" + actionState.name());
+            removeActiveEnvironmentAction(content.getAction_type()); // remove the action
+
+            if (content.getAction_type().equals(Constants.DRIVETO)) {
+                setLastDriveActionStatus(content.getState()); // save the finish state of the action
                 // Wake up the agent that was waiting for external action to finish
                 // FIXME: BDI actions put agent in suspend, which won't work for multiple intention stacks
                 suspend(false);
@@ -656,8 +708,9 @@ public class TrafficAgent extends BushfireAgent {
      * to perform agent startup.
      */
     @Override
-    public void start() {
+    public void start() { // TWO START METHODS
         logger.warn("{} using a stub for io.github.agentsoz.bdiabm.Agent.start()", logPrefix());
+
     }
 
     /**
@@ -737,6 +790,14 @@ public class TrafficAgent extends BushfireAgent {
         }
     }
 
+    private void setLastDriveActionStatus(ActionContent.State lastDriveActionStatus) {
+        this.lastDriveActionStatus = lastDriveActionStatus;
+    }
+
+    public ActionContent.State getLastDriveActionStatus() {
+        return lastDriveActionStatus;
+    }
+
     public double getTime() {
         return time;
     }
@@ -749,24 +810,6 @@ public class TrafficAgent extends BushfireAgent {
         writer.println(logPrefix() + msg);
     }
 
-    enum MemoryEventType {
-        BELIEVED,
-        PERCEIVED,
-        DECIDED,
-        ACTIONED
-    }
-
-    enum MemoryEventValue {
-        DONT_ASSESS,
-        IS_PLAN_APPLICABLE,
-        GOTO_LOCATION,
-        LAST_ENV_ACTION_STATE,
-        ASSESS,
-        EVALUATE,
-        RECONSIDER_AGAIN,
-        DECIDE_BLOCKAGE_IMPACT,
-        REROUTE
-    }
 
     class Prefix {
         public String toString() {
