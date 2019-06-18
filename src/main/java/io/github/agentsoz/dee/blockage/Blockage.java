@@ -50,7 +50,7 @@ public class Blockage extends Location{
     private static  Map<String, ArrayList<String>> allBlockagePointsWithLinks = new HashMap<String, ArrayList<String>>() {{  //#FIXME  Move this initialisation to configuration level
         put(DataTypes.GROSSMANDS, new ArrayList<String>( Arrays.asList("11206","11207") ));
         put(DataTypes.GREAT_OCEAN_ROAD, new ArrayList<String>( Arrays.asList("12340-12338-12336-12334-12332","12331-12333-12335-12337-12339")) );
-        put("grid_network_blockage", new ArrayList<String>( Arrays.asList("4-5","4-5r")) ); //#FIXME grid network blockage
+        put("grid_network_blockage", new ArrayList<String>( Arrays.asList("2-3","4-5r")) ); //#FIXME grid network blockage
     }};
 
 
