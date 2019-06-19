@@ -200,28 +200,28 @@ public class TrafficAgent extends BushfireAgent {
         return blockageList;
     }
 
-    boolean isDriving() {
-        return activeEnvironmentActions != null && activeEnvironmentActions.containsKey(Constants.DRIVETO);
-    }
+//    boolean isDriving() {
+//        return activeEnvironmentActions != null && activeEnvironmentActions.containsKey(Constants.DRIVETO);
+//    }
 
     private void addActiveEnvironmentAction(EnvironmentAction activeEnvironmentAction) {
         activeEnvironmentActions.put(activeEnvironmentAction.getActionID(), activeEnvironmentAction);
     }
 
-    private EnvironmentAction removeActiveEnvironmentAction(String actionId) {
-        if (actionId != null && activeEnvironmentActions.containsKey(actionId)) {
-            return activeEnvironmentActions.remove(actionId);
-        }
-        return null;
-    }
+//    private EnvironmentAction removeActiveEnvironmentAction(String actionId) {
+//        if (actionId != null && activeEnvironmentActions.containsKey(actionId)) {
+//            return activeEnvironmentActions.remove(actionId);
+//        }
+//        return null;
+//    }
 
-    public ActionContent.State getLastEnvironmentActionState() {
-        return lastEnvironmentActionStatus;
-    }
+//    public ActionContent.State getLastEnvironmentActionState() {
+//        return lastEnvironmentActionStatus;
+//    }
 
-    public void setLastEnvironmentActionState(ActionContent.State lastEnvironmentActionStatus) {
-        this.lastEnvironmentActionStatus = lastEnvironmentActionStatus;
-    }
+//    public void setLastEnvironmentActionState(ActionContent.State lastEnvironmentActionStatus) {
+//        this.lastEnvironmentActionStatus = lastEnvironmentActionStatus;
+//    }
 
 //    double getResponseBarometer() {
 //        return responseBarometerMessages + responseBarometerFieldOfView + responseBarometerSocialMessage;
@@ -400,6 +400,17 @@ public class TrafficAgent extends BushfireAgent {
 
     }
 
+    boolean replanCurrentDriveTo(Constants.EvacRoutingMode routingMode) {
+        memorise(MemoryEventType.ACTIONED.name(), Constants.REPLAN_CURRENT_DRIVETO);
+        EnvironmentAction action = new EnvironmentAction(
+                Integer.toString(getId()),
+                Constants.REPLAN_CURRENT_DRIVETO,
+                new Object[] {routingMode});
+        addActiveEnvironmentAction(action); // will be reset by updateAction()
+        subgoal(action); // should be last call in any plan step
+        return true;
+    }
+
     private void processSNBlockageUpdates(Object params) { // #assume format: Blcoakge,time of type String
         if (params == null || !(params instanceof String)) {
             logger.error("unknown blockage update received for agent {}: null or incorrect length ", getId());
@@ -549,30 +560,6 @@ public class TrafficAgent extends BushfireAgent {
 
 
 
-    // private double
-//    private void handleSocialPercept(String perceptID, Object parameters) {
-//
-////        if (!sharesInfoWithSocialNetwork) {
-////            return;
-////        }
-//        // Spread EVACUATE_NOW if haven't done so already
-//        if (perceptID.equals(DeePerceptList.EMERGENCY_MESSAGE) &&
-//                !blockagePointsShared.contains(EmergencyMessage.EmergencyMessageType.EVACUATE_NOW.name()) &&
-//                parameters instanceof String &&
-//                getEmergencyMessageType(parameters) == EmergencyMessage.EmergencyMessageType.EVACUATE_NOW) {
-//            shareWithSocialNetwork((String) parameters);
-//            blockagePointsShared.add(getEmergencyMessageType(parameters).name());
-//        }
-//        // Spread BLOCKED for given blocked link if haven't already
-//        if (perceptID.equals(DeePerceptList.BLOCKED)) {
-//            String blockedMsg = DeePerceptList.BLOCKED + parameters.toString();
-//            if (!blockagePointsShared.contains(blockedMsg)) {
-//                shareWithSocialNetwork(blockedMsg);
-//                blockagePointsShared.add(blockedMsg);
-//            }
-//        }
-//
-//    }
 
     void memorise(String event, String data) {
         try {
@@ -616,21 +603,6 @@ public class TrafficAgent extends BushfireAgent {
 //    }
 
 
-//    private void handleFireVisual() {
-//        // Always replan when we see fire
-//        replanCurrentDriveTo(MATSimEvacModel.EvacRoutingMode.carGlobalInformation);
-//    }
-
-    boolean replanCurrentDriveTo(Constants.EvacRoutingMode routingMode) {
-        memorise(MemoryEventType.ACTIONED.name(), Constants.REPLAN_CURRENT_DRIVETO);
-        EnvironmentAction action = new EnvironmentAction(
-                Integer.toString(getId()),
-                Constants.REPLAN_CURRENT_DRIVETO,
-                new Object[] {routingMode});
-        addActiveEnvironmentAction(action); // will be reset by updateAction()
-        subgoal(action); // should be last call in any plan step
-        return true;
-    }
 
     double getTravelDistanceTo(Location location) {
         return (double) getQueryPerceptInterface().queryPercept(
@@ -669,28 +641,7 @@ public class TrafficAgent extends BushfireAgent {
         DataServer.getInstance(Run.DATASERVER).publish(DeePerceptList.BLOCKAGE_INFO_BROADCAST, msg);
     }
 
-    /**
-     * Called by the Jill model with the status of a BDI action previously
-     * posted by this agent to the ABM environment.
-     */
-    @Override
-    public void updateAction(String actionID, ActionContent content) {
-        logger.debug("{} received action update: {}", logPrefix(), content);
-        ActionContent.State actionState = content.getState();
-        if (actionState == ActionContent.State.PASSED ||
-                actionState == ActionContent.State.FAILED ||
-                actionState == ActionContent.State.DROPPED) {
-            memorise(MemoryEventType.BELIEVED.name(), MemoryEventValue.LAST_ENV_ACTION_STATE.name() + "=" + actionState.name());
-            removeActiveEnvironmentAction(content.getAction_type()); // remove the action
 
-            if (content.getAction_type().equals(Constants.DRIVETO)) {
-                setLastDriveActionStatus(content.getState()); // save the finish state of the action
-                // Wake up the agent that was waiting for external action to finish
-                // FIXME: BDI actions put agent in suspend, which won't work for multiple intention stacks
-                suspend(false);
-            }
-        }
-    }
 
     /**
      * BDI-ABM agent init function; Not used by Jill.
