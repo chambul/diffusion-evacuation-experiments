@@ -26,9 +26,14 @@ package io.github.agentsoz.dee;
 import io.github.agentsoz.dataInterface.DataClient;
 import io.github.agentsoz.dataInterface.DataServer;
 import io.github.agentsoz.dataInterface.DataSource;
+import io.github.agentsoz.dee.agents.SocialTrafficAgent;
+import io.github.agentsoz.ees.Constants;
 import io.github.agentsoz.ees.DiffusedContent;
+import io.github.agentsoz.ees.DiffusionModel;
+import io.github.agentsoz.ees.SNUpdates;
 import io.github.agentsoz.socialnetwork.ICModel;
 import io.github.agentsoz.socialnetwork.SNConfig;
+import io.github.agentsoz.socialnetwork.SocialAgent;
 import io.github.agentsoz.socialnetwork.SocialNetworkManager;
 import io.github.agentsoz.util.Time;
 import org.slf4j.Logger;
@@ -36,110 +41,80 @@ import org.slf4j.LoggerFactory;
 
 import java.util.*;
 
+/*
 
-public class BlockageInformationDiffusionModel implements DataSource<SortedMap<Double, DiffusedContent>>, DataClient<String[]> {
+     extends DiffusionModel class in:
+     init (with SocialTrafficAgents)
+     sendData (include latest blockage updates)
+     receiveData (process latest blockage times)
+
+     Other functionalities are same as in DiffusionModel class:
+     constructors
+     parse (same configs)
+     start
+     stepDiffusionProcess (standard functionality of the IC model)
+     finish
+
+
+ */
+public class BlockageInformationDiffusionModel extends DiffusionModel implements DataSource<HashMap<String,DiffusedContent>>, DataClient<Object> {
 
     private final Logger logger = LoggerFactory.getLogger(BlockageInformationDiffusionModel.class);
 
-    private static final String eConfigFile = "configFile";
-    static final String eGlobalStartHhMm = "startHHMM"; // copied from ees.Config
-
-    private DataServer dataServer;
-    private double startTimeInSeconds = -1;
-    private SocialNetworkManager snManager;
-    private TreeMap<Double, DiffusedContent> allStepsInfoSpreadMap;
     private double lastUpdateTimeInMinutes = -1;
     private Time.TimestepUnit timestepUnit = Time.TimestepUnit.SECONDS;
     private String configFile = null;
     private List<String> agentsIds = null;
 
     Map<String, Set> localContentFromAgents;
+    HashMap<String,Double> latestBlockageTimes;
     ArrayList<String> globalContentFromAgents;
 
     public BlockageInformationDiffusionModel(String configFile) {
-        this.snManager = (configFile==null) ? null : new SocialNetworkManager(configFile);
-        this.allStepsInfoSpreadMap = new TreeMap<>();
-        this.localContentFromAgents = new HashMap<>();
-        this.globalContentFromAgents =  new ArrayList<String>();
+        super(configFile);
     }
 
     public BlockageInformationDiffusionModel(Map<String, String> opts, DataServer dataServer, List<String> agentsIds) {
-        parse(opts);
-        this.snManager = (configFile==null) ? null : new SocialNetworkManager(configFile);
-        this.allStepsInfoSpreadMap = new TreeMap<>();
-        this.localContentFromAgents = new HashMap<>();
-        this.globalContentFromAgents =  new ArrayList<String>();
-        this.dataServer = dataServer;
-        this.agentsIds = agentsIds;
+        super(opts, dataServer, agentsIds);
     }
 
-    private void parse(Map<String, String> opts) {
-        if (opts == null) {
-            return;
-        }
-        for (String opt : opts.keySet()) {
-            logger.info("Found option: {}={}", opt, opts.get(opt));
-            switch(opt) {
-               // case Config.eGlobalStartHhMm:
-                case eGlobalStartHhMm:
-                    String[] tokens = opts.get(opt).split(":");
-                    setStartHHMM(new int[]{Integer.parseInt(tokens[0]),Integer.parseInt(tokens[1])});
-                    break;
-                case eConfigFile:
-                    configFile = opts.get(opt);
-                    break;
-                default:
-                    logger.warn("Ignoring option: " + opt + "=" + opts.get(opt));
-            }
-        }
-    }
-
-    public void setStartHHMM(int[] hhmm) {
-        startTimeInSeconds = Time.convertTime(hhmm[0], Time.TimestepUnit.HOURS, timestepUnit)
-                + Time.convertTime(hhmm[1], Time.TimestepUnit.MINUTES, timestepUnit);
-    }
-
-
-    public void init(List<String> idList) {
-
-        this.snManager.setupSNConfigsAndLogs(); // first, setup configs and create log
-        for (String id : idList) {
-            this.snManager.createSocialAgent(id); //populate agentmap
-        }
-        this.snManager.genNetworkAndDiffModels(); // setup configs, gen network and diffusion models
-        this.snManager.printSNModelconfigs();
-
-        //subscribe to BDI data updates
-        this.dataServer.subscribe(this, DeePerceptList.BLOCKAGE_INFLUENCE);
-        this.dataServer.subscribe(this, DeePerceptList.BLOCKAGE_UPDATES);
-        this.dataServer.subscribe(this,DeePerceptList.BLOCKAGE_INFO_BROADCAST);
-    }
-
-    private void stepDiffusionProcess() {
-        snManager.diffuseContent(); // step the diffusion model
-        if (snManager.getDiffModel() instanceof ICModel) {
-            ICModel icModel = (ICModel) snManager.getDiffModel();
-            icModel.recordCurrentStepSpread(dataServer.getTime());
-
-            HashMap<String, String[]> latestUpdate = icModel.getLatestDiffusionUpdates();
-            if (!latestUpdate.isEmpty()) {
-                DiffusedContent dc = new DiffusedContent();
-                dc.setContentSpreadMap(latestUpdate);
-                this.allStepsInfoSpreadMap.put(dataServer.getTime(), dc);
-                logger.debug("put timed diffusion updates for ICModel at {}", dataServer.getTime());
-            }
-        }
-
-
-    }
 
     @Override
-    public SortedMap<Double, DiffusedContent> sendData(double timestep, String dataType) {
+    public void init(List<String> idList) {
+
+        this.getSnManager().setupSNConfigsAndLogs(); // first, setup configs and create log
+        for (String id : idList) {
+            // this.snManager.createSocialAgent(id);
+            int agentID = Integer.parseInt(id);
+            this.getSnManager().getAgentMap().put(agentID, new SocialTrafficAgent(agentID));
+        }
+        this.getSnManager().genNetworkAndDiffModels(); // setup configs, gen network and diffusion models
+        this.getSnManager().printSNModelconfigs();
+
+        //subscribe to BDI data updates
+        this.getDataServer().subscribe(this, Constants.BDI_REASONING_UPDATES);
+
+    }
+
+
+    /*
+            1. Update social states (Same as Diffusion model)
+            2. Share blockage times with dierct neighbours -> update Hash
+            3. run IC diffusion process -> update Hash
+            4.
+     */
+    @Override
+    public HashMap<String,DiffusedContent> sendData(double timestep, String dataType) {
         Double nextTime = timestep + SNConfig.getDiffturn();
+
+        //create the data structure that is passed to the BDI side
+        HashMap<String, DiffusedContent> currentStepDiffusedContents = new HashMap<>();
+
         if (nextTime != null) {
-            dataServer.registerTimedUpdate(DeePerceptList.DIFFUSION, this, nextTime);
+            getDataServer().registerTimedUpdate(Constants.DIFFUSION, this, nextTime);
             // update the model with any new messages form agents
-            ICModel icModel = (ICModel) this.snManager.getDiffModel();
+            ICModel icModel = (ICModel) this.getSnManager().getDiffModel();
+
             if (!localContentFromAgents.isEmpty()) { // update local content
                 Map<String, String[]> map = new HashMap<>();
                 for (String key : localContentFromAgents.keySet()) {
@@ -155,118 +130,113 @@ public class BlockageInformationDiffusionModel implements DataSource<SortedMap<D
                 icModel.updateSocialStatesFromLocalContent(map);
             }
 
-            if(!globalContentFromAgents.isEmpty()) { // update global content
+            if(!globalContentFromAgents.isEmpty()) { // update global contents
 
                 logger.info("Global content received to spread: {}", globalContentFromAgents.toString());
                 icModel.updateSocialStatesFromGlobalContent(globalContentFromAgents);
 
             }
+
+            //share blockage time infomration with ONLY direct neighbours (no processing of whole agent list)
+            for(Map.Entry entry: latestBlockageTimes.entrySet()){
+                String id = (String) entry.getKey();
+                double time = (double) entry.getValue();
+                updateAndShareLatestBlockageTimeWithNeighbours(id,time, currentStepDiffusedContents);
+            }
+
+
             // step the model before begin called again
-            stepDiffusionProcess();
+            stepDiffusionProcess(currentStepDiffusedContents);
 
             // clear the contents
             globalContentFromAgents.clear();
             localContentFromAgents.clear();
-        }
-        double currentTime = Time.convertTime(timestep, timestepUnit, Time.TimestepUnit.MINUTES);
-        SortedMap<Double, DiffusedContent> periodicInfoSpread = allStepsInfoSpreadMap.subMap(lastUpdateTimeInMinutes, currentTime);
-        lastUpdateTimeInMinutes = currentTime;
+            latestBlockageTimes.clear(); // clear last step blockage percept times
 
-        return (periodicInfoSpread.isEmpty()) ? null : periodicInfoSpread;
+        }
+
+        double currentTime = Time.convertTime(timestep, timestepUnit, Time.TimestepUnit.MINUTES);
+        lastUpdateTimeInMinutes = currentTime;
+        return (currentStepDiffusedContents.isEmpty()) ? null : currentStepDiffusedContents;
+
     }
 
-
     @Override
-    public void receiveData(double time, String dataType, String[] data) { // data package from the BDI side
+    public void receiveData(double time, String dataType, Object data) { // data package from the BDI side
 
         switch (dataType) {
-            case DeePerceptList.BLOCKAGE_INFLUENCE: // update social states based on BDI reasoning
-                // data from agent is of type [String,String] being [content,agentid]
-                if (!(data instanceof String[]) || ((String[]) data).length != 2) {
-                    logger.error("received unknown data: " + data);
+            case Constants.BDI_REASONING_UPDATES: // update Diffusion model based on BDI updates
+                if (!(data instanceof SNUpdates)) {
+                    logger.error("received unknown data: " + data.toString());
                     break;
                 }
-                String[] content = (String[]) data;
-                logger.debug("received local content " + content);
-                String msg = content[0];
-                String agentId = content[1];
-                Set<String> agents = (localContentFromAgents.containsKey(msg)) ? localContentFromAgents.get(msg) :
-                        new HashSet<>();
-                agents.add(agentId);
-                localContentFromAgents.put(msg, agents);
-                break;
 
-            case DeePerceptList.BLOCKAGE_UPDATES: // #TODO blockage information updates that are shared among direct neighbours?
-                break;
+                SNUpdates newUpdates = (SNUpdates) data;
+                String agentId = String.valueOf(newUpdates.getAgentId());
 
-            case DeePerceptList.BLOCKAGE_INFO_BROADCAST:
-                if (!(data instanceof String[]) || ((String[]) data).length != 2) {
-                    logger.error("received unknown data: " + data);
-                    break;
+                //process local contents
+                for(String localContent: newUpdates.getContentsMap().keySet()){
+                    logger.debug("Agent {} received local content type {}. Message: {}",agentId,localContent);
+
+                    if(localContent.equals(DeePerceptList.BLOCKAGE_INFLUENCE)) {
+                        Set<String> agents = (localContentFromAgents.containsKey(localContent)) ? localContentFromAgents.get(localContent) :
+                                new HashSet<>();
+                        agents.add(agentId);
+                        localContentFromAgents.put(localContent, agents);
+                        String[] params = (String[]) newUpdates.getContentsMap().get(localContent);
+                        String msg = params[0];   // do something with parameters
+                    }
+
+                    else if (localContent.equals(DeePerceptList.BLOCKAGE_UPDATES)){
+                        Object[] params = (Object[]) newUpdates.getContentsMap().get(localContent);
+                        String blockageName = (String) params[0];
+                        double blockedPercepttime = (double) params[1];
+                        latestBlockageTimes.put(agentId,blockedPercepttime );  //#FIXME time should be updated per blockage
+                    }
+                    else{
+                        logger.error("unknown local content received: {} for agent {}",localContent, agentId);
+                    }
+
                 }
-                String[] globalContent = (String[]) data;
-                logger.debug("received global content " + globalContent);
-                String gMsg = globalContent[0];
-                if(!globalContentFromAgents.contains(gMsg)) {
-                    globalContentFromAgents.add(gMsg);
+
+                //process global (broadcast) contents
+                for(String globalContent: newUpdates.getBroadcastContentsMap().keySet()){
+                    logger.debug("received global content " + globalContent);
+                    if(!globalContentFromAgents.contains(globalContent)) {
+                        globalContentFromAgents.add(globalContent);
+                    }
+                    String[] params = (String[])newUpdates.getContentsMap().get(globalContent);
+                    // do something with parameters
+
+                }
+
+                //process SN actions
+                for(String action: newUpdates.getSNActionsMap().keySet()){
+                    Object[] params = newUpdates.getContentsMap().get(action);
+                    // do something with parameters
                 }
                 break;
-
             default:
                 throw new RuntimeException("Unknown data type received: " + dataType);
         }
     }
 
-    /**
-     * Sets the publish/subscribe data server
-     * @param dataServer the server to use
-     */
-    void setDataServer(DataServer dataServer) {
-        this.dataServer = dataServer;
-    }
+    public void updateAndShareLatestBlockageTimeWithNeighbours(String id,double time, HashMap<String,DiffusedContent> contentHashMap){ // no comparison needed, time of blocked percept will be the latest for all agents.
 
-    /**
-     * Set the time step unit for this model
-     * @param unit the time step unit to use
-     */
-    void setTimestepUnit(Time.TimestepUnit unit) {
-        timestepUnit = unit;
-    }
+        SocialTrafficAgent agent = (SocialTrafficAgent) this.getSnManager().getAgentMap().get(id); // update own time.
+        agent.setLastKnownBlockageTime(time);
 
+        for (int neighbourID : agent.getLinkMap().keySet()){
+            SocialTrafficAgent neighbourAgent = (SocialTrafficAgent) this.getSnManager().getAgentMap().get(neighbourID);
+            neighbourAgent.setLastKnownBlockageTime(time);
 
-    public void start() {
-        if (snManager != null) {
-            init(agentsIds);
-            setTimestepUnit(Time.TimestepUnit.MINUTES);
-            dataServer.registerTimedUpdate(DeePerceptList.DIFFUSION, this, Time.convertTime(startTimeInSeconds, Time.TimestepUnit.SECONDS, timestepUnit));
-        } else {
-            logger.warn("started but will be idle forever!!");
-        }
-    }
-
-    /**
-     * Start publishing data
-     */
-    public void start(int[] hhmm) {
-        double startTimeInSeconds = Time.convertTime(hhmm[0], Time.TimestepUnit.HOURS, Time.TimestepUnit.SECONDS)
-                + Time.convertTime(hhmm[1], Time.TimestepUnit.MINUTES, Time.TimestepUnit.SECONDS);
-        dataServer.registerTimedUpdate(DeePerceptList.DIFFUSION, this, startTimeInSeconds);
-    }
-
-
-    public void finish() {
-        // cleaning
-
-        if(snManager == null) { // return if the diffusion model is not executed
-            return;
-        }
-        if (snManager.getDiffModel() instanceof ICModel) {
-
-            //terminate diffusion model and output diffusion data
-            ICModel icModel = (ICModel) this.snManager.getDiffModel();
-            icModel.finish();
-            icModel.getDataCollector().writeSpreadDataToFile();
+            //package update to send to the BDI agent
+            DiffusedContent content = getOrCreateDiffusedContent(id,contentHashMap);
+            Object[] params = {time};
+            content.getContentsMap().put(DeePerceptList.BLOCKAGE_UPDATES,params );
         }
 
+
     }
+
 }

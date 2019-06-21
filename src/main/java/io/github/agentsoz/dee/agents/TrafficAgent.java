@@ -29,9 +29,7 @@ import io.github.agentsoz.bdiabm.data.ActionContent;
 import io.github.agentsoz.dataInterface.DataServer;
 import io.github.agentsoz.dee.DeePerceptList;
 import io.github.agentsoz.dee.blockage.Blockage;
-import io.github.agentsoz.ees.Constants;
-import io.github.agentsoz.ees.EmergencyMessage;
-import io.github.agentsoz.ees.Run;
+import io.github.agentsoz.ees.*;
 import io.github.agentsoz.ees.agents.bushfire.BushfireAgent;
 import io.github.agentsoz.jill.core.beliefbase.BeliefBaseException;
 import io.github.agentsoz.jill.core.beliefbase.BeliefSetField;
@@ -264,12 +262,8 @@ public class TrafficAgent extends BushfireAgent {
         }
 
         // perceive congestion and blockage events always
-        EnvironmentAction action = new EnvironmentAction(
-                Integer.toString(getId()),
-                Constants.PERCEIVE,
-                new Object[]{Constants.BLOCKED, Constants.CONGESTION});
-        post(action);
-        addActiveEnvironmentAction(action);
+        registerPercepts(new String[] {Constants.BLOCKED, Constants.CONGESTION});
+
     }
 
     /**
@@ -305,30 +299,34 @@ public class TrafficAgent extends BushfireAgent {
         // save it to memory
         memorise(MemoryEventType.PERCEIVED.name(), perceptID + ":" + parameters.toString());
 
-//        else if (perceptID.equals(DeePerceptList.EMERGENCY_MESSAGE)) {
-//            updateResponseBarometerMessages(parameters);
-//        } else if (perceptID.equals(DeePerceptList.SOCIAL_NETWORK_MSG)) {
-//            updateResponseBarometerSocialMessage(parameters);
-//        }
-//        else if (perceptID.equals(DeePerceptList.FIELD_OF_VIEW)) {
-//          //  updateResponseBarometerFieldOfViewPercept(parameters);
-//            if (DeePerceptList.SIGHTED_FIRE.equalsIgnoreCase(parameters.toString())) {
-//                handleFireVisual();
-//            }
-
-
         if (perceptID.equals(PerceptList.ARRIVED)) {
             // do something
-        } else if (perceptID.equals(DeePerceptList.BLOCKAGE_INFLUENCE)) {
-            processSNBlockageInfo(parameters);
-        } else if (perceptID.equals(DeePerceptList.BLOCKAGE_UPDATES)) {
-            processSNBlockageUpdates(parameters);
+        } else if (perceptID.equals(Constants.SOCIAL_NETWORK_CONTENT)) {
+            DiffusedContent diffusedContent = (DiffusedContent) parameters;
+            HashMap<String,Object[]> contents = diffusedContent.getContentsMap();
+            for(String content: contents.keySet()){
+                if(content.equals(DeePerceptList.BLOCKAGE_INFLUENCE)){
+                    String blockageInfluence= (String)contents.get(content)[0];
+                    processSNBlockageInfo(blockageInfluence);
+                }
+                else if(content.equals(DeePerceptList.BLOCKAGE_UPDATES)){
+
+                    processSNBlockageUpdates(contents.get(content));
+                }
+                else{
+                    logger.error("unknown social network content for agent {}: {} ", getId(),content);
+                }
+            }
+
+
+
 
         } else if (perceptID.equals(PerceptList.CONGESTION)) {
             checkCongestionNearBlockage();
         } else if (perceptID.equals(PerceptList.BLOCKED)) { // 1. current link 2. blocked link
 
             processBlockedPercept((Object[]) parameters);
+            registerPercepts(new String[] {Constants.BLOCKED, Constants.CONGESTION}); // #FIXME register again
         }
 
         // handle percept spread on social network
@@ -383,50 +381,52 @@ public class TrafficAgent extends BushfireAgent {
             blockage.setLatestBlockageInfoTime(time); //  update latest time to now.
 
             //SN tasks
-            String blockageInfoUpdate = blockageName + time; // SN INFORMATION UPDATE, send everytime an agenr receives a blocked percept
-            sendBlockageUpdatestoSN(blockageInfoUpdate); // no need to save as information updates are sent everytime they are received from ABM.
+            sendBlockageUpdatestoSN(blockageName,time); // no need to save as information updates are sent everytime they are received from ABM.
 
         }
 
         //Finally, issue  a BDI action
         replanCurrentDriveTo(Constants.EvacRoutingMode.carGlobalInformation);
+
         // perceive congestion and blockage events always
-        EnvironmentAction action = new EnvironmentAction(
-                Integer.toString(getId()),
-                Constants.PERCEIVE,
-                new Object[] {Constants.BLOCKED, Constants.CONGESTION});
-        post(action);
-        addActiveEnvironmentAction(action);
+        registerPercepts(new String[] {Constants.BLOCKED, Constants.CONGESTION});
+
+//        EnvironmentAction action = new EnvironmentAction(
+//                Integer.toString(getId()),
+//                Constants.PERCEIVE,
+//                new Object[] {Constants.BLOCKED, Constants.CONGESTION});
+//        post(action);
+//        addActiveEnvironmentAction(action);
 
     }
 
-    boolean replanCurrentDriveTo(Constants.EvacRoutingMode routingMode) {
-        memorise(MemoryEventType.ACTIONED.name(), Constants.REPLAN_CURRENT_DRIVETO);
-        EnvironmentAction action = new EnvironmentAction(
-                Integer.toString(getId()),
-                Constants.REPLAN_CURRENT_DRIVETO,
-                new Object[] {routingMode});
-        addActiveEnvironmentAction(action); // will be reset by updateAction()
-        subgoal(action); // should be last call in any plan step
-        return true;
-    }
+//    boolean replanCurrentDriveTo(Constants.EvacRoutingMode routingMode) {
+//        memorise(MemoryEventType.ACTIONED.name(), Constants.REPLAN_CURRENT_DRIVETO);
+//        EnvironmentAction action = new EnvironmentAction(
+//                Integer.toString(getId()),
+//                Constants.REPLAN_CURRENT_DRIVETO,
+//                new Object[] {routingMode});
+//        addActiveEnvironmentAction(action); // will be reset by updateAction()
+//        subgoal(action); // should be last call in any plan step
+//        return true;
+//    }
 
-    private void processSNBlockageUpdates(Object params) { // #assume format: Blcoakge,time of type String
-        if (params == null || !(params instanceof String)) {
+    private void processSNBlockageUpdates(Object[] params) { // expected parameters: Blcoakge name ,time
+        if (params == null ) { // || !(params instanceof String
             logger.error("unknown blockage update received for agent {}: null or incorrect length ", getId());
             return;
         }
 
-        String[] tokens = ((String) params).split(",");
+       // String[] tokens = params.split(",");
 
-        String blockageName = (String) tokens[0];
-        double latestTimeFromSN = Double.valueOf(tokens[0]);
+        String blockageName = (String) params[0];
+        double latestTimeFromSN =  (double) params[1];
 
         Blockage blockage = getBlockageObjectFromName(blockageName);
         blockage.setLatestBlockageInfoTime(latestTimeFromSN); // update most recent time received from
     }
 
-    private void processSNBlockageInfo(Object msg) {
+    private void processSNBlockageInfo(String msg) {
 
 
         if (msg == null || !(msg instanceof String)) {
@@ -620,25 +620,33 @@ public class TrafficAgent extends BushfireAgent {
         return type;
     }
 
-    private void sendBlockageInfluencetoSN(String content) {
-        String[] msg = {content, String.valueOf(getId())};
+    private void sendBlockageInfluencetoSN(String content) { //#FIXME for every influence sending to other side, do we have to create a snupdate object?,or just one object per agent? maintain hashmap in jillBDIModel
+        SNUpdates snUpdates = new SNUpdates(this.getId());
+        String[] msg = {content};
+        snUpdates.getContentsMap().put(DeePerceptList.BLOCKAGE_INFLUENCE,msg);
+
         memorise(MemoryEventType.ACTIONED.name(), DeePerceptList.BLOCKAGE_INFLUENCE // blockage information
                 + ":" + content);
-        DataServer.getInstance(Run.DATASERVER).publish(DeePerceptList.BLOCKAGE_INFLUENCE, msg);
+        DataServer.getInstance(Run.DATASERVER).publish(Constants.BDI_REASONING_UPDATES, snUpdates);
     }
 
-    private void sendBlockageUpdatestoSN(String content) {
-        String[] msg = {content, String.valueOf(getId())};
-        memorise(MemoryEventType.ACTIONED.name(), DeePerceptList.BDI_STATE_UPDATES // blockage information
-                + ":" + content);
-        DataServer.getInstance(Run.DATASERVER).publish(DeePerceptList.BLOCKAGE_UPDATES, msg);
+    private void sendBlockageUpdatestoSN(String blockage, double time) {
+        SNUpdates blockageTimeUpdates = new SNUpdates(this.getId());
+        Object[] params = {blockage, time};
+        blockageTimeUpdates.getContentsMap().put(DeePerceptList.BLOCKAGE_UPDATES,params);
+
+        memorise(MemoryEventType.ACTIONED.name(), DeePerceptList.BLOCKAGE_UPDATES // blockage information
+                + ":" + params.toString());
+        DataServer.getInstance(Run.DATASERVER).publish(Constants.BDI_REASONING_UPDATES, blockageTimeUpdates);
     }
 
     private void broadcastToSocialNetwork(String content) {
-        String[] msg = {content, String.valueOf(getId())};
+        SNUpdates broadCastUpdate = new SNUpdates(this.getId());
+        String[] msg = {content};
+        broadCastUpdate.getBroadcastContentsMap().put(DeePerceptList.BLOCKAGE_UPDATES,msg);
         memorise(MemoryEventType.ACTIONED.name(), DeePerceptList.BLOCKAGE_INFO_BROADCAST
                 + ":" + content);
-        DataServer.getInstance(Run.DATASERVER).publish(DeePerceptList.BLOCKAGE_INFO_BROADCAST, msg);
+        DataServer.getInstance(Run.DATASERVER).publish(Constants.BDI_REASONING_UPDATES, broadCastUpdate);
     }
 
 
