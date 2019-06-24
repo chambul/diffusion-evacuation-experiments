@@ -34,11 +34,11 @@ import io.github.agentsoz.ees.agents.bushfire.BushfireAgent;
 import io.github.agentsoz.jill.core.beliefbase.BeliefBaseException;
 import io.github.agentsoz.jill.core.beliefbase.BeliefSetField;
 import io.github.agentsoz.jill.lang.AgentInfo;
-import io.github.agentsoz.util.ActionList;
 import io.github.agentsoz.util.Location;
 import io.github.agentsoz.util.PerceptList;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
 
 import java.awt.*;
 import java.io.PrintStream;
@@ -85,7 +85,7 @@ public class TrafficAgent extends BushfireAgent {
     private int blockageRecencyThreshold;
     private double distanceFromTheBlockageThreshold;
     private int blockageAngleThreshold = 0; // degrees
-
+    private SNUpdates snUpdates=null;
 
     // reconsider times
     static final double RECONSIDER_LATER_TIME = 30.0;
@@ -283,8 +283,6 @@ public class TrafficAgent extends BushfireAgent {
     public void handlePercept(String perceptID, Object parameters) {
 
 
-
-
         if (perceptID == null || perceptID.isEmpty()) {
             return;
         } // first process time percept as other percepts are using current time.
@@ -304,7 +302,9 @@ public class TrafficAgent extends BushfireAgent {
         } else if (perceptID.equals(Constants.SOCIAL_NETWORK_CONTENT)) {
             DiffusedContent diffusedContent = (DiffusedContent) parameters;
             HashMap<String,Object[]> contents = diffusedContent.getContentsMap();
+
             for(String content: contents.keySet()){
+
                 if(content.equals(DeePerceptList.BLOCKAGE_INFLUENCE)){
                     String blockageInfluence= (String)contents.get(content)[0];
                     processSNBlockageInfo(blockageInfluence);
@@ -326,7 +326,7 @@ public class TrafficAgent extends BushfireAgent {
         } else if (perceptID.equals(PerceptList.BLOCKED)) { // 1. current link 2. blocked link
 
             processBlockedPercept((Object[]) parameters);
-            registerPercepts(new String[] {Constants.BLOCKED, Constants.CONGESTION}); // #FIXME register again
+            registerPercepts(new String[] {Constants.BLOCKED, Constants.CONGESTION});
         }
 
         // handle percept spread on social network
@@ -338,6 +338,9 @@ public class TrafficAgent extends BushfireAgent {
         if (assessSituation) {
             post(new GoalAssessBlockageImpact("assess blockage impact"));
         }
+
+
+
     }
 
 
@@ -352,6 +355,7 @@ public class TrafficAgent extends BushfireAgent {
         String currentLinkID = (String) parameters[0];
         String blockedLinkID = (String) parameters[1];
 
+        snUpdates =  new SNUpdates();
 //        Location currentLoc = ((Location[]) this.getQueryPerceptInterface().queryPercept(
 //                String.valueOf(this.getId()), PerceptList.REQUEST_LOCATION, null))[0];
 
@@ -373,7 +377,7 @@ public class TrafficAgent extends BushfireAgent {
 
             //SN tasks
             String blockageInfo = "road blockage," + newBlockage.getName() + "," + time; // SN INFORMATION
-            sendBlockageInfluencetoSN(blockageInfo);
+            addBlockageInfluencetoSNUpdate(blockageInfo,snUpdates);
             blockagePointsShared.add(blockageName); // save blockage name as this influence is sent only once.
         } else { // agent knows about the blockage, either from SN or ABM.
 
@@ -381,7 +385,7 @@ public class TrafficAgent extends BushfireAgent {
             blockage.setLatestBlockageInfoTime(time); //  update latest time to now.
 
             //SN tasks
-            sendBlockageUpdatestoSN(blockageName,time); // no need to save as information updates are sent everytime they are received from ABM.
+            addBlockageTimeToSNUpdate(blockageName,time,snUpdates); // no need to save as information updates are sent everytime they are received from ABM.
 
         }
 
@@ -620,33 +624,32 @@ public class TrafficAgent extends BushfireAgent {
         return type;
     }
 
-    private void sendBlockageInfluencetoSN(String content) { //#FIXME for every influence sending to other side, do we have to create a snupdate object?,or just one object per agent? maintain hashmap in jillBDIModel
-        SNUpdates snUpdates = new SNUpdates(this.getId());
+    private void addBlockageInfluencetoSNUpdate(String content, SNUpdates snUpdates) {
+
         String[] msg = {content};
         snUpdates.getContentsMap().put(DeePerceptList.BLOCKAGE_INFLUENCE,msg);
 
         memorise(MemoryEventType.ACTIONED.name(), DeePerceptList.BLOCKAGE_INFLUENCE // blockage information
                 + ":" + content);
-        DataServer.getInstance(Run.DATASERVER).publish(Constants.BDI_REASONING_UPDATES, snUpdates);
+//        DataServer.getInstance(Run.DATASERVER).publish(Constants.BDI_REASONING_UPDATES, snUpdates);
     }
 
-    private void sendBlockageUpdatestoSN(String blockage, double time) {
-        SNUpdates blockageTimeUpdates = new SNUpdates(this.getId());
+    private void addBlockageTimeToSNUpdate(String blockage, double time, SNUpdates snUpdates) {
         Object[] params = {blockage, time};
-        blockageTimeUpdates.getContentsMap().put(DeePerceptList.BLOCKAGE_UPDATES,params);
+        snUpdates.getContentsMap().put(DeePerceptList.BLOCKAGE_UPDATES,params);
 
         memorise(MemoryEventType.ACTIONED.name(), DeePerceptList.BLOCKAGE_UPDATES // blockage information
                 + ":" + params.toString());
-        DataServer.getInstance(Run.DATASERVER).publish(Constants.BDI_REASONING_UPDATES, blockageTimeUpdates);
+//        DataServer.getInstance(Run.DATASERVER).publish(Constants.BDI_REASONING_UPDATES, snUpdates);
     }
 
-    private void broadcastToSocialNetwork(String content) {
-        SNUpdates broadCastUpdate = new SNUpdates(this.getId());
+    private void addBroadcastContenttoSNUpdate(String content,SNUpdates snUpdates) {
+
         String[] msg = {content};
-        broadCastUpdate.getBroadcastContentsMap().put(DeePerceptList.BLOCKAGE_UPDATES,msg);
+        snUpdates.getBroadcastContentsMap().put(DeePerceptList.BLOCKAGE_UPDATES,msg);
         memorise(MemoryEventType.ACTIONED.name(), DeePerceptList.BLOCKAGE_INFO_BROADCAST
                 + ":" + content);
-        DataServer.getInstance(Run.DATASERVER).publish(Constants.BDI_REASONING_UPDATES, broadCastUpdate);
+//        DataServer.getInstance(Run.DATASERVER).publish(Constants.BDI_REASONING_UPDATES, snUpdates);
     }
 
 
@@ -776,4 +779,20 @@ public class TrafficAgent extends BushfireAgent {
         }
     }
 
+    public  SNUpdates getOrCreateSNUpdate() {
+
+        if (this.snUpdates == null) {
+            snUpdates = new SNUpdates();
+        }
+
+        return snUpdates;
+    }
+
+    public void clearSNUpdate(){
+        this.snUpdates=null;
+    }
+
+    public SNUpdates getSNUpdates() {
+        return snUpdates;
+    }
 }

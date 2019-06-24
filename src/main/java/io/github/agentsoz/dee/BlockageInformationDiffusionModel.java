@@ -171,49 +171,54 @@ public class BlockageInformationDiffusionModel extends DiffusionModel implements
                     break;
                 }
 
-                SNUpdates newUpdates = (SNUpdates) data;
-                String agentId = String.valueOf(newUpdates.getAgentId());
+                HashMap<String, SNUpdates> snUpdatesMap = ( HashMap<String, SNUpdates>) data;
 
-                //process local contents
-                for(String localContent: newUpdates.getContentsMap().keySet()){
-                    logger.debug("Agent {} received local content type {}. Message: {}",agentId,localContent);
+//                if (!(data instanceof SNUpdates)) {
+//                    logger.error("received unknown data: " + data.toString());
+//                    break;
+//                }
+                for(Map.Entry entry: snUpdatesMap.entrySet()) {
+                    String agentId = (String) entry.getKey();
+                    SNUpdates newUpdates = (SNUpdates) entry.getValue();
 
-                    if(localContent.equals(DeePerceptList.BLOCKAGE_INFLUENCE)) {
-                        Set<String> agents = (localContentFromAgents.containsKey(localContent)) ? localContentFromAgents.get(localContent) :
-                                new HashSet<>();
-                        agents.add(agentId);
-                        localContentFromAgents.put(localContent, agents);
-                        String[] params = (String[]) newUpdates.getContentsMap().get(localContent);
-                        String msg = params[0];   // do something with parameters
+                    //process local contents
+                    for (String localContent : newUpdates.getContentsMap().keySet()) {
+                        logger.debug("Agent {} received local content type {}. Message: {}", agentId, localContent);
+
+                        if (localContent.equals(DeePerceptList.BLOCKAGE_INFLUENCE)) {
+                            Set<String> agents = (localContentFromAgents.containsKey(localContent)) ? localContentFromAgents.get(localContent) :
+                                    new HashSet<>();
+                            agents.add(agentId);
+                            localContentFromAgents.put(localContent, agents);
+                            String[] params = (String[]) newUpdates.getContentsMap().get(localContent);
+                            String msg = params[0];   // do something with parameters
+                        } else if (localContent.equals(DeePerceptList.BLOCKAGE_UPDATES)) {
+                            Object[] params = (Object[]) newUpdates.getContentsMap().get(localContent);
+                            String blockageName = (String) params[0];
+                            double blockedPercepttime = (double) params[1];
+                            latestBlockageTimes.put(agentId, blockedPercepttime);  //#FIXME time should be updated per blockage
+                        } else {
+                            logger.error("unknown local content received: {} for agent {}", localContent, agentId);
+                        }
+
                     }
 
-                    else if (localContent.equals(DeePerceptList.BLOCKAGE_UPDATES)){
-                        Object[] params = (Object[]) newUpdates.getContentsMap().get(localContent);
-                        String blockageName = (String) params[0];
-                        double blockedPercepttime = (double) params[1];
-                        latestBlockageTimes.put(agentId,blockedPercepttime );  //#FIXME time should be updated per blockage
+                    //process global (broadcast) contents
+                    for (String globalContent : newUpdates.getBroadcastContentsMap().keySet()) {
+                        logger.debug("received global content " + globalContent);
+                        if (!globalContentFromAgents.contains(globalContent)) {
+                            globalContentFromAgents.add(globalContent);
+                        }
+                        String[] params = (String[]) newUpdates.getContentsMap().get(globalContent);
+                        // do something with parameters
+
                     }
-                    else{
-                        logger.error("unknown local content received: {} for agent {}",localContent, agentId);
+
+                    //process SN actions
+                    for (String action : newUpdates.getSNActionsMap().keySet()) {
+                        Object[] params = newUpdates.getContentsMap().get(action);
+                        // do something with parameters
                     }
-
-                }
-
-                //process global (broadcast) contents
-                for(String globalContent: newUpdates.getBroadcastContentsMap().keySet()){
-                    logger.debug("received global content " + globalContent);
-                    if(!globalContentFromAgents.contains(globalContent)) {
-                        globalContentFromAgents.add(globalContent);
-                    }
-                    String[] params = (String[])newUpdates.getContentsMap().get(globalContent);
-                    // do something with parameters
-
-                }
-
-                //process SN actions
-                for(String action: newUpdates.getSNActionsMap().keySet()){
-                    Object[] params = newUpdates.getContentsMap().get(action);
-                    // do something with parameters
                 }
                 break;
             default:
