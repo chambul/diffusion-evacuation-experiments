@@ -26,7 +26,6 @@ import io.github.agentsoz.abmjill.genact.EnvironmentAction;
 import io.github.agentsoz.bdiabm.EnvironmentActionInterface;
 import io.github.agentsoz.bdiabm.QueryPerceptInterface;
 import io.github.agentsoz.bdiabm.data.ActionContent;
-import io.github.agentsoz.dataInterface.DataServer;
 import io.github.agentsoz.dee.DeePerceptList;
 import io.github.agentsoz.dee.blockage.Blockage;
 import io.github.agentsoz.ees.*;
@@ -40,7 +39,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 
-import java.awt.*;
 import java.io.PrintStream;
 import java.util.*;
 import java.util.List;
@@ -85,7 +83,6 @@ public class TrafficAgent extends BushfireAgent {
     private int blockageRecencyThreshold;
     private double distanceFromTheBlockageThreshold;
     private int blockageAngleThreshold = 0; // degrees
-    private SNUpdates snUpdates=null;
 
     // reconsider times
     static final double RECONSIDER_LATER_TIME = 30.0;
@@ -282,6 +279,7 @@ public class TrafficAgent extends BushfireAgent {
     @Override
     public void handlePercept(String perceptID, Object parameters) {
 
+        resetDiffusionContent(); //set Diffusion content to null.
 
         if (perceptID == null || perceptID.isEmpty()) {
             return;
@@ -299,9 +297,9 @@ public class TrafficAgent extends BushfireAgent {
 
         if (perceptID.equals(PerceptList.ARRIVED)) {
             // do something
-        } else if (perceptID.equals(Constants.SOCIAL_NETWORK_CONTENT)) {
-            DiffusedContent diffusedContent = (DiffusedContent) parameters;
-            HashMap<String,Object[]> contents = diffusedContent.getContentsMap();
+        } else if (perceptID.equals(Constants.DIFFUSION_CONTENT)) {
+            DiffusionContent diffusedContent = (DiffusionContent) parameters;
+            HashMap<String,Object[]> contents = diffusedContent.getContentsMapFromDiffusionModel();
 
             for(String content: contents.keySet()){
 
@@ -355,7 +353,6 @@ public class TrafficAgent extends BushfireAgent {
         String currentLinkID = (String) parameters[0];
         String blockedLinkID = (String) parameters[1];
 
-        snUpdates =  new SNUpdates();
 //        Location currentLoc = ((Location[]) this.getQueryPerceptInterface().queryPercept(
 //                String.valueOf(this.getId()), PerceptList.REQUEST_LOCATION, null))[0];
 
@@ -377,7 +374,7 @@ public class TrafficAgent extends BushfireAgent {
 
             //SN tasks
             String blockageInfo = "road blockage," + newBlockage.getName() + "," + time; // SN INFORMATION
-            addBlockageInfluencetoSNUpdate(blockageInfo,snUpdates);
+            putBlockageInfluencetoDiffusionContent(DeePerceptList.BLOCKAGE_INFLUENCE,blockageInfo);
             blockagePointsShared.add(blockageName); // save blockage name as this influence is sent only once.
         } else { // agent knows about the blockage, either from SN or ABM.
 
@@ -385,7 +382,7 @@ public class TrafficAgent extends BushfireAgent {
             blockage.setLatestBlockageInfoTime(time); //  update latest time to now.
 
             //SN tasks
-            addBlockageTimeToSNUpdate(blockageName,time,snUpdates); // no need to save as information updates are sent everytime they are received from ABM.
+            putBlockageTimeToDiffusionContent(DeePerceptList.BLOCKAGE_UPDATES,blockageName,time); // no need to save as information updates are sent everytime they are received from ABM.
 
         }
 
@@ -624,32 +621,35 @@ public class TrafficAgent extends BushfireAgent {
         return type;
     }
 
-    private void addBlockageInfluencetoSNUpdate(String content, SNUpdates snUpdates) {
+    //type: DeePerceptList.BLOCKAGE_INFLUENCE
+    private void putBlockageInfluencetoDiffusionContent(String contentType, String content) {
+        DiffusionContent dc =  getOrCreateDiffusionContent();
+        String[] params = {content};
+        dc.getContentsMapFromBDIModel().put(contentType,params);
 
-        String[] msg = {content};
-        snUpdates.getContentsMap().put(DeePerceptList.BLOCKAGE_INFLUENCE,msg);
-
-        memorise(MemoryEventType.ACTIONED.name(), DeePerceptList.BLOCKAGE_INFLUENCE // blockage information
+        memorise(MemoryEventType.ACTIONED.name(), contentType
                 + ":" + content);
-//        DataServer.getInstance(Run.DATASERVER).publish(Constants.BDI_REASONING_UPDATES, snUpdates);
+        setPublishDiffusionContentToTrue(); // publish to data server
     }
 
-    private void addBlockageTimeToSNUpdate(String blockage, double time, SNUpdates snUpdates) {
+    //type: DeePerceptList.BLOCKAGE_UPDATES
+    private void putBlockageTimeToDiffusionContent(String contentType, String blockage, double time) {
         Object[] params = {blockage, time};
-        snUpdates.getContentsMap().put(DeePerceptList.BLOCKAGE_UPDATES,params);
+        getOrCreateDiffusionContent().getContentsMapFromBDIModel().put(contentType,params);
 
-        memorise(MemoryEventType.ACTIONED.name(), DeePerceptList.BLOCKAGE_UPDATES // blockage information
+        memorise(MemoryEventType.ACTIONED.name(), contentType // blockage information
                 + ":" + params.toString());
-//        DataServer.getInstance(Run.DATASERVER).publish(Constants.BDI_REASONING_UPDATES, snUpdates);
+        setPublishDiffusionContentToTrue(); //publish to data server
     }
 
-    private void addBroadcastContenttoSNUpdate(String content,SNUpdates snUpdates) {
+    // type: DeePerceptList.BLOCKAGE_INFO_BROADCAST
+    private void putBroadcastContenttoDiffusionContent(String type, String content) {
 
         String[] msg = {content};
-        snUpdates.getBroadcastContentsMap().put(DeePerceptList.BLOCKAGE_UPDATES,msg);
-        memorise(MemoryEventType.ACTIONED.name(), DeePerceptList.BLOCKAGE_INFO_BROADCAST
-                + ":" + content);
-//        DataServer.getInstance(Run.DATASERVER).publish(Constants.BDI_REASONING_UPDATES, snUpdates);
+        getOrCreateDiffusionContent().getBroadcastContentsMapFromBDIModel().put(type,msg);
+        memorise(MemoryEventType.ACTIONED.name(),
+                type + ":" + content);
+        setPublishDiffusionContentToTrue(); //publish to data server
     }
 
 
@@ -779,20 +779,4 @@ public class TrafficAgent extends BushfireAgent {
         }
     }
 
-    public  SNUpdates getOrCreateSNUpdate() {
-
-        if (this.snUpdates == null) {
-            snUpdates = new SNUpdates();
-        }
-
-        return snUpdates;
-    }
-
-    public void clearSNUpdate(){
-        this.snUpdates=null;
-    }
-
-    public SNUpdates getSNUpdates() {
-        return snUpdates;
-    }
 }
