@@ -260,7 +260,7 @@ public class TrafficAgent extends BushfireAgent {
 
         // perceive congestion and blockage events always
         registerPercepts(new String[] {Constants.BLOCKED, Constants.CONGESTION});
-
+        super.start(writer, params); // need to set BushfireAgent class writer as this is used when replanCurrentDriveTo method is called.
     }
 
     /**
@@ -323,7 +323,7 @@ public class TrafficAgent extends BushfireAgent {
             checkCongestionNearBlockage();
         } else if (perceptID.equals(PerceptList.BLOCKED)) { // 1. current link 2. blocked link
 
-            processBlockedPercept((Object[]) parameters);
+            processBlockedPercept((Map<String,String>)parameters );
             registerPercepts(new String[] {Constants.BLOCKED, Constants.CONGESTION});
         }
 
@@ -348,10 +348,10 @@ public class TrafficAgent extends BushfireAgent {
         2. Agent knows about the blockage from its SN, but decides to reconsider_again/dont reroute
 
      */
-    private void processBlockedPercept(Object[] parameters) {
+    private void processBlockedPercept(Map<String,String> parameters) {
 
-        String currentLinkID = (String) parameters[0];
-        String blockedLinkID = (String) parameters[1];
+        String currentLinkID = (String) parameters.get("link");
+        String blockedLinkID = (String) parameters.get("nextlink");
 
 //        Location currentLoc = ((Location[]) this.getQueryPerceptInterface().queryPercept(
 //                String.valueOf(this.getId()), PerceptList.REQUEST_LOCATION, null))[0];
