@@ -138,12 +138,12 @@ public class BlockageInformationDiffusionModel extends DiffusionModel implements
 
             }
 
-            //share blockage time infomration with ONLY direct neighbours (no processing of whole agent list)
-            for(Map.Entry entry: latestBlockageTimes.entrySet()){
-                String id = (String) entry.getKey();
-                double time = (double) entry.getValue();
-                updateAndShareLatestBlockageTimeWithNeighbours(id,time, currentStepDataContainer);
-            }
+            //(BLOCKAGE_UPDATES) share blockage time infomration with ONLY direct neighbours (no processing of whole agent list)
+//            for(Map.Entry entry: latestBlockageTimes.entrySet()){
+//                String id = (String) entry.getKey();
+//                double time = (double) entry.getValue();
+//                updateAndShareLatestBlockageTimeWithNeighbours(id,time, currentStepDataContainer);
+//            }
 
 
             // step the model before begin called again
@@ -201,13 +201,15 @@ public class BlockageInformationDiffusionModel extends DiffusionModel implements
                             String[] params = (String[]) bdiDiffusionContent.getContentsMapFromBDIModel().get(localContent);
                             String msg = params[0];   // do something with parameters
 
-                        } else if (localContent.equals(DeePerceptList.BLOCKAGE_UPDATES)) {
-                            Object[] params = (Object[]) bdiDiffusionContent.getContentsMapFromBDIModel().get(localContent);
-                            String blockageName = (String) params[0];
-                            double blockedPercepttime = (double) params[1];
-                            latestBlockageTimes.put(agentId, blockedPercepttime);  //#FIXME time should be updated per blockage
-
-                        } else {
+                        }
+//                        else if (localContent.equals(DeePerceptList.BLOCKAGE_UPDATES)) {
+//                            Object[] params = (Object[]) bdiDiffusionContent.getContentsMapFromBDIModel().get(localContent);
+//                            String blockageName = (String) params[0];
+//                            double blockedPercepttime = (double) params[1];
+//                            latestBlockageTimes.put(agentId, blockedPercepttime);  //#FIXME time should be updated per blockage
+//
+//                        }
+                        else {
                             logger.error("unknown local content received: {} for agent {}", localContent, agentId);
                         }
 
@@ -236,26 +238,26 @@ public class BlockageInformationDiffusionModel extends DiffusionModel implements
         }
     }
 
-    public void updateAndShareLatestBlockageTimeWithNeighbours(String id,double time, DiffusionDataContainer dataContainer){ // no comparison needed, time of blocked percept will be the latest for all agents.
-
-        SocialTrafficAgent agent = (SocialTrafficAgent) this.getSnManager().getAgentMap().get(Integer.parseInt(id)); // update own time.
-        agent.setLastKnownBlockageTime(time);
-
-        for (int neighbourID : agent.getLinkMap().keySet()){ // spreading
-            SocialTrafficAgent neighbourAgent = (SocialTrafficAgent) this.getSnManager().getAgentMap().get(neighbourID);
-            neighbourAgent.setLastKnownBlockageTime(time);
-
-            //package update to send to the BDI agent
-            Object[] params = {time};
-            dataContainer.putContentToContentsMapFromDiffusionModel(String.valueOf(neighbourID),DeePerceptList.BLOCKAGE_UPDATES, params);
-
-//               DiffusionContent content = dataContainer.getOrCreateDiffusedContent(id);
-//            DiffusionContent content = contentHashMap.get(id);
+//    public void updateAndShareLatestBlockageTimeWithNeighbours(String id,double time, DiffusionDataContainer dataContainer){ // no comparison needed, time of blocked percept will be the latest for all agents.
+//
+//        SocialTrafficAgent agent = (SocialTrafficAgent) this.getSnManager().getAgentMap().get(Integer.parseInt(id)); // update own time.
+//        agent.setLastKnownBlockageTime(time);
+//
+//        for (int neighbourID : agent.getLinkMap().keySet()){ // spreading
+//            SocialTrafficAgent neighbourAgent = (SocialTrafficAgent) this.getSnManager().getAgentMap().get(neighbourID);
+//            neighbourAgent.setLastKnownBlockageTime(time);
+//
+//            //package update to send to the BDI agent
 //            Object[] params = {time};
-//            content.getContentsMap().put(DeePerceptList.BLOCKAGE_UPDATES,params );
-        }
-
-
-    }
+//            dataContainer.putContentToContentsMapFromDiffusionModel(String.valueOf(neighbourID),DeePerceptList.BLOCKAGE_UPDATES, params);
+//
+////               DiffusionContent content = dataContainer.getOrCreateDiffusedContent(id);
+////            DiffusionContent content = contentHashMap.get(id);
+////            Object[] params = {time};
+////            content.getContentsMap().put(DeePerceptList.BLOCKAGE_UPDATES,params );
+//        }
+//
+//
+//    }
 
 }

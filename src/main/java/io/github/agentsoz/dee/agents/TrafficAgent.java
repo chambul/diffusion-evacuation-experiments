@@ -307,10 +307,10 @@ public class TrafficAgent extends BushfireAgent {
                     String blockageInfluence= (String)contents.get(content)[0];
                     processSNBlockageInfo(blockageInfluence);
                 }
-                else if(content.equals(DeePerceptList.BLOCKAGE_UPDATES)){
-
-                    processSNBlockageUpdates(contents.get(content));
-                }
+//                else if(content.equals(DeePerceptList.BLOCKAGE_UPDATES)){
+//
+//                    processSNBlockageUpdates(contents.get(content));
+//                }
                 else{
                     logger.error("unknown social network content for agent {}: {} ", getId(),content);
                 }
@@ -362,8 +362,8 @@ public class TrafficAgent extends BushfireAgent {
             return;
         }
 
-        if (!isBlockageExistsInBlockageList(blockageName)) { // agent does not know about the blockage
-
+//        if (!isBlockageExistsInBlockageList(blockageName)) { // agent does not know about the blockage
+            //for each blockage post to social network
             // double[] cords = Blockage.findAndGetLocationOfBlockage(blockageName); // get cordinates of the blockage
             Blockage newBlockage = Blockage.createBlockageFromName(blockageName);
             if(newBlockage == null) {
@@ -376,15 +376,15 @@ public class TrafficAgent extends BushfireAgent {
             String blockageInfo = "road blockage," + newBlockage.getName() + "," + time; // SN INFORMATION
             putBlockageInfluencetoDiffusionContent(DeePerceptList.BLOCKAGE_INFLUENCE,blockageInfo);
             blockagePointsShared.add(blockageName); // save blockage name as this influence is sent only once.
-        } else { // agent knows about the blockage, either from SN or ABM.
-
-            Blockage blockage = getBlockageObjectFromName(blockageName); // get the existing blockage instance
-            blockage.setLatestBlockageInfoTime(time); //  update latest time to now.
-
-            //SN tasks
-            putBlockageTimeToDiffusionContent(DeePerceptList.BLOCKAGE_UPDATES,blockageName,time); // no need to save as information updates are sent everytime they are received from ABM.
-
-        }
+//        } else { // agent knows about the blockage, either from SN or ABM.
+//
+//            Blockage blockage = getBlockageObjectFromName(blockageName); // get the existing blockage instance
+//            blockage.setLatestBlockageInfoTime(time); //  update latest time to now.
+//
+//            //SN tasks
+//            putBlockageTimeToDiffusionContent(DeePerceptList.BLOCKAGE_UPDATES,blockageName,time); // no need to save as information updates are sent everytime they are received from ABM.
+//
+//        }
 
         //Finally, issue  a BDI action
         replanCurrentDriveTo(Constants.EvacRoutingMode.carGlobalInformation);
@@ -408,20 +408,20 @@ public class TrafficAgent extends BushfireAgent {
 //        return true;
 //    }
 
-    private void processSNBlockageUpdates(Object[] params) { // expected parameters: Blcoakge name ,time
-        if (params == null ) { // || !(params instanceof String
-            logger.error("unknown blockage update received for agent {}: null or incorrect length ", getId());
-            return;
-        }
-
-       // String[] tokens = params.split(",");
-
-        String blockageName = (String) params[0];
-        double latestTimeFromSN =  (double) params[1];
-
-        Blockage blockage = getBlockageObjectFromName(blockageName);
-        blockage.setLatestBlockageInfoTime(latestTimeFromSN); // update most recent time received from
-    }
+//    private void processSNBlockageUpdates(Object[] params) { // expected parameters: Blcoakge name ,time
+//        if (params == null ) { // || !(params instanceof String
+//            logger.error("unknown blockage update received for agent {}: null or incorrect length ", getId());
+//            return;
+//        }
+//
+//       // String[] tokens = params.split(",");
+//
+//        String blockageName = (String) params[0];
+//        double latestTimeFromSN =  (double) params[1];
+//
+//        Blockage blockage = getBlockageObjectFromName(blockageName);
+//        blockage.setLatestBlockageInfoTime(latestTimeFromSN); // update most recent time received from
+//    }
 
     private void processSNBlockageInfo(String msg) {
 
@@ -629,14 +629,14 @@ public class TrafficAgent extends BushfireAgent {
     }
 
     //type: DeePerceptList.BLOCKAGE_UPDATES
-    private void putBlockageTimeToDiffusionContent(String contentType, String blockage, double time) {
-        Object[] params = {blockage, time};
-        getOrCreateDiffusionContent().getContentsMapFromBDIModel().put(contentType,params);
-
-        memorise(MemoryEventType.ACTIONED.name(), contentType // blockage information
-                + ":" + params.toString());
-        setPublishDiffusionContentToTrue(); //publish to data server
-    }
+//    private void putBlockageTimeToDiffusionContent(String contentType, String blockage, double time) {
+//        Object[] params = {blockage, time};
+//        getOrCreateDiffusionContent().getContentsMapFromBDIModel().put(contentType,params);
+//
+//        memorise(MemoryEventType.ACTIONED.name(), contentType // blockage information
+//                + ":" + params.toString());
+//        setPublishDiffusionContentToTrue(); //publish to data server
+//    }
 
     // type: DeePerceptList.BLOCKAGE_INFO_BROADCAST
     private void putBroadcastContenttoDiffusionContent(String type, String content) {
