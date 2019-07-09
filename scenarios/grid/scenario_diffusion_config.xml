@@ -44,7 +44,7 @@
     <ic>
         <step_size>30</step_size>
         <seeding_strategy seed="53">random</seeding_strategy>
-        <diffusion_probability sigma="0.05">0.5</diffusion_probability>
+        <diffusion_probability sigma="0.05">1.0</diffusion_probability>
     </ic>
 
 

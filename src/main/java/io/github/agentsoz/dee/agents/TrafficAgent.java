@@ -392,12 +392,8 @@ public class TrafficAgent extends BushfireAgent {
         // perceive congestion and blockage events always
         registerPercepts(new String[] {Constants.BLOCKED, Constants.CONGESTION});
 
-//        EnvironmentAction action = new EnvironmentAction(
-//                Integer.toString(getId()),
-//                Constants.PERCEIVE,
-//                new Object[] {Constants.BLOCKED, Constants.CONGESTION});
-//        post(action);
-//        addActiveEnvironmentAction(action);
+        //finally, publish diffusion content updates
+        sendDiffusionContentToBDIModel();
 
     }
 

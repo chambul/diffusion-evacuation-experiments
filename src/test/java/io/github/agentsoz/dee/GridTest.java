@@ -47,7 +47,7 @@ public class GridTest {
         String[] args = {
                 "--config", "scenarios/grid/dee-main.xml",
         };
-        Run.main(args);
+        Main.main(args);
 
 //        final String actualEventsFilename = utils.getorSetOutputDirectory() + "/output_events.xml.gz";
 //        final String primaryExpectedEventsFilename = utils.getInputDirectory() + "/output_events.xml.gz";

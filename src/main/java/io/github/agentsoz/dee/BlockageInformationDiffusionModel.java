@@ -66,16 +66,16 @@ public class BlockageInformationDiffusionModel extends DiffusionModel implements
     private String configFile = null;
     private List<String> agentsIds = null;
 
-    Map<String, Set> localContentFromAgents;
     HashMap<String,Double> latestBlockageTimes;
-    ArrayList<String> globalContentFromAgents;
 
     public BlockageInformationDiffusionModel(String configFile) {
         super(configFile);
+        latestBlockageTimes = new HashMap<>();
     }
 
     public BlockageInformationDiffusionModel(Map<String, String> opts, DataServer dataServer, List<String> agentsIds) {
         super(opts, dataServer, agentsIds);
+        latestBlockageTimes = new HashMap<>();
     }
 
 
@@ -105,6 +105,7 @@ public class BlockageInformationDiffusionModel extends DiffusionModel implements
      */
     @Override
     public SortedMap<Double, DiffusionDataContainer> sendData(double timestep, String dataType) {
+        double currentTime = Time.convertTime(timestep, timestepUnit, Time.TimestepUnit.MINUTES);
         Double nextTime = timestep + SNConfig.getDiffturn();
 
         // create data structure to store current step contents and params
@@ -115,10 +116,10 @@ public class BlockageInformationDiffusionModel extends DiffusionModel implements
             // update the model with any new messages form agents
             ICModel icModel = (ICModel) this.getSnManager().getDiffModel();
 
-            if (!localContentFromAgents.isEmpty()) { // update local content
+            if (!getLocalContentFromAgents().isEmpty()) { // update local content
                 Map<String, String[]> map = new HashMap<>();
-                for (String key : localContentFromAgents.keySet()) {
-                    Object[] set = localContentFromAgents.get(key).toArray(new String[0]);
+                for (String key : getLocalContentFromAgents().keySet()) {
+                    Object[] set = getLocalContentFromAgents().get(key).toArray(new String[0]);
                     String[] newSet = new String[set.length];
                     for (int i = 0; i < set.length; i++) {
                         newSet[i] = (String)set[i];
@@ -130,10 +131,10 @@ public class BlockageInformationDiffusionModel extends DiffusionModel implements
                 icModel.updateSocialStatesFromLocalContent(map);
             }
 
-            if(!globalContentFromAgents.isEmpty()) { // update global contents
+            if(!getGlobalContentFromAgents().isEmpty()) { // update global contents
 
-                logger.info("Global content received to spread: {}", globalContentFromAgents.toString());
-                icModel.updateSocialStatesFromGlobalContent(globalContentFromAgents);
+                logger.info("Global content received to spread: {}", getGlobalContentFromAgents().toString());
+                icModel.updateSocialStatesFromGlobalContent(getGlobalContentFromAgents());
 
             }
 
@@ -146,19 +147,23 @@ public class BlockageInformationDiffusionModel extends DiffusionModel implements
 
 
             // step the model before begin called again
-            stepDiffusionProcess(currentStepDataContainer,timestep);
+            stepDiffusionProcess(currentStepDataContainer,currentTime);
 
-            //now update current step data container to all steps data map
-            getAllStepsDiffusionData().put(timestep,currentStepDataContainer);
+            //now put the current step data container to all steps data map
+            if(!currentStepDataContainer.getDiffusionDataMap().isEmpty()){
+                getAllStepsDiffusionData().put(currentTime, currentStepDataContainer);
+            }
+
+
 
             // clear the contents
-            globalContentFromAgents.clear();
-            localContentFromAgents.clear();
+            getGlobalContentFromAgents().clear();
+            getLocalContentFromAgents().clear();
             latestBlockageTimes.clear(); // clear last step blockage percept times
 
         }
 
-        double currentTime = Time.convertTime(timestep, timestepUnit, Time.TimestepUnit.MINUTES);
+
         //+1 to avoid returning empty map for diffusion data for first step (toKey = fromKey)
         SortedMap<Double, DiffusionDataContainer> periodicDiffusionData =   getAllStepsDiffusionData().subMap(lastUpdateTimeInMinutes,currentTime+1);
         lastUpdateTimeInMinutes = currentTime;
@@ -189,10 +194,10 @@ public class BlockageInformationDiffusionModel extends DiffusionModel implements
                         logger.debug("Agent {} received local content type {}. Message: {}", agentId, localContent);
 
                         if (localContent.equals(DeePerceptList.BLOCKAGE_INFLUENCE)) {
-                            Set<String> agents = (localContentFromAgents.containsKey(localContent)) ? localContentFromAgents.get(localContent) :
+                            Set<String> agents = (getLocalContentFromAgents().containsKey(localContent)) ? getLocalContentFromAgents().get(localContent) :
                                     new HashSet<>();
                             agents.add(agentId);
-                            localContentFromAgents.put(localContent, agents);
+                            getLocalContentFromAgents().put(localContent, agents);
                             String[] params = (String[]) bdiDiffusionContent.getContentsMapFromBDIModel().get(localContent);
                             String msg = params[0];   // do something with parameters
 
@@ -211,8 +216,8 @@ public class BlockageInformationDiffusionModel extends DiffusionModel implements
                     //process global (broadcast) contents
                     for (String globalContent : bdiDiffusionContent.getBroadcastContentsMapFromBDIModel().keySet()) {
                         logger.debug("received global content " + globalContent);
-                        if (!globalContentFromAgents.contains(globalContent)) {
-                            globalContentFromAgents.add(globalContent);
+                        if (!getGlobalContentFromAgents().contains(globalContent)) {
+                            getGlobalContentFromAgents().add(globalContent);
                         }
                         String[] params = (String[]) bdiDiffusionContent.getBroadcastContentsMapFromBDIModel().get(globalContent);
                         // do something with parameters
@@ -233,7 +238,7 @@ public class BlockageInformationDiffusionModel extends DiffusionModel implements
 
     public void updateAndShareLatestBlockageTimeWithNeighbours(String id,double time, DiffusionDataContainer dataContainer){ // no comparison needed, time of blocked percept will be the latest for all agents.
 
-        SocialTrafficAgent agent = (SocialTrafficAgent) this.getSnManager().getAgentMap().get(id); // update own time.
+        SocialTrafficAgent agent = (SocialTrafficAgent) this.getSnManager().getAgentMap().get(Integer.parseInt(id)); // update own time.
         agent.setLastKnownBlockageTime(time);
 
         for (int neighbourID : agent.getLinkMap().keySet()){ // spreading
@@ -242,7 +247,7 @@ public class BlockageInformationDiffusionModel extends DiffusionModel implements
 
             //package update to send to the BDI agent
             Object[] params = {time};
-            dataContainer.putContentToContentsMapFromDiffusionModel(id,DeePerceptList.BLOCKAGE_UPDATES, params);
+            dataContainer.putContentToContentsMapFromDiffusionModel(String.valueOf(neighbourID),DeePerceptList.BLOCKAGE_UPDATES, params);
 
 //               DiffusionContent content = dataContainer.getOrCreateDiffusedContent(id);
 //            DiffusionContent content = contentHashMap.get(id);
