@@ -80,8 +80,8 @@ public class TrafficAgent extends BushfireAgent {
     //new attributes
     private boolean assessSituation = false;
     //   private boolean sharedBlockageSNInfo = false;
-    private int blockageRecencyThreshold;
-    private double distanceFromTheBlockageThreshold;
+    private int blockageRecencyThreshold=0; // in minutes
+    private double distanceFromTheBlockageThreshold; // km
     private int blockageAngleThreshold = 0; // degrees
 
     // reconsider times
@@ -126,14 +126,14 @@ public class TrafficAgent extends BushfireAgent {
     private Map<String,EnvironmentAction> activeEnvironmentActions;
     private ActionContent.State lastEnvironmentActionStatus;
     private ActionContent.State lastDriveActionStatus;
-    private Set<String> blockagePointsShared; // contains a list of bloc
+ //   private Set<String> blockagePointsShared; // contains a list of bloc
     private List<Blockage> blockageList;
 
 
     public TrafficAgent(String id) {
         super(id);
         locations = new HashMap<>();
-        blockagePointsShared = new HashSet<>();
+//        blockagePointsShared = new HashSet<>();
         blockageList = new ArrayList<Blockage>();
         activeEnvironmentActions = new HashMap<>();
 
@@ -168,8 +168,8 @@ public class TrafficAgent extends BushfireAgent {
         this.blockageRecencyThreshold = blockageRecencyThreshold;
     }
 
-    public int getBlockageRecencyThreshold() {
-        return blockageRecencyThreshold;
+    public int getBlockageRecencyThresholdInSeconds() {
+        return blockageRecencyThreshold*60;
     }
 
     public boolean isAssessSituation() {
@@ -301,18 +301,18 @@ public class TrafficAgent extends BushfireAgent {
             DiffusionContent diffusedContent = (DiffusionContent) parameters;
             HashMap<String,Object[]> contents = diffusedContent.getContentsMapFromDiffusionModel();
 
-            for(String content: contents.keySet()){
+            for(String contentType: contents.keySet()){
 
-                if(content.equals(DeePerceptList.BLOCKAGE_INFLUENCE)){
-                    String blockageInfluence= (String)contents.get(content)[0];
-                    processSNBlockageInfo(blockageInfluence);
+                if(contentType.equals(DeePerceptList.BLOCKAGE_INFLUENCE)){
+                    String content= (String)contents.get(contentType)[0];
+                    processSNBlockageInfo(content);
                 }
 //                else if(content.equals(DeePerceptList.BLOCKAGE_UPDATES)){
 //
 //                    processSNBlockageUpdates(contents.get(content));
 //                }
                 else{
-                    logger.error("unknown social network content for agent {}: {} ", getId(),content);
+                    logger.error("unknown social network content type received for BDI agent {}: {} ", getId(),contentType);
                 }
             }
 
@@ -362,24 +362,26 @@ public class TrafficAgent extends BushfireAgent {
             return;
         }
 
-//        if (!isBlockageExistsInBlockageList(blockageName)) { // agent does not know about the blockage
-            //for each blockage post to social network
-            // double[] cords = Blockage.findAndGetLocationOfBlockage(blockageName); // get cordinates of the blockage
+        if (!isBlockageExistsInBlockageList(blockageName)) { // agent does not know about the blockage
             Blockage newBlockage = Blockage.createBlockageFromName(blockageName);
             if(newBlockage == null) {
                 logger.error("Cannot create blockage instance, unknown blockage name {}", blockageName);
             }
-            newBlockage.setLatestBlockageInfoTime(time); // update latest time to now.
             blockageList.add(newBlockage);
+        }
 
-            //SN tasks
-            String blockageInfo = "road blockage," + newBlockage.getName() + "," + time; // SN INFORMATION
+        //  for every blocked percept, update blockage time, create content and
+        Blockage blockage = getBlockageObjectFromName(blockageName);
+        blockage.setLatestBlockageObservedTime(time); // time known of the actual event
+
+        //SN tasks
+            String blockageInfo = "road blockage," + blockage.getName() + "," + time; // SN INFORMATION
             putBlockageInfluencetoDiffusionContent(DeePerceptList.BLOCKAGE_INFLUENCE,blockageInfo);
-            blockagePointsShared.add(blockageName); // save blockage name as this influence is sent only once.
+           // blockagePointsShared.add(blockageName); // save blockage name as this influence is sent only once.
 //        } else { // agent knows about the blockage, either from SN or ABM.
 //
 //            Blockage blockage = getBlockageObjectFromName(blockageName); // get the existing blockage instance
-//            blockage.setLatestBlockageInfoTime(time); //  update latest time to now.
+//            blockage.setLatestBlockageObservedTime(time); //  update latest time to now.
 //
 //            //SN tasks
 //            putBlockageTimeToDiffusionContent(DeePerceptList.BLOCKAGE_UPDATES,blockageName,time); // no need to save as information updates are sent everytime they are received from ABM.
@@ -420,35 +422,44 @@ public class TrafficAgent extends BushfireAgent {
 //        double latestTimeFromSN =  (double) params[1];
 //
 //        Blockage blockage = getBlockageObjectFromName(blockageName);
-//        blockage.setLatestBlockageInfoTime(latestTimeFromSN); // update most recent time received from
+//        blockage.setLatestBlockageObservedTime(latestTimeFromSN); // update most recent time received from
 //    }
 
-    private void processSNBlockageInfo(String msg) {
+    private void processSNBlockageInfo(String content) {
 
 
-        if (msg == null || !(msg instanceof String)) {
+        if (content == null || !(content instanceof String)) {
             logger.error("null information received from the SN model for agent {}", getId());
             return;
         }
 
-        //extract pieces of info from the SN msg (example format: road blockage,grossmands,time)
-        String[] tokens = ((String) msg).split(",");
 
-        String blockageName = tokens[1]; // second token
-        if (isBlockageExistsInBlockageList(blockageName)) { // normally this shouldn't be the case, otherwise agent is active in SN
-            logger.warn("agent {} is already aware of the {} SN blockage information at time {}", getId(), blockageName, time);
-        } else {
+        try{
+            String[] tokens = ((String) content).split(","); //extract pieces of info from the SN msg (example format: road blockage,grossmands,time)
 
-            Blockage newBlockage = Blockage.createBlockageFromName(blockageName);
-            if (newBlockage == null) {
-                logger.error("could not find the blockage point in the SN information for name {}", blockageName);
+            String blockageName = tokens[1]; // grossmands
+            double newObservedTime = Double.valueOf(tokens[2]); // time
+
+            if (!isBlockageExistsInBlockageList(blockageName)) { // first time hearing about the blockage, create new blockage and add to list
+                Blockage newBlockage = Blockage.createBlockageFromName(blockageName);
+                if (newBlockage == null) {
+                    logger.error("could not find the blockage {} in the blockage list", blockageName);
+                }
+                blockageList.add(newBlockage);
             }
-            blockageList.add(newBlockage);
-            newBlockage.setLatestBlockageInfoTime(time);
+
+            Blockage blockage = getBlockageObjectFromName(blockageName);
+           if(blockage.getLatestObservedTime() < newObservedTime){ // update if later than the current observed time
+               blockage.setLatestBlockageObservedTime(newObservedTime); // time blockage event was observed
+           }
+            blockage.setLatestInfoReceivedTime(time); // update received time to the latest, which is now
             this.assessSituation = true;
 
         }
+        catch(ArrayIndexOutOfBoundsException e) {
+            logger.error("Cannot find blockage name by splitting received content", e.getMessage());
 
+        }
 
     }
 

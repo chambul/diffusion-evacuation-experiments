@@ -52,11 +52,11 @@ public class PlanEvaluateCurrentContext extends Plan {
 
                 for (Blockage blockage: agent.getBlockageList()) { // list cannot be empty if agent selects this plan
 
-                    if(  agent.getTime() - blockage.getLatestBlockageInfoTime() <= agent.getBlockageRecencyThreshold() ){ // evaluate recency
+                    if(  agent.getTime() - blockage.getLatestObservedTime() <= agent.getBlockageRecencyThresholdInSeconds() ){ // evaluate recency
                         blockage.setRecencyOfBlockage(Blockage.recency.RECENT);
                     }
 
-                    double smallestAngleDif = agent.getSmallestAngleBetweenTwoLines(currentLoc,destination,currentLoc,blockage); // test blockage diraction wrt to current destination
+                    double smallestAngleDif = agent.getSmallestAngleBetweenTwoLines(currentLoc,destination,currentLoc,blockage); // test blockage direction wrt to current destination
                     if (smallestAngleDif <= agent.getBlockageAngleThreshold()) { // consider absolute value without - or + direction
                         blockage.setBlockageInCurrentDirection(true); // blockage  in same direction
                         blockage.setNoBlockageImpact(false); // evaluated to find blockage impact

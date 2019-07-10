@@ -33,8 +33,8 @@ public class Blockage extends Location{
     private double lastUpdatedTime;
     private double distToBlockage;
     private boolean congestionNearBlockage;
-   // private Location location;
-    private double latestBlockageInfoTime;
+    private double latestObservedTime; // latest time that the blockage was observed
+    private double latestInfoReceivedTime; // latest time that an information is received about the blockage from SN
     private recency  recencyOfBlockage;
     private boolean blockageInCurrentDirection;
     private boolean noBlockageImpact;
@@ -163,13 +163,21 @@ public class Blockage extends Location{
     }
 
 
-    public double getLatestBlockageInfoTime() {
+    public double getLatestObservedTime() {
 
-        return latestBlockageInfoTime;
+        return latestObservedTime;
     }
 
-    public void setLatestBlockageInfoTime(double latestBlockageInfoTime) {
-        this.latestBlockageInfoTime = latestBlockageInfoTime;
+    public void setLatestBlockageObservedTime(double time) {
+           this.latestObservedTime = time;
+    }
+
+    public double getLatestInfoReceivedTime() {
+        return latestInfoReceivedTime;
+    }
+
+    public void setLatestInfoReceivedTime(double latestInfoReceivedTime) {
+        this.latestInfoReceivedTime = latestInfoReceivedTime;
     }
 
     public void setLastUpdatedTime(double lastUpdatedTime) {

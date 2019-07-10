@@ -125,8 +125,8 @@ public class BlockageInformationDiffusionModel extends DiffusionModel implements
                         newSet[i] = (String)set[i];
                     }
                     map.put(key,newSet);
-                    logger.info(String.format("At time %.0f, total %d agents will spread new message: %s", timestep, newSet.length, key));
-                    logger.info("Agents spreading new message are: {}", Arrays.toString(newSet));
+                    logger.info(String.format("At time %.0f, total %d agents will spread content: %s", timestep, newSet.length, key));
+                    logger.info("Agents spreading the content are: {}", Arrays.toString(newSet));
                 }
                 icModel.updateSocialStatesFromLocalContent(map);
             }
@@ -147,7 +147,7 @@ public class BlockageInformationDiffusionModel extends DiffusionModel implements
 
 
             // step the model before begin called again
-            stepDiffusionProcess(currentStepDataContainer,currentTime);
+            stepDiffusionProcess(currentStepDataContainer,DeePerceptList.BLOCKAGE_INFLUENCE,currentTime);
 
             //now put the current step data container to all steps data map
             if(!currentStepDataContainer.getDiffusionDataMap().isEmpty()){
@@ -190,16 +190,17 @@ public class BlockageInformationDiffusionModel extends DiffusionModel implements
                     DiffusionContent bdiDiffusionContent = (DiffusionContent) entry.getValue();
 
                     //process local contents
-                    for (String localContent : bdiDiffusionContent.getContentsMapFromBDIModel().keySet()) {
-                        logger.debug("Agent {} received local content type {}. Message: {}", agentId, localContent);
+                    for (Map.Entry contentEntry : bdiDiffusionContent.getContentsMapFromBDIModel().entrySet()) {
+                        String localContentType = (String) contentEntry.getKey();
+                        String[] params = (String[]) contentEntry.getValue();
+                        String content = params[0];
+                        logger.debug("Agent {} received local content type {}. Content: {} ", agentId, localContentType,content);
 
-                        if (localContent.equals(DeePerceptList.BLOCKAGE_INFLUENCE)) {
-                            Set<String> agents = (getLocalContentFromAgents().containsKey(localContent)) ? getLocalContentFromAgents().get(localContent) :
+                        if (localContentType.equals(DeePerceptList.BLOCKAGE_INFLUENCE)) { // store Blockage Influence content type
+                            Set<String> agents = (getLocalContentFromAgents().containsKey(content)) ? getLocalContentFromAgents().get(content) :
                                     new HashSet<>();
                             agents.add(agentId);
-                            getLocalContentFromAgents().put(localContent, agents);
-                            String[] params = (String[]) bdiDiffusionContent.getContentsMapFromBDIModel().get(localContent);
-                            String msg = params[0];   // do something with parameters
+                            getLocalContentFromAgents().put(content, agents);
 
                         }
 //                        else if (localContent.equals(DeePerceptList.BLOCKAGE_UPDATES)) {
@@ -210,7 +211,7 @@ public class BlockageInformationDiffusionModel extends DiffusionModel implements
 //
 //                        }
                         else {
-                            logger.error("unknown local content received: {} for agent {}", localContent, agentId);
+                            logger.error("unknown local content received: {} for agent {}", localContentType, agentId);
                         }
 
                     }
