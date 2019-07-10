@@ -61,7 +61,7 @@ public class PlanDecideAssessment extends Plan {
             },
 
             () -> {
-                subgoal(new GoalEvaluate("Evaluate")); // wait untill evaluation is done.
+                subgoal(new GoalEvaluate("Evaluate")); // wait until evaluation is done.
             },
 
             () -> {
@@ -69,7 +69,7 @@ public class PlanDecideAssessment extends Plan {
                 for (Blockage blockage: ((TrafficAgent) getAgent()).getBlockageList()) {
 
                     if (blockage.isNoBlockageImpact() == false) { // if there is a blocage impact, post decide goal
-                        //subgoal(new )
+                        post(new GoalDecide("assess blockage impact"));
                     }
                 }
             }

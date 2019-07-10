@@ -48,22 +48,30 @@ public class PlanEvaluateCurrentContext extends Plan {
                 // get destination (next activity) coords: x2,y2
                 double[] destCords =  (double[]) agent.getQueryPerceptInterface().queryPercept(
                         String.valueOf(agent.getId()), PerceptList.REQUEST_DESTINATION_COORDINATES, null);
-                Location destination  = new Location("Dest",destCords[0],destCords[1]);
 
-                for (Blockage blockage: agent.getBlockageList()) { // list cannot be empty if agent selects this plan
-
-                    if(  agent.getTime() - blockage.getLatestObservedTime() <= agent.getBlockageRecencyThresholdInSeconds() ){ // evaluate recency
-                        blockage.setRecencyOfBlockage(Blockage.recency.RECENT);
-                    }
-
-                    double smallestAngleDif = agent.getSmallestAngleBetweenTwoLines(currentLoc,destination,currentLoc,blockage); // test blockage direction wrt to current destination
-                    if (smallestAngleDif <= agent.getBlockageAngleThreshold()) { // consider absolute value without - or + direction
-                        blockage.setBlockageInCurrentDirection(true); // blockage  in same direction
-                        blockage.setNoBlockageImpact(false); // evaluated to find blockage impact
-                    }
-
-
+                if( (destCords[0]==-1 && destCords[1]==-1) ) { //agent is in last activity
+                    agent.setTravelPlanCompleted(true);
+                    agent.memorise(TrafficAgent.MemoryEventType.BELIEVED.name(),TrafficAgent.MemoryEventValue.MATSIM_PLAN_COMPLETED.name()+ "|" + this.getClass().getSimpleName()+ "=" + true);
                 }
+                else{
+                    Location destination  = new Location("Dest",destCords[0],destCords[1]);
+
+                    for (Blockage blockage: agent.getBlockageList()) { // list cannot be empty if agent selects this plan
+
+                        if(  agent.getTime() - blockage.getLatestObservedTime() <= agent.getBlockageRecencyThresholdInSeconds() ){ // evaluate recency
+                            blockage.setRecencyOfBlockage(Blockage.recency.RECENT);
+                        }
+
+                        double smallestAngleDif = agent.getSmallestAngleBetweenTwoLines(currentLoc,destination,currentLoc,blockage); // test blockage direction wrt to current destination
+                        if (smallestAngleDif <= agent.getBlockageAngleThreshold()) { // consider absolute value without - or + direction
+                            blockage.setBlockageInCurrentDirection(true); // blockage  in same direction
+                            blockage.setNoBlockageImpact(false); // evaluated to find blockage impact
+                        }
+
+
+                    }
+                }
+
             },
 
 

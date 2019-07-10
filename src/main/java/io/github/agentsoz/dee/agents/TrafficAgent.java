@@ -79,15 +79,16 @@ public class TrafficAgent extends BushfireAgent {
 
     //new attributes
     private boolean assessSituation = false;
+    private boolean travelPlanCompleted = false;
     //   private boolean sharedBlockageSNInfo = false;
     private int blockageRecencyThreshold=0; // in minutes
     private double distanceFromTheBlockageThreshold; // km
     private int blockageAngleThreshold = 0; // degrees
 
     // reconsider times
-    static final double RECONSIDER_LATER_TIME = 30.0;
-    static final double RECONSIDER_SOONER_TIME = 5.0;
-    static final double RECONSIDER_REGULAR_TIME = 10.0;
+    static final double RECONSIDER_LATER_TIME = 30.0*60;
+    static final double RECONSIDER_SOONER_TIME = 5.0*60;
+    static final double RECONSIDER_REGULAR_TIME = 10.0*60;
 
 
     enum MemoryEventType {
@@ -106,7 +107,8 @@ public class TrafficAgent extends BushfireAgent {
         EVALUATE,
         RECONSIDER_AGAIN,
         DECIDE_BLOCKAGE_IMPACT,
-        REROUTE
+        REROUTE,
+        MATSIM_PLAN_COMPLETED
     }
 
     //defaults
@@ -174,6 +176,14 @@ public class TrafficAgent extends BushfireAgent {
 
     public boolean isAssessSituation() {
         return assessSituation;
+    }
+
+    public boolean isTravelPlanCompleted() {
+        return travelPlanCompleted;
+    }
+
+    public void setTravelPlanCompleted(boolean travelPlanCompleted) {
+        this.travelPlanCompleted = travelPlanCompleted;
     }
 
     public void setAssessSituation(boolean assessSituation) {
@@ -333,7 +343,7 @@ public class TrafficAgent extends BushfireAgent {
         // Now trigger a response as needed
 //        checkBarometersAndTriggerResponseAsNeeded();
 
-        if (assessSituation) {
+        if (assessSituation && !travelPlanCompleted) {
             post(new GoalAssessBlockageImpact("assess blockage impact"));
         }
 
