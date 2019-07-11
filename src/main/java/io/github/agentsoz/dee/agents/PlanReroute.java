@@ -23,6 +23,8 @@ package io.github.agentsoz.dee.agents;
  */
 
 import io.github.agentsoz.dee.blockage.Blockage;
+import io.github.agentsoz.ees.Constants;
+import io.github.agentsoz.ees.agents.bushfire.BushfireAgent;
 import io.github.agentsoz.jill.lang.Agent;
 import io.github.agentsoz.jill.lang.Goal;
 import io.github.agentsoz.jill.lang.Plan;
@@ -35,6 +37,7 @@ public class PlanReroute extends Plan {
 
     TrafficAgent agent=null;
     Blockage rerouteBlockage = null;
+    boolean isReplanning = false;
 
     public PlanReroute(Agent agent, Goal goal, String name) {
         super(agent, goal, name);
@@ -61,7 +64,7 @@ public class PlanReroute extends Plan {
         return applicable;
     }
 
-    @Override  // #FIXME if more than one binding, assign them to plan variables.
+    @Override
     public void setPlanVariables(Map<String, Object> vars) {
     }
 
@@ -69,9 +72,15 @@ public class PlanReroute extends Plan {
     PlanStep[] steps = {
             () -> {
                 ((TrafficAgent) getAgent()).memorise(TrafficAgent.MemoryEventType.ACTIONED.name(), TrafficAgent.MemoryEventValue.REROUTE.name() +  ":" + getGoal() + "|" + this.getClass().getSimpleName() + "=" + true);
-                // agent.replanCurrentDriveTo(MATSimEvacModel.EvacRoutingMode.carGlobalInformation); #FIXME uncomment
-                //#FIXME what about the reconsider time here? should we reconisder again this blockage?
-            },
+                agent.reRouteNow();
+
+                //#FIXME decide wha to do with reconsider time here
+                ((TrafficAgent) getAgent()).memorise(TrafficAgent.MemoryEventType.BELIEVED.name(),
+                        TrafficAgent.MemoryEventValue.STATE_CHANGED.name()
+                                + ": replanned current route from reasoning");
+            }
+
+
 
 
     };

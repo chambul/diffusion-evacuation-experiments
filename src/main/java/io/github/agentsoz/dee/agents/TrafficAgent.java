@@ -40,6 +40,7 @@ import org.slf4j.LoggerFactory;
 
 
 import java.io.PrintStream;
+import java.nio.file.WatchEvent;
 import java.util.*;
 import java.util.List;
 
@@ -108,7 +109,8 @@ public class TrafficAgent extends BushfireAgent {
         RECONSIDER_AGAIN,
         DECIDE_BLOCKAGE_IMPACT,
         REROUTE,
-        MATSIM_PLAN_COMPLETED
+        MATSIM_PLAN_COMPLETED,
+        STATE_CHANGED;
     }
 
     //defaults
@@ -409,6 +411,9 @@ public class TrafficAgent extends BushfireAgent {
 
     }
 
+    public boolean reRouteNow(){
+        return replanCurrentDriveTo(Constants.EvacRoutingMode.carGlobalInformation);
+    }
 //    boolean replanCurrentDriveTo(Constants.EvacRoutingMode routingMode) {
 //        memorise(MemoryEventType.ACTIONED.name(), Constants.REPLAN_CURRENT_DRIVETO);
 //        EnvironmentAction action = new EnvironmentAction(

@@ -72,7 +72,7 @@ public class PlanEvaluateCurrentContext extends Plan {
                     }
                 }
 
-            },
+            }
 
 
     };
