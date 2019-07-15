@@ -346,7 +346,7 @@ public class TrafficAgent extends BushfireAgent {
 //        checkBarometersAndTriggerResponseAsNeeded();
 
         if (assessSituation && !travelPlanCompleted) {
-            post(new GoalAssessBlockageImpact("assess blockage impact"));
+ //           post(new GoalAssessBlockageImpact("assess blockage impact")); //#FIXME commented until the reRouteCurrentLeg action issue is fixed
         }
 
 
