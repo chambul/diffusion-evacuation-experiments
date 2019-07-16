@@ -36,9 +36,9 @@ return
 
 
 
-if [ $# -ne 2 ]; then
+if [ $# -ne 3 ]; then
  	printf " This script creates configurations for batch run. Enter following args: \n";
-	printf " 1. scenario = sn/bl(baseline)/bc(Broadcast)  2. timeStamp/ output directory \n ";
+	printf " 1. scenarioType = d/bl(diffusion/baseline) 2. specific run  directory 3. config number  \n ";
   >&2
   exit 1
  fi
@@ -46,8 +46,6 @@ if [ $# -ne 2 ]; then
 #--------------------starting script--------------------------------------------
 printf "\n\n createConfigurationsFromLHS.sh script started.... \n"
 
-#only hardcorded configuration
-batchRunMainConfig="./configs/batch-run-main-config.xml"
 
 # set the python di using bash xml_grep : python functions doesnt work until the path is set
 #path=`xml_grep "local-python-path" $batchRunMainConfig --text_only`
@@ -60,44 +58,57 @@ export PYTHONPATH="${PYTHONPATH}:$path"
 ## Parsing input parameters
 if [ $# -ne 0 ];
 then
-  scenario=$1
-  timeStamp=$2  #FIXME passing timeStamp or the specific configuration setting directory?
+  scenarioType=$1
+  outDir=$2
+  configNo=$3
 fi
 
-outDirFormat=$timeStamp-$scenario #FIXME passing timeStamp or the specific configuration setting directory?
-resultsDir=$(getSingleTagValue $batchRunMainConfig "local-results")
-outDir=$resultsDir/$outDirFormat
+#only hardcorded configuration
+batchRunMainConfig="./configs/batch-run-main-config.xml"
+scenario="grid"
+expMainConfig="$outDir/scenarios/$scenario/dee-main.xml"
+expDiffusionConfig="$outDir/scenarios/$scenario/scenario_diffusion_config.xml"
+resultsDir="output"
+lhs="../latin-hypercube-samples/integrated-model-settings.xls"
+
+#outDirFormat=$timeStamp-$scenario #FIXME passing timeStamp or the specific configuration setting directory?
+#resultsDir=$(getSingleTagValue $batchRunMainConfig "local-results")
+
+#outDir=$resultsDir/$outDirFormat
 
 
 #set configurations based on case/scenario
-
-if [ $scenario == "sn" ];
+: '
+if [ $scenarioType == "d" ];
 then
-expMainConfig=$(getSingleTagValue $batchRunMainConfig "sn-main") # original main configuration file
-expDiffusionConfig=$(getSingleTagValue $batchRunMainConfig "sn-diffusion") # original diffusion configuration file
-lhs=$(getSingleTagValue $batchRunMainConfig "sn-lhs")
+#expMainConfig=$(getSingleTagValue $batchRunMainConfig "sn-main") # original main configuration file
+#expDiffusionConfig=$(getSingleTagValue $batchRunMainConfig "sn-diffusion") # original diffusion configuration file
+#lhs=$(getSingleTagValue $batchRunMainConfig "sn-lhs")
 
-elif [ $scenario == "bl" ];
+elif [ $scenarioType == "bl" ];
 then
-expMainConfig=$(getSingleTagValue $batchRunMainConfig "bl-main") # original diffusion configuration file
-elif [[ $scenario == "bc" ]]; then
+#expMainConfig=$(getSingleTagValue $batchRunMainConfig "bl-main") # original diffusion configuration file
+elif [[ $scenarioType == "bc" ]]; then
   printf " currently not implemented for broadcast scenario. \n" ;
   exit 1;
 else
-  printf "scenario option $scenario is unknown, aborting!";
+  printf "scenario option $scenarioType is unknown, aborting!";
   exit 1;
 fi
+'
+
 
 
 #print Configs
-printf " cofiguration files and directory paths (relatives directories from script dir) : \n"
-printf "batch run main configuration file= $batchRunMainConfig  \n"
-printf "scenario/case = $scenario  \n"
-printf "original main configuration file = $expMainConfig \n"
-printf "original diffusion configuration file  = $expDiffusionConfig \n"
-printf "original diffusion configuration file name = $expDiffusionConfig \n"
-printf "lhs file-name = $lhs \n"
 printf "configuration files will be created at = $outDir \n"
+printf " configuration file paths: \n"
+printf "experiments configuration xml file= $batchRunMainConfig  \n"
+printf "scenario = $scenario  \n"
+printf "scenario type = $scenarioType  \n"
+printf "simulation main configuration file = $expMainConfig \n"
+printf "simulation diffusion configuration file  = $expDiffusionConfig \n"
+printf "lhs file-name = $lhs \n"
+
 
 
 while true; do
@@ -130,34 +141,47 @@ IFS=,
 
 
 ################## scenario SN######################
-if [ $scenario == "sn" ];
+if [ $scenarioType == "d" ];
 then
 	sample=0
 	while read col1 col2 col3 col4 col5 col6 col7 col8
 	do
 		let "sample++"
 
-		links=$col2 #&& echo $dependants
+		links=$col2
 		prob=$col3
-		step=$col4 #&& echo $SclDistance
+		step=$col4
+    farT=$col5
+    recencyT=$col6
+    angleT=$col7
 
 
 		#4. modify the parameters in the configuration file
 		# find the mathing string in each line and replace the entire lines and write to a new file
 
+    if [ $sample -eq $configNo ];
+    then
+    # copy the new config file to a new dir
+    printf "links: $links | prob: $prob| diffusion step: $step"
 
-              # copy the new config file to a new dir
-              mkdir -p $outDir/sample$sample
+    mkdir -p $outDir/sample$sample
 
-		sed -e 's/avg_links=.*/avg_links="'$links'"/g;
+    # main config modifications
+    #logfile
+    sed -i "s#<opt id\=\"jLogFile\">[-_[:alnum:]./]*#<opt id=\"jLogFile\">${resultsDir}/jill.log#"  $expMainConfig  # alnum = Any alphanumeric character, [A-Za-z0-9]
+    #jOutFile
+    sed -i "s#<opt id\=\"jOutFile\">[-_[:alnum:]./]*#<opt id=\"jOutFile\">${resultsDir}/jill.out#"  $expMainConfig
+
+    # diffusion config modifications
+    sed -e 's/avg_links=.*/avg_links="'$links'"/g;
 		s|>[0-9,.]*</diffusion_probability>|>'$prob'</diffusion_probability>|g; #change delimiter
 	 	s|>[0-9]*</step_size>|>'$step'</step_size>|g'  $expDiffusionConfig > $outDir/sample$sample/$(basename $expDiffusionConfig)
 
-# copy in main configuration
-cp $expMainConfig $outDir/sample$sample/
 
-#record the diff
-diff $expDiffusionConfig $outDir/sample$sample/$(basename $expDiffusionConfig) >> $outDir/diffusion_config_diffs.txt
+    #record the diff
+    diff $expDiffusionConfig $outDir/sample$sample/$(basename $expDiffusionConfig) >> $outDir/diffusion_config_diffs.txt
+
+  fi
 
 done < $INPUT
 IFS=$OLDIFS

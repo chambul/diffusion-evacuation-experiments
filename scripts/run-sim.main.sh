@@ -112,27 +112,24 @@ timeStampDir=$results_dir/$timestampDirName
 
 			#4.1 mkdir out directory
 			outDir=$configDir/run$run
-			mkdir -p $outDir
+			mkdir -p $outDir/scenarios
 
-			#4.2 copy sn.jar, hawkesbury config, libs and the scripts from sn integration and the experiments project
-		#	cp -r $sn_dir/target/social_network_integration-0.0.1-SNAPSHOT/{run.sh,checkForErrors.sh,social_network_integration-0.0.1-SNAPSHOT.jar,lib,panic_data,test_data} $outDir
-      cp -r $config_dir $outDir
-      cp -r ../scenarios/xsd $outDir
+			#4.2 copy configurations and jar file.
+      cp -r --parents $config_dir/* $outDir/scenarios/
+      cp -r --parents ../scenarios/xsd/* $outDir/scenarios/
       cp  ../target/dee-1.0-SNAPSHOT.jar $outDir
-			#mkdir -p $outDir/case_studies && cp -r $sn_dir/target/social_network_integration-0.0.1-SNAPSHOT/case_studies/hawkesbury $outDir/case_studies/
 
-			#4.3 copy the extractActivities, main-run scripts -- experiments jar file???
+
+			#4.3 copy  main-run scripts
 			#cp -r $exp_dir/main-run.sh $outDir
 
-			#4.4 replace with the hawkesbury configuration file
-			#rm $outDir/case_studies/hawkesbury/hawkesbury.xml
-			#cp -r $config_dir/s$scenario/$timestamp/sample$sample/hawkesbury.xml $outDir/case_studies/hawkesbury
-
+			#4.4 run config modifying script
+      ./createConfigurationsFromLHS.sh  $scenario_type $outDir  $sample
 
 			#4.5 run main-run script: #looping over samples and parrelising the simulation runs and conducting experiments
 			#CHNAGE using outdir mai-run script
 		#	$outDir/main-run.sh  $run $outDir $sample & # why dont you execute the main-run in the out directory?
-    # run command from outDir: java -cp dee-1.0-SNAPSHOT.jar io.github.agentsoz.dee.Main --config scenarios/grid/dee-main.xml
+    cd $outDir && java -cp dee-1.0-SNAPSHOT.jar io.github.agentsoz.dee.Main --config scenarios/grid/dee-main.xml && cd -
 
 
 			run=`expr "$run" + 1`;
@@ -231,34 +228,4 @@ wait
 printf "main-script shutting down \n"
 exit
 
-'
-
-
-#--------------------- commented-------------------
-: '
-# passing optional arguments
-for i in "$@"
-do
-case $i in
-    -sc=*|--scenario=*)
-    scenario="${i#*=}"
-    shift # past argument=value
-    ;;
-    -sam=*|--samples=*)
-    samples="${i#*=}"
-    shift # past argument=value
-    ;;
-    -r=*|--runs=*)
-    runs="${i#*=}"
-    shift # past argument=value
-    ;;
-    --default)
-    DEFAULT=YES
-    shift # past argument with no value
-    ;;
-    *)
-            # unknown option
-    ;;
-esac
-done
 '
