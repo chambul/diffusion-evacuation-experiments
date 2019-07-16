@@ -66,7 +66,9 @@ fi
 #only hardcorded configuration
 batchRunMainConfig="./configs/batch-run-main-config.xml"
 scenario="grid"
-expMainConfig="$outDir/scenarios/$scenario/dee-main.xml"
+simMainConfig="$outDir/scenarios/$scenario/dee-main.xml"
+matsimMainConfig="$outDir/scenarios/$scenario/matsim-main.xml"
+matsimPlansFile="$outDir/scenarios/$scenario/scenario_matsim_plans-dee-traffic-agents-2.xml"
 expDiffusionConfig="$outDir/scenarios/$scenario/scenario_diffusion_config.xml"
 resultsDir="output"
 lhs="../latin-hypercube-samples/integrated-model-settings.xls"
@@ -81,13 +83,13 @@ lhs="../latin-hypercube-samples/integrated-model-settings.xls"
 : '
 if [ $scenarioType == "d" ];
 then
-#expMainConfig=$(getSingleTagValue $batchRunMainConfig "sn-main") # original main configuration file
+#simMainConfig=$(getSingleTagValue $batchRunMainConfig "sn-main") # original main configuration file
 #expDiffusionConfig=$(getSingleTagValue $batchRunMainConfig "sn-diffusion") # original diffusion configuration file
 #lhs=$(getSingleTagValue $batchRunMainConfig "sn-lhs")
 
 elif [ $scenarioType == "bl" ];
 then
-#expMainConfig=$(getSingleTagValue $batchRunMainConfig "bl-main") # original diffusion configuration file
+#simMainConfig=$(getSingleTagValue $batchRunMainConfig "bl-main") # original diffusion configuration file
 elif [[ $scenarioType == "bc" ]]; then
   printf " currently not implemented for broadcast scenario. \n" ;
   exit 1;
@@ -101,12 +103,13 @@ fi
 
 #print Configs
 printf "configuration files will be created at = $outDir \n"
-printf " configuration file paths: \n"
-printf "experiments configuration xml file= $batchRunMainConfig  \n"
 printf "scenario = $scenario  \n"
 printf "scenario type = $scenarioType  \n"
-printf "simulation main configuration file = $expMainConfig \n"
+printf "experiments configuration xml file= $batchRunMainConfig  \n"
+printf "simulation main configuration file = $simMainConfig \n"
+printf "matsim main configuration file = $matsimMainConfig \n"
 printf "simulation diffusion configuration file  = $expDiffusionConfig \n"
+printf "matsim plans file = $matsimPlansFile \n"
 printf "lhs file-name = $lhs \n"
 
 
@@ -122,7 +125,7 @@ done
 
 
 #1. copy configurations to outDir.
-#cp $expMainConfig  $outDir/
+#cp $simMainConfig  $outDir/
 ssconvert $lhs $outDir/samples.csv #1. export the excel file to a csv file and remove formatting - ssconvert is a commandline utlity of  Gnumeric application
 
 
@@ -167,19 +170,24 @@ then
     mkdir -p $outDir/sample$sample
 
     # main config modifications
-    #logfile
-    sed -i "s#<opt id\=\"jLogFile\">[-_[:alnum:]./]*#<opt id=\"jLogFile\">${resultsDir}/jill.log#"  $expMainConfig  # alnum = Any alphanumeric character, [A-Za-z0-9]
+    #FIXME adding '' after option i as in mac i expects an extension. Effects of this on ubuntu not tested.
+    sed -i '' "s#<opt id\=\"jLogFile\">[-_[:alnum:]./]*#<opt id=\"jLogFile\">${resultsDir}/jill.log#"  $simMainConfig  # alnum = Any alphanumeric character, [A-Za-z0-9]
     #jOutFile
-    sed -i "s#<opt id\=\"jOutFile\">[-_[:alnum:]./]*#<opt id=\"jOutFile\">${resultsDir}/jill.out#"  $expMainConfig
+    sed -i '' "s#<opt id\=\"jOutFile\">[-_[:alnum:]./]*#<opt id=\"jOutFile\">${resultsDir}/jill.out#"  $simMainConfig
+    #matsim output directory
+    sed -i '' "s#<opt id\=\"outputDir\">[-_[:alnum:]./]*#<opt id=\"outputDir\">${resultsDir}/matsim#"  $simMainConfig
 
     # diffusion config modifications
-    sed -e 's/avg_links=.*/avg_links="'$links'"/g;
-		s|>[0-9,.]*</diffusion_probability>|>'$prob'</diffusion_probability>|g; #change delimiter
-	 	s|>[0-9]*</step_size>|>'$step'</step_size>|g'  $expDiffusionConfig > $outDir/sample$sample/$(basename $expDiffusionConfig)
+    sed -i '' "s#log_file\=\"[-_[:alnum:]./]*#log_file\=\"diffusion.log#"  $expDiffusionConfig #logfile
+    sed -i '' "s#out_file\=\"[-_[:alnum:]./]*#out_file\=\"diffusion.out#"  $expDiffusionConfig #outfile
+    sed -i '' 's/avg_links=.*/avg_links="'$links'"/g;
+		s|>[0-9,.]*</diffusion_probability>|>'$prob'</diffusion_probability>|g;
+	 	s|>[0-9]*</step_size>|>'$step'</step_size>|g'  $expDiffusionConfig #degree, probability and diffusion step
 
 
-    #record the diff
-    diff $expDiffusionConfig $outDir/sample$sample/$(basename $expDiffusionConfig) >> $outDir/diffusion_config_diffs.txt
+    #matsim agent plan modifications
+    
+
 
   fi
 

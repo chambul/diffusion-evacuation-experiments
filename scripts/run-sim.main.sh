@@ -115,8 +115,8 @@ timeStampDir=$results_dir/$timestampDirName
 			mkdir -p $outDir/scenarios
 
 			#4.2 copy configurations and jar file.
-      cp -r --parents $config_dir/* $outDir/scenarios/
-      cp -r --parents ../scenarios/xsd/* $outDir/scenarios/
+      cp -r $config_dir $outDir/scenarios/
+      cp -r ../scenarios/xsd $outDir/scenarios/
       cp  ../target/dee-1.0-SNAPSHOT.jar $outDir
 
 
@@ -125,6 +125,10 @@ timeStampDir=$results_dir/$timestampDirName
 
 			#4.4 run config modifying script
       ./createConfigurationsFromLHS.sh  $scenario_type $outDir  $sample
+
+      #4.5 FIXME  save diffs of config files after modifications
+      #diff $expDiffusionConfig $outDir/sample$sample/$(basename $expDiffusionConfig) >> $outDir/diffusion_config_diffs.txt
+
 
 			#4.5 run main-run script: #looping over samples and parrelising the simulation runs and conducting experiments
 			#CHNAGE using outdir mai-run script
