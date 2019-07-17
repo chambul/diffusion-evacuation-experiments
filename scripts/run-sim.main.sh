@@ -102,8 +102,11 @@ timeStampDir=$results_dir/$timestampDirName
     touch $logFile
 		printf "running $runs simulation runs...\n" > $logFile
 
-
-		while [ "$run" -le "$endRun" ]; do
+      if [ $startRun -le 0 ]; then
+      printf " startRun is too low. This should be atleast 1. Abort  \n "
+      exit 1
+      fi
+      # first make the first run directory (run1) with all needed changes
 
 			#4.1 mkdir out directory
 			outDir=$configDir/run$run
@@ -138,16 +141,24 @@ timeStampDir=$results_dir/$timestampDirName
       diff -bwB $scenarioDir/$matsimMainConfigName $outDir/scenarios/$scenario/$matsimMainConfigName >> $outDir/config_diffs.txt
       printf "*********************************************************************************\n"   >> $outDir/config_diffs.txt
 
+
 			#4.5 run main-run script: #looping over samples and parrelising the simulation runs and conducting experiments
 			#CHNAGE using outdir mai-run script
 		#	$outDir/main-run.sh  $run $outDir $sample & # why dont you execute the main-run in the out directory?
     printf "********************************run java program for run$run*************************************************\n \n"
-  #  cd $outDir && java -cp dee-1.0-SNAPSHOT.jar io.github.agentsoz.dee.Main --config scenarios/grid/dee-main.xml && cd -
+    #cd $outDir && java -cp dee-1.0-SNAPSHOT.jar io.github.agentsoz.dee.Main --config scenarios/$scenario/$simMainConfigName && cd -
 
+    # increment run before the while loop
+    #run=`expr "$run" + 1`;
+    run1Dir=$configDir/run$startRun
+    #all changes made, now replicate first run directory endRun times
 
-			run=`expr "$run" + 1`;
-
-			done
+		while [ "$run" -lt "$endRun" ]; do
+      run=`expr "$run" + 1`;
+      $nextDir=$configDir/run$run &&  mkdir -p $nextDir
+      printf "next run directory: $nextDir \n"
+      cp -r $run1Dir/* $nextDir
+    done;
 
 			run=$startRun
 			sample=`expr "$sample" + 1`;

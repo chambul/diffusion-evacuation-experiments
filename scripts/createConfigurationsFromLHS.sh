@@ -242,4 +242,4 @@ fi
 
 
 
-printf "************modified configurations for config $sample *********\n"
+printf "************modified configurations for config $sample *********\n\n"
