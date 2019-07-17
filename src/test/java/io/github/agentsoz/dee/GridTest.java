@@ -45,7 +45,7 @@ public class GridTest {
         //	utils.createOutputDirectory(); // output dir is created by matsim based on config outdir
 
         String[] args = {
-                "--config", "scenarios/grid/dee-main.xml",
+                "--config", "scenarios/grid/social_network_experiments_diffusion.xml",
         };
         Main.main(args);
 

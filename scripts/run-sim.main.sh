@@ -1,18 +1,7 @@
 #!/bin/bash
 ###
-# this is the  main script for running simulations local/remote. all inputs are hardcoded and do not use the config files in exp/scripts/config dir.
-# steps:
-#	build the diffusion-evacuation-experiments project
-#	get the configurations from the LHS script (generateConfigsFromSamples.sh) -> generates the main config file in workspace/configs
-#	local:
-#		for each sample-run copy data neeeded and replace hawkesbury.xml config
-#		exec main-run.sh <input args>
-#	remote:
-#		for each sample create a single out dir by - copy data neeeded and replace hawkesbury.xml config
-#		copy inputs for the main-run.sh script to the file run-properties.csv
-#		scp ressults dir with sample dirs - replicate the sample dirs into the required number of out dirs
-#		scp *  inside exp/scripts/remote dir
-#		run PBS script
+# this is the  main script for running simulations local/remote. all inputs are hardcoded
+# matsim plans file must be in .gz format. If in .xml, configs might be modified, but diff will not be computed properly
 #
 #
 ###
@@ -20,10 +9,16 @@
 ##directories
 #sn_dir="../../diffusion-evacuation-experiments"
 #exp_dir="../../experiments/scripts"
-config_dir="../scenarios/grid"
+scenario="grid" # full path from scenarios dir to scenario xml files  e.g. surf-coast-shire/typical-summer-weekday-50k
+scenarioDir="../scenarios/$scenario"
 LatinHyperSamplesDir="../latin-hypercube-samples"
+simMainConfigName="social_network_experiments_diffusion.xml"
+matsimMainConfigName="scenario_matsim_main.xml"
+matsimPlansFileName="scenario_matsim_plans-dee-traffic-agents-2.xml.gz"
+expDiffusionConfigName="scenario_diffusion_config.xml"
 #remote_run_scripts_dir="$exp_dir/remote/scripts"
 results_dir="../../results"
+
 
 #matsim_output_dir="/home/chaminda/workspace/sub_projects/NictaMatsim/output"
 #act_events="/home/chaminda/workspace/experiment_data/matsim_data"
@@ -82,7 +77,7 @@ timeStampDir=$results_dir/$timestampDirName
 
 
   #copy scenario configurations
-#  cp $config_dir $timeStampDir
+#  cp $scenarioDir $timeStampDir
 #	echo $LatinHyperSamplesDir
 	#3. generate the configs from the samples
 #	./generateConfigsFromSamples.sh  $scenario $LatinHyperSamplesDir $timestamp
@@ -112,11 +107,11 @@ timeStampDir=$results_dir/$timestampDirName
 
 			#4.1 mkdir out directory
 			outDir=$configDir/run$run
-			mkdir -p $outDir/scenarios
+			mkdir -p $outDir/scenarios/$scenario
 
 			#4.2 copy configurations and jar file.
-      cp -r $config_dir $outDir/scenarios/
-      cp -r ../scenarios/xsd $outDir/scenarios/
+      cp -r $scenarioDir/* $outDir/scenarios/$scenario/ # copy content inside dee.scenario
+      cp -r ../scenarios/xsd $outDir/scenarios/ #copy xsd dir to scenarios
       cp  ../target/dee-1.0-SNAPSHOT.jar $outDir
 
 
@@ -124,16 +119,30 @@ timeStampDir=$results_dir/$timestampDirName
 			#cp -r $exp_dir/main-run.sh $outDir
 
 			#4.4 run config modifying script
-      ./createConfigurationsFromLHS.sh  $scenario_type $outDir  $sample
+      ./createConfigurationsFromLHS.sh  $scenario_type $scenario $simMainConfigName $matsimMainConfigName $matsimPlansFileName $expDiffusionConfigName $outDir  $sample
 
-      #4.5 FIXME  save diffs of config files after modifications
-      #diff $expDiffusionConfig $outDir/sample$sample/$(basename $expDiffusionConfig) >> $outDir/diffusion_config_diffs.txt
+      #4.5 save diffs of config files after modifications. bwB options to ignores all white spaces like new lines and indent changes
+      printf "DIFF: $simMainConfigName\n"   >> $outDir/config_diffs.txt
+      diff -bwB $scenarioDir/$simMainConfigName $outDir/scenarios/$scenario/$simMainConfigName >> $outDir/config_diffs.txt
+      printf "*********************************************************************************\n"   >> $outDir/config_diffs.txt
 
+      printf "DIFF: $expDiffusionConfigName\n"   >> $outDir/config_diffs.txt
+      diff -bwB $scenarioDir/$expDiffusionConfigName $outDir/scenarios/$scenario/$expDiffusionConfigName >> $outDir/config_diffs.txt
+      printf "*********************************************************************************\n"   >> $outDir/config_diffs.txt
+
+      printf "DIFF: $matsimPlansFileName\n"   >> $outDir/config_diffs.txt
+      zdiff -bwB $scenarioDir/$matsimPlansFileName $outDir/scenarios/$scenario/$matsimPlansFileName >> $outDir/config_diffs.txt
+      printf "*********************************************************************************\n"   >> $outDir/config_diffs.txt
+
+      printf "DIFF: $matsimMainConfigName (Ideally there shouldn't be any diff )\n"   >> $outDir/config_diffs.txt
+      diff -bwB $scenarioDir/$matsimMainConfigName $outDir/scenarios/$scenario/$matsimMainConfigName >> $outDir/config_diffs.txt
+      printf "*********************************************************************************\n"   >> $outDir/config_diffs.txt
 
 			#4.5 run main-run script: #looping over samples and parrelising the simulation runs and conducting experiments
 			#CHNAGE using outdir mai-run script
 		#	$outDir/main-run.sh  $run $outDir $sample & # why dont you execute the main-run in the out directory?
-    cd $outDir && java -cp dee-1.0-SNAPSHOT.jar io.github.agentsoz.dee.Main --config scenarios/grid/dee-main.xml && cd -
+    printf "********************************run java program for run$run*************************************************\n \n"
+  #  cd $outDir && java -cp dee-1.0-SNAPSHOT.jar io.github.agentsoz.dee.Main --config scenarios/grid/dee-main.xml && cd -
 
 
 			run=`expr "$run" + 1`;
@@ -172,7 +181,7 @@ timeStampDir=$results_dir/$timestampDirName
 
 			#4.4 replace with the hawkesbury configuration file
 			rm $outDir/case_studies/hawkesbury/hawkesbury.xml
-			cp -r $config_dir/s$scenario/$timestamp/sample$sample/hawkesbury.xml $outDir/case_studies/hawkesbury
+			cp -r $scenarioDir/s$scenario/$timestamp/sample$sample/hawkesbury.xml $outDir/case_studies/hawkesbury
 
 			#test purpose
 			#cp -r $sn_dir/test_data $outDir

@@ -36,9 +36,9 @@ return
 
 
 
-if [ $# -ne 3 ]; then
+if [ $# -ne 8 ]; then
  	printf " This script creates configurations for batch run. Enter following args: \n";
-	printf " 1. scenarioType = d/bl(diffusion/baseline) 2. specific run  directory 3. config number  \n ";
+	printf " 1. scenarioType = d/bl(diffusion/baseline) 2. scenarioName 3.main config name 4. matsim config name 5.matsim plans file name 6. diffusion config name 7.  specific run  directory 8. config number  \n ";
   >&2
   exit 1
  fi
@@ -59,53 +59,30 @@ export PYTHONPATH="${PYTHONPATH}:$path"
 if [ $# -ne 0 ];
 then
   scenarioType=$1
-  outDir=$2
-  configNo=$3
+  scenario=$2
+  simMainConfigName=$3
+  matsimMainConfigName=$4
+  matsimPlansFileName=$5
+  expDiffusionConfigName=$6
+  outDir=$7
+  configNo=$8
 fi
 
 #only hardcorded configuration
-batchRunMainConfig="./configs/batch-run-main-config.xml"
-scenario="grid"
-simMainConfig="$outDir/scenarios/$scenario/dee-main.xml"
-matsimMainConfig="$outDir/scenarios/$scenario/matsim-main.xml"
-matsimPlansFile="$outDir/scenarios/$scenario/scenario_matsim_plans-dee-traffic-agents-2.xml"
-expDiffusionConfig="$outDir/scenarios/$scenario/scenario_diffusion_config.xml"
+#batchRunMainConfig="./configs/batch-run-main-config.xml"
+simMainConfig="$outDir/scenarios/$scenario/$simMainConfigName"
+matsimMainConfig="$outDir/scenarios/$scenario/$matsimMainConfigName"
+matsimPlansFile="$outDir/scenarios/$scenario/$matsimPlansFileName"
+expDiffusionConfig="$outDir/scenarios/$scenario/$expDiffusionConfigName"
 resultsDir="output"
 lhs="../latin-hypercube-samples/integrated-model-settings.xls"
-
-#outDirFormat=$timeStamp-$scenario #FIXME passing timeStamp or the specific configuration setting directory?
-#resultsDir=$(getSingleTagValue $batchRunMainConfig "local-results")
-
-#outDir=$resultsDir/$outDirFormat
-
-
-#set configurations based on case/scenario
-: '
-if [ $scenarioType == "d" ];
-then
-#simMainConfig=$(getSingleTagValue $batchRunMainConfig "sn-main") # original main configuration file
-#expDiffusionConfig=$(getSingleTagValue $batchRunMainConfig "sn-diffusion") # original diffusion configuration file
-#lhs=$(getSingleTagValue $batchRunMainConfig "sn-lhs")
-
-elif [ $scenarioType == "bl" ];
-then
-#simMainConfig=$(getSingleTagValue $batchRunMainConfig "bl-main") # original diffusion configuration file
-elif [[ $scenarioType == "bc" ]]; then
-  printf " currently not implemented for broadcast scenario. \n" ;
-  exit 1;
-else
-  printf "scenario option $scenarioType is unknown, aborting!";
-  exit 1;
-fi
-'
-
 
 
 #print Configs
 printf "configuration files will be created at = $outDir \n"
 printf "scenario = $scenario  \n"
 printf "scenario type = $scenarioType  \n"
-printf "experiments configuration xml file= $batchRunMainConfig  \n"
+#printf "experiments configuration xml file= $batchRunMainConfig  \n"
 printf "simulation main configuration file = $simMainConfig \n"
 printf "matsim main configuration file = $matsimMainConfig \n"
 printf "simulation diffusion configuration file  = $expDiffusionConfig \n"
@@ -154,7 +131,7 @@ then
 		links=$col2
 		prob=$col3
 		step=$col4
-    farT=$col5
+    distanceT=$col5
     recencyT=$col6
     angleT=$col7
 
@@ -165,28 +142,95 @@ then
     if [ $sample -eq $configNo ];
     then
     # copy the new config file to a new dir
-    printf "links: $links | prob: $prob| diffusion step: $step"
-
-    mkdir -p $outDir/sample$sample
-
-    # main config modifications
-    #FIXME adding '' after option i as in mac i expects an extension. Effects of this on ubuntu not tested.
-    sed -i '' "s#<opt id\=\"jLogFile\">[-_[:alnum:]./]*#<opt id=\"jLogFile\">${resultsDir}/jill.log#"  $simMainConfig  # alnum = Any alphanumeric character, [A-Za-z0-9]
-    #jOutFile
-    sed -i '' "s#<opt id\=\"jOutFile\">[-_[:alnum:]./]*#<opt id=\"jOutFile\">${resultsDir}/jill.out#"  $simMainConfig
-    #matsim output directory
-    sed -i '' "s#<opt id\=\"outputDir\">[-_[:alnum:]./]*#<opt id=\"outputDir\">${resultsDir}/matsim#"  $simMainConfig
-
-    # diffusion config modifications
-    sed -i '' "s#log_file\=\"[-_[:alnum:]./]*#log_file\=\"diffusion.log#"  $expDiffusionConfig #logfile
-    sed -i '' "s#out_file\=\"[-_[:alnum:]./]*#out_file\=\"diffusion.out#"  $expDiffusionConfig #outfile
-    sed -i '' 's/avg_links=.*/avg_links="'$links'"/g;
-		s|>[0-9,.]*</diffusion_probability>|>'$prob'</diffusion_probability>|g;
-	 	s|>[0-9]*</step_size>|>'$step'</step_size>|g'  $expDiffusionConfig #degree, probability and diffusion step
+    printf "extracted settings row $sample: links: $links | prob: $prob| diffusion step: $step | distanceThreshold: $distanceT | recencyThreshold: $recencyT | angleT: $angleT \n"
 
 
-    #matsim agent plan modifications
-    
+    #mkdir -p $outDir/sample$sample
+
+    #config modifications for linux
+    if [[ "$OSTYPE" == "linux-gnu" ]]; then
+
+      printf "Operating system: linux-gnu \n"
+      # main config modifications
+      sed -i "s#<opt id\=\"jLogFile\">[-_[:alnum:]./]*#<opt id=\"jLogFile\">${resultsDir}/jill.log#"  $simMainConfig  # alnum = Any alphanumeric character, [A-Za-z0-9]
+
+      #jOutFile
+      sed -i "s#<opt id\=\"jOutFile\">[-_[:alnum:]./]*#<opt id=\"jOutFile\">${resultsDir}/jill.out#"  $simMainConfig
+      #matsim output directory
+      sed -i "s#<opt id\=\"outputDir\">[-_[:alnum:]./]*#<opt id=\"outputDir\">${resultsDir}/matsim#"  $simMainConfig
+
+      # diffusion config modifications
+      sed -i "s#log_file\=\"[-_[:alnum:]./]*#log_file\=\"${resultsDir}/diffusion.log#"  $expDiffusionConfig #logfile
+      sed -i "s#out_file\=\"[-_[:alnum:]./]*#out_file\=\"${resultsDir}/diffusion.out#"  $expDiffusionConfig #outfile
+      sed -i 's/avg_links=.*/avg_links="'$links'"/g;
+  		s|>[0-9,.]*</diffusion_probability>|>'$prob'</diffusion_probability>|g;
+  	 	s|>[0-9]*</step_size>|>'$step'</step_size>|g'  $expDiffusionConfig #degree, probability and diffusion step
+
+      #matsim agent plan modifications. --inplace option to allow modification in matsim file rather than sending output to standard output
+
+      extension="${matsimPlansFileName##*.}"
+      if [[ "$extension" == "gz"* ]]; then
+        printf " MATSim plans file is in gz format as expected. \n"
+
+        gunzip $matsimPlansFile # first uncompress
+        xmlFile="${matsimPlansFileName%.*}" # remove .gz extension (.xml is already there)
+        #xmlFile="$baseNameWithoutExtension.xml"
+        printf " generated MATSim plans xml file name is $xmlFile \n"
+
+        xmlFilePath=$outDir/scenarios/$scenario/$xmlFile # add the file path to filename
+        xmlstarlet edit --inplace --update "/population/*/attributes/attribute[@name='distanceFromTheBlockageThreshold']" --value "$distanceT" $xmlFilePath
+        xmlstarlet edit --inplace --update "/population/*/attributes/attribute[@name='blockageRecencyThreshold']" --value "$recencyT" $xmlFilePath
+        xmlstarlet edit --inplace --update "/population/*/attributes/attribute[@name='blockageAngleThreshold']" --value "$angleT" $xmlFilePath
+
+        #done modifying, now compress it again
+        gzip $xmlFilePath
+
+    elif [[ "$extension" == "xml"* ]]; then
+
+      printf " MATSim plans file  is xml format, this is discouraged as diff may not be computed properly. \n"
+      xmlstarlet edit --inplace --update "/population/*/attributes/attribute[@name='distanceFromTheBlockageThreshold']" --value "$distanceT" $matsimPlansFile
+      xmlstarlet edit --inplace --update "/population/*/attributes/attribute[@name='blockageRecencyThreshold']" --value "$recencyT" $matsimPlansFile
+      xmlstarlet edit --inplace --update "/population/*/attributes/attribute[@name='blockageAngleThreshold']" --value "$angleT" $matsimPlansFile
+
+    else
+        printf " ERROR: MATSim plans file is in an unknown extension: $extension \n"
+    fi
+
+
+
+
+    # config modifications for MAC
+    elif [[ "$OSTYPE" == "darwin"* ]]; then
+
+      printf "Operating system: Mac OS \n"
+
+      # main config modifications
+      #adding '' after option i as in mac i expects an extension.
+      sed -i '' "s#<opt id\=\"jLogFile\">[-_[:alnum:]./]*#<opt id=\"jLogFile\">${resultsDir}/jill.log#"  $simMainConfig  # alnum = Any alphanumeric character, [A-Za-z0-9]
+
+      #jOutFile
+      sed -i '' "s#<opt id\=\"jOutFile\">[-_[:alnum:]./]*#<opt id=\"jOutFile\">${resultsDir}/jill.out#"  $simMainConfig
+      #matsim output directory
+      sed -i '' "s#<opt id\=\"outputDir\">[-_[:alnum:]./]*#<opt id=\"outputDir\">${resultsDir}/matsim#"  $simMainConfig
+
+      # diffusion config modifications
+      sed -i '' "s#log_file\=\"[-_[:alnum:]./]*#log_file\=\"diffusion.log#"  $expDiffusionConfig #logfile
+      sed -i '' "s#out_file\=\"[-_[:alnum:]./]*#out_file\=\"diffusion.out#"  $expDiffusionConfig #outfile
+      sed -i '' 's/avg_links=.*/avg_links="'$links'"/g;
+  		s|>[0-9,.]*</diffusion_probability>|>'$prob'</diffusion_probability>|g;
+  	 	s|>[0-9]*</step_size>|>'$step'</step_size>|g'  $expDiffusionConfig #degree, probability and diffusion step
+
+
+      # NOT TESTED matsim agent plan modifications. --inplace option to allow modification in matsim file rather than sending output to standard output
+      xmlstarlet edit --inplace --update "/population/*/attributes/attribute[@name='distanceFromTheBlockageThreshold']" --value "$distanceT" $matsimPlansFile
+      xmlstarlet edit --inplace --update "/population/*/attributes/attribute[@name='blockageRecencyThreshold']" --value "$recencyT" $matsimPlansFile
+      xmlstarlet edit --inplace --update "/population/*/attributes/attribute[@name='blockageAngleThreshold']" --value "$angleT" $matsimPlansFile
+
+    else
+
+        printf "unknown OS, aborting"
+        exit 1
+    fi
 
 
   fi
@@ -198,4 +242,4 @@ fi
 
 
 
-printf "generated $sample number of samples \n"
+printf "************modified configurations for config $sample *********\n"
