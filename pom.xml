@@ -70,9 +70,16 @@
 
         <dependency>
             <groupId>io.github.agentsoz</groupId>
-            <artifactId>ees</artifactId>
+            <artifactId>eeslib</artifactId>
             <version>2.1.1-SNAPSHOT</version>
         </dependency>
+        <!-- https://mvnrepository.com/artifact/com.google.inject/guice -->
+        <dependency>
+            <groupId>com.google.inject</groupId>
+            <artifactId>guice</artifactId>
+            <version>4.1.0</version>
+        </dependency>
+
 
     </dependencies>
 

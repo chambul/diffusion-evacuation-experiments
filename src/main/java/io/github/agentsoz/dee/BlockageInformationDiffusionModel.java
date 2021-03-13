@@ -34,7 +34,7 @@ import io.github.agentsoz.ees.DiffusionModel;
 import io.github.agentsoz.socialnetwork.ICModel;
 import io.github.agentsoz.socialnetwork.SNConfig;
 import io.github.agentsoz.socialnetwork.SocialAgent;
-import io.github.agentsoz.socialnetwork.SocialNetworkManager;
+import io.github.agentsoz.socialnetwork.SocialNetworkDiffusionModel;
 import io.github.agentsoz.util.Time;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -106,7 +106,7 @@ public class BlockageInformationDiffusionModel extends DiffusionModel implements
     @Override
     public SortedMap<Double, DiffusionDataContainer> sendData(double timestep, String dataType) {
         double currentTime = Time.convertTime(timestep, timestepUnit, Time.TimestepUnit.MINUTES);
-        Double nextTime = timestep + SNConfig.getDiffturn();
+        Double nextTime = timestep + this.getSnManager().getEarliestTimeForNextStep();
 
         // create data structure to store current step contents and params
         DiffusionDataContainer currentStepDataContainer =  new DiffusionDataContainer();
@@ -114,7 +114,7 @@ public class BlockageInformationDiffusionModel extends DiffusionModel implements
         if (nextTime != null) {
             getDataServer().registerTimedUpdate(Constants.DIFFUSION_DATA_CONTAINER_FROM_DIFFUSION_MODEL, this, nextTime);
             // update the model with any new messages form agents
-            ICModel icModel = (ICModel) this.getSnManager().getDiffModel();
+            ICModel icModel = (ICModel) this.getSnManager().getDiffModels()[0];
 
             if (!getLocalContentFromAgents().isEmpty()) { // update local content
                 Map<String, String[]> map = new HashMap<>();

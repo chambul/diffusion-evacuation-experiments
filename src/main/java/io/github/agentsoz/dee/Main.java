@@ -31,6 +31,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 
@@ -38,10 +39,7 @@ import static io.github.agentsoz.ees.Run.DATASERVER;
 
 public class Main {
 
-    private static final Logger log = LoggerFactory.getLogger(Main.class);
-
     static final String OPT_CONFIG = "--config";
-
     // Model IDs in XML
     static final String eModelFire = "phoenix";
     static final String eModelDisruption = "disruption";
@@ -49,6 +47,7 @@ public class Main {
     static final String eModelMatsim = "matsim";
     static final String eModelBdi = "bdi";
     static final String eModelDiffusion = "diffusion";
+    private static final Logger log = LoggerFactory.getLogger(Main.class);
 
     public static void main(String[] args) {
 
@@ -65,13 +64,15 @@ public class Main {
 
         // Get BDI agents map from the MATSim population file
         log.info("Reading BDI agents from MATSim population file");
-        Map<String, List<String[]>> bdiMap = Utils.getAgentsFromMATSimPlansFile(cfg.getModelConfig(eModelMatsim).get("configXml"));
+        Map<Integer, List<String[]>> bdiMap = Utils.getAgentsFromMATSimPlansFile(cfg.getModelConfig(eModelMatsim).get("configXml"));
         JillBDIModel.removeNonBdiAgentsFrom(bdiMap);
 
         // Run it
         new Run()
                 .withModel(DataServer.getInstance(DATASERVER))
-                .withModel(new BlockageInformationDiffusionModel(cfg.getModelConfig(eModelDiffusion), DataServer.getInstance(DATASERVER), new ArrayList<>(bdiMap.keySet())))
+                .withModel(new BlockageInformationDiffusionModel(cfg.getModelConfig(eModelDiffusion),
+                        DataServer.getInstance(DATASERVER),
+                        new ArrayList<>(Arrays.asList(Utils.getAsSortedStringArray(bdiMap.keySet())))))
                 .start(cfg, bdiMap);
     }
 }
