@@ -45,7 +45,7 @@
         <step_size>600</step_size>
         <seeding_strategy seed="53">random</seeding_strategy>
         <diffusion_probability sigma="0.05">0.16</diffusion_probability>
-        <out_file>./diffusion_ic.out</out_file>
+        <out_file>test/output/io/github/agentsoz/dee/BasicTest/diffusion.out</out_file>
         <contents type="information">test_ic_content</contents>
     </ic>
 

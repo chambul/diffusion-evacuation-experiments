@@ -50,7 +50,7 @@ public class Blockage extends Location{
     private static  Map<String, ArrayList<String>> allBlockagePointsWithLinks = new HashMap<String, ArrayList<String>>() {{  //#FIXME  Move this initialisation to configuration level
         put(DataTypes.GROSSMANDS, new ArrayList<String>( Arrays.asList("11206","11207") ));
         put(DataTypes.GREAT_OCEAN_ROAD, new ArrayList<String>( Arrays.asList("12340-12338-12336-12334-12332","12331-12333-12335-12337-12339")) );
-        put("grid_network_blockage", new ArrayList<String>( Arrays.asList("2-3","4-5r")) ); //#FIXME grid network blockage
+        put("grid_network_blockage", new ArrayList<String>( Arrays.asList("2-3","4-5r","12-18")) ); //#FIXME grid network blockage
     }};
 
 
@@ -58,7 +58,7 @@ public class Blockage extends Location{
     private static  List<Location> allBlockageLocations= new ArrayList<Location>() {{  //#FIXME  get the mid point of to from nodes as coords?
         add( new Location(DataTypes.GROSSMANDS,783437.6291368047,5748322.732670321) ); // from node of link 11207 - distnace is arond 550m
         add(new Location(DataTypes.GREAT_OCEAN_ROAD,788600.3567188493,5753735.008117045)); // from node of 12340-12338-12336-12334-12332 -distance is around 450m
-        add(new Location("grid_network_blockage",4500.0,0));
+        add(new Location("grid_network_blockage",2000.0,0));
     }};
 
 

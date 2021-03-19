@@ -60,7 +60,10 @@ import java.util.List;
  * Class DependantInfo
  */
 
-@AgentInfo(hasGoals = {"io.github.agentsoz.abmjill.genact.EnvironmentAction", "io.github.agentsoz.dee.agents.GoalAssessBlockageImpact", "io.github.agentsoz.dee.agents.GoalEvaluate", "io.github.agentsoz.dee.agents.GoalDecide"})
+@AgentInfo(hasGoals = {"io.github.agentsoz.abmjill.genact.EnvironmentAction",
+        "io.github.agentsoz.dee.agents.GoalAssessBlockageImpact",
+        "io.github.agentsoz.dee.agents.GoalEvaluate",
+        "io.github.agentsoz.dee.agents.GoalDecide"})
 public class TrafficAgent extends BushfireAgent {
 
 
@@ -305,7 +308,9 @@ public class TrafficAgent extends BushfireAgent {
         }
 
         // save it to memory
-        memorise(MemoryEventType.PERCEIVED.name(), perceptID + ":" + parameters.toString());
+        if(!perceptID.equals(Constants.DIFFUSION_CONTENT)) {
+            memorise(MemoryEventType.PERCEIVED.name(), perceptID + ":" + parameters.toString());
+        }
 
         if (perceptID.equals(PerceptList.ARRIVED)) {
             // do something
@@ -318,6 +323,9 @@ public class TrafficAgent extends BushfireAgent {
                 if(contentType.equals(DeePerceptList.BLOCKAGE_INFLUENCE)){
                     String content= (String)contents.get(contentType)[0];
                     processSNBlockageInfo(content);
+
+                    memorise(MemoryEventType.PERCEIVED.name(), perceptID + ":" + content);
+
                 }
 //                else if(content.equals(DeePerceptList.BLOCKAGE_UPDATES)){
 //
@@ -346,7 +354,8 @@ public class TrafficAgent extends BushfireAgent {
 //        checkBarometersAndTriggerResponseAsNeeded();
 
         if (assessSituation && !travelPlanCompleted) {
- //           post(new GoalAssessBlockageImpact("assess blockage impact")); //#FIXME commented until the reRouteCurrentLeg action issue is fixed
+            post(new GoalAssessBlockageImpact("assess blockage impact")); //#FIXME commented until the reRouteCurrentLeg action issue is fixed
+//            replanCurrentDriveTo(Constants.EvacRoutingMode.carGlobalInformation);
         }
 
 
@@ -362,7 +371,7 @@ public class TrafficAgent extends BushfireAgent {
      */
     private void processBlockedPercept(Map<String,String> parameters) {
 
-        String currentLinkID = (String) parameters.get("link");
+//        String currentLinkID = (String) parameters.get("link");
         String blockedLinkID = (String) parameters.get("nextlink");
 
 //        Location currentLoc = ((Location[]) this.getQueryPerceptInterface().queryPercept(
@@ -380,6 +389,10 @@ public class TrafficAgent extends BushfireAgent {
                 logger.error("Cannot create blockage instance, unknown blockage name {}", blockageName);
             }
             blockageList.add(newBlockage);
+
+            // blockage influence,  should only send one/first time, road blockage at X
+            String blockageInfo = "road blockage at " + newBlockage.getName() ; //+ "," + time
+            putBlockageInfluencetoDiffusionContent(DeePerceptList.BLOCKAGE_INFLUENCE,blockageInfo);
         }
 
         //  for every blocked percept, update blockage time, create content and
@@ -387,8 +400,7 @@ public class TrafficAgent extends BushfireAgent {
         blockage.setLatestBlockageObservedTime(time); // time known of the actual event
 
         //SN tasks
-            String blockageInfo = "road blockage," + blockage.getName() + "," + time; // SN INFORMATION
-            putBlockageInfluencetoDiffusionContent(DeePerceptList.BLOCKAGE_INFLUENCE,blockageInfo);
+
            // blockagePointsShared.add(blockageName); // save blockage name as this influence is sent only once.
 //        } else { // agent knows about the blockage, either from SN or ABM.
 //
@@ -411,19 +423,10 @@ public class TrafficAgent extends BushfireAgent {
 
     }
 
-    public boolean reRouteNow(){
-        return replanCurrentDriveTo(Constants.EvacRoutingMode.carGlobalInformation);
-    }
-//    boolean replanCurrentDriveTo(Constants.EvacRoutingMode routingMode) {
-//        memorise(MemoryEventType.ACTIONED.name(), Constants.REPLAN_CURRENT_DRIVETO);
-//        EnvironmentAction action = new EnvironmentAction(
-//                Integer.toString(getId()),
-//                Constants.REPLAN_CURRENT_DRIVETO,
-//                new Object[] {routingMode});
-//        addActiveEnvironmentAction(action); // will be reset by updateAction()
-//        subgoal(action); // should be last call in any plan step
-//        return true;
+//    public boolean reRouteNow(){
+//        return replanCurrentDriveTo(Constants.EvacRoutingMode.carGlobalInformation);
 //    }
+
 
 //    private void processSNBlockageUpdates(Object[] params) { // expected parameters: Blcoakge name ,time
 //        if (params == null ) { // || !(params instanceof String
@@ -450,11 +453,13 @@ public class TrafficAgent extends BushfireAgent {
 
 
         try{
-            String[] tokens = ((String) content).split(","); //extract pieces of info from the SN msg (example format: road blockage,grossmands,time)
+            //#FIXME token extraction is disabled for the influence message.
+//            String[] tokens = ((String) content).split(","); //extract pieces of info from the SN msg (example format: road blockage,grossmands,time)
 
-            String blockageName = tokens[1]; // grossmands
-            double newObservedTime = Double.valueOf(tokens[2]); // time
-
+//            String blockageName = tokens[1]; // grossmands
+//            double newObservedTime = Double.valueOf(tokens[2]); // time
+                String blockageName= "grid_network_blockage";
+                double newObservedTime  = time;
             if (!isBlockageExistsInBlockageList(blockageName)) { // first time hearing about the blockage, create new blockage and add to list
                 Blockage newBlockage = Blockage.createBlockageFromName(blockageName);
                 if (newBlockage == null) {

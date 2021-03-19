@@ -106,14 +106,12 @@ public class BlockageInformationDiffusionModel extends DiffusionModel implements
     @Override
     public SortedMap<Double, DiffusionDataContainer> sendData(double timestep, String dataType) {
         double currentTime = Time.convertTime(timestep, timestepUnit, Time.TimestepUnit.MINUTES);
-        Double nextTime = timestep + this.getSnManager().getEarliestTimeForNextStep();
-
+        timestep = timestep -1; // when SNM is called DataServer time is incremented by 1 (than expected).
         // create data structure to store current step contents and params
         DiffusionDataContainer currentStepDataContainer =  new DiffusionDataContainer();
 
-        if (nextTime != null) {
-            getDataServer().registerTimedUpdate(Constants.DIFFUSION_DATA_CONTAINER_FROM_DIFFUSION_MODEL, this, nextTime);
-            // update the model with any new messages form agents
+//        if (nextTime != null) {
+          // update the model with any new messages form agents
             ICModel icModel = (ICModel) this.getSnManager().getDiffModels()[0];
 
             if (!getLocalContentFromAgents().isEmpty()) { // update local content
@@ -146,10 +144,15 @@ public class BlockageInformationDiffusionModel extends DiffusionModel implements
 //            }
 
 
-            // step the model before begin called again
-            stepDiffusionProcess(currentStepDataContainer,DeePerceptList.BLOCKAGE_INFLUENCE,currentTime);
+            // DiffusionModel method: step the models and update data container
+            stepDiffusionProcess(currentStepDataContainer,DeePerceptList.BLOCKAGE_INFLUENCE,timestep); // pass in seconds
 
-            //now put the current step data container to all steps data map
+
+        //register next time to call
+        Double nextTime =  this.getSnManager().getEarliestTimeForNextStep()  ; //
+        getDataServer().registerTimedUpdate(Constants.DIFFUSION_DATA_CONTAINER_FROM_DIFFUSION_MODEL, this, nextTime);
+
+        //now put the current step data container to all steps data map
             if(!currentStepDataContainer.getDiffusionDataMap().isEmpty()){
                 getAllStepsDiffusionData().put(currentTime, currentStepDataContainer);
             }
@@ -161,7 +164,7 @@ public class BlockageInformationDiffusionModel extends DiffusionModel implements
             getLocalContentFromAgents().clear();
             latestBlockageTimes.clear(); // clear last step blockage percept times
 
-        }
+//        }
 
 
         //+1 to avoid returning empty map for diffusion data for first step (toKey = fromKey)

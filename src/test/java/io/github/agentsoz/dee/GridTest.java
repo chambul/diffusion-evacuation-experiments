@@ -23,6 +23,7 @@ package io.github.agentsoz.dee;
  */
 
 import io.github.agentsoz.ees.Run;
+import io.github.agentsoz.socialnetwork.util.Global;
 import org.junit.Test;
 import org.matsim.testcases.MatsimTestUtils;
 import org.slf4j.Logger;
@@ -39,6 +40,8 @@ public class GridTest {
 
     @Test
     public void gridWorldTest() {
+
+        Global.setRandomSeed(4711); // deterministic results for testing
 
         utils.setTestClassAndMethod(this.getClass(), "gridWorldTest"); // set test class and method name
         //	utils.getorSetOutputDirectory(); // set output dir path

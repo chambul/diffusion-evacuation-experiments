@@ -5,12 +5,12 @@
     <!-- specify the network strucuture: random= random ER MODEL), sw=small world model, rand-reg=random-regular model -->
     <!-- spcify the logfile path and log level (i=info, d=debug, t=trace) -->
     <snModel
-            diffusionType="ic"
+            diffusionModels="ic"
             networkType="rand-reg"
             coord_file="not-needed-if-using-random"
             log_file="output/diffusion.log"
             log_level="i"
-            out_file="output/diffusion.out"
+            out_file="test/output/situation-awareness-diffusion.out"
     />
 
     <!-- network configurations-->
@@ -45,6 +45,8 @@
         <step_size>60</step_size>
         <seeding_strategy seed="53">random</seeding_strategy>
         <diffusion_probability sigma="0.05">0.4</diffusion_probability>
+        <out_file>test/output/situation-awareness-diffusion.out</out_file>
+        <contents type="information">test_ic_content</contents>
     </ic>
 
 
@@ -52,18 +54,20 @@
     <!--  Thigh is replaced in SNConfig as Thigh = 2 * Tlow -->
     <!-- 1st config set: common to all diffusion models, 2nd set: specific for LT diffusion model, 3rd set: specific for CLT diffusion model-->
 
-    <diffModel
+    <lt
 
 
-            diff_turn="1200"
+            diff_turn="60"
             standard_deviation="0.025"
             strategy="random"
             thresholdType="guassian"
-
             diff_seed="5"
             mean_act_threshold="0.3"
-            mean_high_threshold="0.7"
+            out_file="./diffusion_lt.out"
+            contents="test_lt_content"
+            content_type="influence"
 
+            mean_high_threshold="0.7"
             panicSeed="10"
             waitSeed="30"
             waitT="0.5"

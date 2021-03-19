@@ -64,24 +64,33 @@ public class PlanReroute extends Plan {
         return applicable;
     }
 
-    @Override
-    public void setPlanVariables(Map<String, Object> vars) {
-    }
-
 
     PlanStep[] steps = {
             () -> {
                 ((TrafficAgent) getAgent()).memorise(TrafficAgent.MemoryEventType.ACTIONED.name(), TrafficAgent.MemoryEventValue.REROUTE.name() +  ":" + getGoal() + "|" + this.getClass().getSimpleName() + "=" + true);
-                agent.reRouteNow();
+                isReplanning = agent.replanCurrentDriveTo(Constants.EvacRoutingMode.carGlobalInformation);
 
-                //#FIXME decide wha to do with reconsider time here
+            },
+            () -> {
+                if (isReplanning) {
+                    // Step subsequent to post must suspend agent when waiting for external stimuli
+                    // Will be reset by updateAction()
+                    agent.suspend(true);
+                    // Do not add any checks here since the above call is non-blocking
+                    // Suspend will happen once this step is finished
+                }
+            },
+            () -> {
                 ((TrafficAgent) getAgent()).memorise(TrafficAgent.MemoryEventType.BELIEVED.name(),
                         TrafficAgent.MemoryEventValue.STATE_CHANGED.name()
-                                + ": replanned current route from reasoning");
-            }
-
+                                + ": replanned current route to avoid blockage");
+            },
 
 
 
     };
+
+    @Override
+    public void setPlanVariables(Map<String, Object> vars) {
+    }
 }
