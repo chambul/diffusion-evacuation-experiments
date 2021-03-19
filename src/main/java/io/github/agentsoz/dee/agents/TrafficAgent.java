@@ -63,7 +63,10 @@ import java.util.List;
 @AgentInfo(hasGoals = {"io.github.agentsoz.abmjill.genact.EnvironmentAction",
         "io.github.agentsoz.dee.agents.GoalAssessBlockageImpact",
         "io.github.agentsoz.dee.agents.GoalEvaluate",
-        "io.github.agentsoz.dee.agents.GoalDecide"})
+        "io.github.agentsoz.dee.agents.GoalDecide",
+        "io.github.agentsoz.dee.agents.GoalReplanToDestination",
+        "io.github.agentsoz.dee.agents.GoalTest"
+})
 public class TrafficAgent extends BushfireAgent {
 
 
@@ -354,7 +357,9 @@ public class TrafficAgent extends BushfireAgent {
 //        checkBarometersAndTriggerResponseAsNeeded();
 
         if (assessSituation && !travelPlanCompleted) {
-            post(new GoalAssessBlockageImpact("assess blockage impact")); //#FIXME commented until the reRouteCurrentLeg action issue is fixed
+        //    post(new GoalAssessBlockageImpact("assess blockage impact")); //
+         //   post(new GoalReplanToDestination("replan journey"));
+            post(new GoalTest("test goal"));
 //            replanCurrentDriveTo(Constants.EvacRoutingMode.carGlobalInformation);
         }
 
