@@ -86,7 +86,8 @@ public class TrafficAgent extends BushfireAgent {
 
     //new attributes
     private boolean assessSituation = false;
-    private boolean travelPlanCompleted = false;
+    private boolean travelPlanCompleted = false; // checks if the agent is doing/completed the final activity.
+    private boolean reroutedOnce = false; // checks if the agent has rerouted once.
     //   private boolean sharedBlockageSNInfo = false;
     private int blockageRecencyThreshold=0; // in minutes
     private double distanceFromTheBlockageThreshold; // km
@@ -95,7 +96,7 @@ public class TrafficAgent extends BushfireAgent {
     // reconsider times
     static final double RECONSIDER_LATER_TIME = 30.0*60;
     static final double RECONSIDER_SOONER_TIME = 5.0*60;
-    static final double RECONSIDER_REGULAR_TIME = 10.0*60;
+    static final double RECONSIDER_REGULAR_TIME = 15.0*60;
 
 
     enum MemoryEventType {
@@ -156,6 +157,14 @@ public class TrafficAgent extends BushfireAgent {
 
     public int getBlockageAngleThreshold() {
         return blockageAngleThreshold;
+    }
+
+    public boolean isReroutedOnce() {
+        return reroutedOnce;
+    }
+
+    public void setReroutedOnce(boolean reroutedOnce) {
+        this.reroutedOnce = reroutedOnce;
     }
 
     public static double getReconsiderRegularTime() {
@@ -356,7 +365,7 @@ public class TrafficAgent extends BushfireAgent {
         // Now trigger a response as needed
 //        checkBarometersAndTriggerResponseAsNeeded();
 
-        if (assessSituation && !travelPlanCompleted) {
+        if (assessSituation && !travelPlanCompleted && !reroutedOnce) {
             post(new GoalAssessBlockageImpact("assess blockage impact")); //
          //   post(new GoalReplanToDestination("replan journey"));
 //            post(new GoalTest("test goal"));
@@ -419,6 +428,7 @@ public class TrafficAgent extends BushfireAgent {
 
         //Finally, issue  a BDI action
         replanCurrentDriveTo(Constants.EvacRoutingMode.carGlobalInformation);
+        this.setReroutedOnce(true);
 
         // perceive congestion and blockage events always
         registerPercepts(new String[] {Constants.BLOCKED, Constants.CONGESTION});

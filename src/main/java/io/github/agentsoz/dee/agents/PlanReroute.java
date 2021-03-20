@@ -69,6 +69,7 @@ public class PlanReroute extends Plan {
             () -> {
                 ((TrafficAgent) getAgent()).memorise(TrafficAgent.MemoryEventType.ACTIONED.name(), TrafficAgent.MemoryEventValue.REROUTE.name() +  ":" + getGoal() + "|" + this.getClass().getSimpleName() + "=" + true);
                 isReplanning = agent.replanCurrentDriveTo(Constants.EvacRoutingMode.carGlobalInformation);
+                agent.setReroutedOnce(true);
 
             },
             () -> {
