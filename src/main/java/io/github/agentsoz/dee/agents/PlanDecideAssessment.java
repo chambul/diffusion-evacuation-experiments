@@ -69,7 +69,7 @@ public class PlanDecideAssessment extends Plan {
                 for (Blockage blockage: ((TrafficAgent) getAgent()).getBlockageList()) {
 
                     if (blockage.isNoBlockageImpact() == false) { // if there is a blocage impact, post decide goal
-                        post(new GoalDecide("assess blockage impact"));
+                        subgoal(new GoalDecide("assess blockage impact"));
                     }
                 }
             }
