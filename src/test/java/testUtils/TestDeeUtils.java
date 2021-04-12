@@ -50,16 +50,34 @@ public class TestDeeUtils {
         agent.setBlockageAngleThreshold(45);
 
 
-        double result1 = agent.getSmallestAngleBetweenTwoLines(new Location("test",0,0),new Location("test",2,2),new Location("test",0,0),new Location("test",0,4));
-        double result2 = agent.getSmallestAngleBetweenTwoLines(new Location("test",0,0),new Location("test",2,2),new Location("test",0,0),new Location("test",-2,2));
-        double result3 = agent.getSmallestAngleBetweenTwoLines(new Location("test",0,0),new Location("test",2,2),new Location("test",0,0),new Location("test",-2,-2));
-        double result4 = agent.getSmallestAngleBetweenTwoLines(new Location("test",0,0),new Location("test",2,2),new Location("test",0,0),new Location("test",2,-2));
+        //parameters: cur location, blockage location, destiation location
+
+        //0 - 180
+        double result1 = agent.getSmallestAngleBetweenTwoLines(new Location("test",0,0),new Location("test",2,0),new Location("test",2,2));
+        double result2 = agent.getSmallestAngleBetweenTwoLines(new Location("test",0,0),new Location("test",2,0),new Location("test",0,2));
+        double result3 = agent.getSmallestAngleBetweenTwoLines(new Location("test",0,0),new Location("test",2,0),new Location("test",-2,-2));
+        double result4 = agent.getSmallestAngleBetweenTwoLines(new Location("test",0,0),new Location("test",2,0),new Location("test",-2,0));
+
+        // 180 - 360
+        double result5 = agent.getSmallestAngleBetweenTwoLines(new Location("test",0,0),new Location("test",2,0),new Location("test",-2,-2));
+        double result6 = agent.getSmallestAngleBetweenTwoLines(new Location("test",0,0),new Location("test",2,0),new Location("test",0,-2));
+        double result7 = agent.getSmallestAngleBetweenTwoLines(new Location("test",0,0),new Location("test",2,0),new Location("test",2,-2));
+        double result8 = agent.getSmallestAngleBetweenTwoLines(new Location("test",0,0),new Location("test",2,0),new Location("test",2,0));
+
+        double result9 = agent.getSmallestAngleBetweenTwoLines(new Location("test",5,4),new Location("test",2,0),new Location("test",5,0));
+
 
         Assert.assertEquals(45,result1,0.0); // anti-clockwise 45
         Assert.assertEquals(90,result2,0.0); // anti-clockwies 90
-        Assert.assertEquals(180,result3,0.0); // opposite directions
-        Assert.assertEquals(90,result4,0.0); // clockwise 45
+        Assert.assertEquals(135,result3,0.0); // blockage and destination are in opposite directions
+        Assert.assertEquals(180,result4,0.0); // anti-clockwise/clockwise 180
 
+        Assert.assertEquals(135,result5,0.0); // anti-clockwise 225, clockwise 135
+        Assert.assertEquals(90,result6,0.0); // anti-clockwise 270, clockwise 90
+        Assert.assertEquals(45,result7,0.0); // anti-clockwise 315, clockwise 45
+        Assert.assertEquals(0,result8,0.0); // anti-clockwise 315, clockwise 45
+
+        Assert.assertEquals(36.86989764584401,result9,0); // anti-clockwise 360, clockwise 0
     }
 
 

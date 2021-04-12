@@ -38,7 +38,7 @@ public class PlanEvaluateCurrentContext extends Plan {
     TrafficAgent agent = null;
     PlanStep[] steps = {
             () -> {
-                agent.memorise(TrafficAgent.MemoryEventType.DECIDED.name(), TrafficAgent.MemoryEventValue.EVALUATE.name() +  ":" + getGoal() + "|" + this.getClass().getSimpleName() + "=" + true);
+//                agent.memorise(TrafficAgent.MemoryEventType.DECIDED.name(), TrafficAgent.MemoryEventValue.EVALUATE.name() +  ":" + getGoal() + "|" + this.getClass().getSimpleName() + "=" + true);
 
                 // get current location (from node of the link): x1,y1
                 Location currentLoc = ((Location[]) agent.getQueryPerceptInterface().queryPercept(
@@ -58,15 +58,18 @@ public class PlanEvaluateCurrentContext extends Plan {
 
                     for (Blockage blockage: agent.getBlockageList()) { // list cannot be empty if agent selects this plan
 
-                        if(  agent.getTime() - blockage.getLatestObservedTime() <= agent.getBlockageRecencyThresholdInSeconds() ){ // evaluate recency
+                        if(  agent.getTime() - blockage.getLatestInfoReceivedTime() <= agent.getBlockageRecencyThresholdInSeconds() ){ // set to OLD at initialisation
                             blockage.setRecencyOfBlockage(Blockage.recency.RECENT);
                         }
 
-                        double smallestAngleDif = agent.getSmallestAngleBetweenTwoLines(currentLoc,destination,currentLoc,blockage); // test blockage direction wrt to current destination
+                        double smallestAngleDif = agent.getSmallestAngleBetweenTwoLines(currentLoc,blockage,destination); // test blockage direction wrt to current destination
                         if (smallestAngleDif <= agent.getBlockageAngleThreshold()) { // consider absolute value without - or + direction
                             blockage.setBlockageInCurrentDirection(true); // blockage  in same direction
                             blockage.setNoBlockageImpact(false); // evaluated to find blockage impact
                         }
+
+                        //calculate distance to  blockage
+                        agent.calculateAndGetCurrentDistanceToBlockage(blockage);
 
 
                     }

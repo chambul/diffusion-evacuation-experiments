@@ -48,23 +48,29 @@ public class PlanReconsiderAgain extends Plan {
 
         for (Blockage blockage: agent.getBlockageList()) {
 
-           if( blockage.getDistToBlockage() > agent.getDistanceFromTheBlockageThreshold() ) { // reconsider time 30mins
-               applicable = true;
-               reconsiderBlockage = blockage;
-               reconsider_time = agent.getReconsiderLaterTime();
-           }
-           else if (blockage.getDistToBlockage() <= agent.getDistanceFromTheBlockageThreshold() &&  blockage.isBlockageInCurrentDirection() == true && // reconsider time 5mins
+            reconsiderBlockage = blockage;
+
+            if (blockage.getDistToBlockage() <= agent.getDistanceFromTheBlockageThreshold() &&  blockage.isBlockageInCurrentDirection() == true && // reconsider soon
                    blockage.isCongestionNearBlockage() ==false && blockage.getRecencyOfBlockage() == Blockage.recency.OLD) {
-                applicable = true;
-                reconsiderBlockage = blockage;
                reconsider_time = agent.getReconsiderSoonerTime();
+                applicable = true;
+
+            }
+           else if( agent.getDistanceFromTheBlockageThreshold() < blockage.getDistToBlockage() && blockage.getDistToBlockage() <= 3*agent.getDistanceFromTheBlockageThreshold() ) { // reconsider in a while
+               reconsider_time = agent.getReconsiderRegularTime();
+                applicable = true;
+
+            }
+           else if (blockage.getDistToBlockage() > 3*agent.getDistanceFromTheBlockageThreshold()){ // reconsider later
+               reconsider_time = agent.getReconsiderLaterTime();
+                applicable = true;
+
             }
 
-              ;
         }
 
         ((TrafficAgent) getAgent()).memorise(TrafficAgent.MemoryEventType.DECIDED.name(), TrafficAgent.MemoryEventValue.IS_PLAN_APPLICABLE.name()
-                + ":" + getGoal() + "|" + this.getClass().getSimpleName() + "=" + applicable);
+                + ":" + this.getClass().getSimpleName() + "=" + applicable);
 
         return applicable;
     }
@@ -76,7 +82,7 @@ public class PlanReconsiderAgain extends Plan {
 
     PlanStep[] steps = {
             () -> {
-                ((TrafficAgent) getAgent()).memorise(TrafficAgent.MemoryEventType.DECIDED.name(), TrafficAgent.MemoryEventValue.RECONSIDER_AGAIN.name() +  ":" + getGoal() + "|" + this.getClass().getSimpleName() + "=" + reconsider_time);
+                ((TrafficAgent) getAgent()).memorise(TrafficAgent.MemoryEventType.DECIDED.name(), TrafficAgent.MemoryEventValue.RECONSIDER_AGAIN.name() +  ":" + getGoal() + "| reconsider in " + reconsider_time + "seconds");
                  reconsiderBlockage.setReconsiderTime(reconsider_time);
 
             },

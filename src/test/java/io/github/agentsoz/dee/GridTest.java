@@ -24,6 +24,7 @@ package io.github.agentsoz.dee;
 
 import io.github.agentsoz.ees.Run;
 import io.github.agentsoz.socialnetwork.util.Global;
+import io.github.agentsoz.util.TestUtils;
 import org.junit.Test;
 import org.matsim.testcases.MatsimTestUtils;
 import org.slf4j.Logger;
@@ -52,11 +53,11 @@ public class GridTest {
         };
         Main.main(args);
 
-//        final String actualEventsFilename = utils.getorSetOutputDirectory() + "/output_events.xml.gz";
-//        final String primaryExpectedEventsFilename = utils.getInputDirectory() + "/output_events.xml.gz";
-//        TestUtils.comparingDepartures(primaryExpectedEventsFilename,actualEventsFilename,10.);
-//        TestUtils.comparingArrivals(primaryExpectedEventsFilename,actualEventsFilename,10.);
-//        TestUtils.comparingActivityStarts(primaryExpectedEventsFilename,actualEventsFilename, 10.);
-//        TestUtils.compareFullEvents(primaryExpectedEventsFilename,actualEventsFilename, false);
+        final String actualEventsFilename = utils.getorSetOutputDirectory() + "/output_events.xml.gz";
+        final String primaryExpectedEventsFilename = utils.getInputDirectory() + "/output_events.xml.gz";
+        TestUtils.comparingDepartures(primaryExpectedEventsFilename,actualEventsFilename,10.);
+        TestUtils.comparingArrivals(primaryExpectedEventsFilename,actualEventsFilename,10.);
+        TestUtils.comparingActivityStarts(primaryExpectedEventsFilename,actualEventsFilename, 10.);
+        TestUtils.compareFullEvents(primaryExpectedEventsFilename,actualEventsFilename, false);
     }
 }

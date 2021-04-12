@@ -47,7 +47,7 @@ public class PlanDontReroute extends Plan {
 
         for (Blockage blockage: agent.getBlockageList()) {
 
-            applicable = blockage.getDistToBlockage() <= agent.getDistanceFromTheBlockageThreshold() && blockage.isBlockageInCurrentDirection() == false;
+            applicable = (blockage.getDistToBlockage() <= agent.getDistanceFromTheBlockageThreshold()) && blockage.isBlockageInCurrentDirection() == false;
             noImpactBlockage = blockage;
         }
 
@@ -64,7 +64,7 @@ public class PlanDontReroute extends Plan {
 
     PlanStep[] steps = {
             () -> {
-                ((TrafficAgent) getAgent()).memorise(TrafficAgent.MemoryEventType.DECIDED.name(), TrafficAgent.MemoryEventValue.DONT_ASSESS.name() +  ":" + getGoal() + "|" + this.getClass().getSimpleName() + "=" + true);
+//                ((TrafficAgent) getAgent()).memorise(TrafficAgent.MemoryEventType.DECIDED.name(), TrafficAgent.MemoryEventValue.DONT_ASSESS.name() +  ":" + getGoal() + "|" + this.getClass().getSimpleName() + "=" + true);
                 noImpactBlockage.setNoBlockageImpact(true);
             },
 

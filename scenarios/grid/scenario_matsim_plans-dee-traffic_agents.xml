@@ -8,7 +8,7 @@
             <attribute name="BDIAgentType" class="java.lang.String">
                 io.github.agentsoz.dee.agents.TrafficAgent
             </attribute>
-            <attribute name="distanceFromTheBlockageThreshold" class="java.lang.Double">5.0</attribute>
+            <attribute name="distanceFromTheBlockageThreshold" class="java.lang.Double">3.0</attribute>
             <attribute name="blockageRecencyThreshold" class="java.lang.Integer">25</attribute>
             <attribute name="blockageAngleThreshold" class="java.lang.Integer">60</attribute>
         </attributes>
@@ -26,7 +26,7 @@
             <attribute name="BDIAgentType" class="java.lang.String">
                 io.github.agentsoz.dee.agents.TrafficAgent
             </attribute>
-            <attribute name="distanceFromTheBlockageThreshold" class="java.lang.Double">5.0</attribute>
+            <attribute name="distanceFromTheBlockageThreshold" class="java.lang.Double">3.0</attribute>
             <attribute name="blockageRecencyThreshold" class="java.lang.Integer">25</attribute>
             <attribute name="blockageAngleThreshold" class="java.lang.Integer">60</attribute>
         </attributes>
@@ -44,16 +44,16 @@
             <attribute name="BDIAgentType" class="java.lang.String">
                 io.github.agentsoz.dee.agents.TrafficAgent
             </attribute>
-            <attribute name="distanceFromTheBlockageThreshold" class="java.lang.Double">5.0</attribute>
+            <attribute name="distanceFromTheBlockageThreshold" class="java.lang.Double">3.0</attribute>
             <attribute name="blockageRecencyThreshold" class="java.lang.Integer">25</attribute>
-            <attribute name="blockageAngleThreshold" class="java.lang.Integer">60</attribute>
+            <attribute name="blockageAngleThreshold" class="java.lang.Integer">20</attribute>
         </attributes>
         <plan selected="yes">
-            <activity type="home" x="5000.0" y="5000.0" end_time="02:00:00" />
+            <activity type="home" x="0000.0" y="3000.0" end_time="00:40:00" />
             <leg mode="car" />
-            <activity type="work" x="5000.0" y="0000.0" end_time="02:10:00" />
+            <activity type="work" x="5000.0" y="0000.0" end_time="00:50:00" />
             <leg mode="car" />
-            <activity type="home" x="0000.0" y="0000.0" />
+            <activity type="home" x="5000.0" y="2000.0" />
         </plan>
     </person>
 
@@ -62,14 +62,14 @@
             <attribute name="BDIAgentType" class="java.lang.String">
                 io.github.agentsoz.dee.agents.TrafficAgent
             </attribute>
-            <attribute name="distanceFromTheBlockageThreshold" class="java.lang.Double">5.0</attribute>
+            <attribute name="distanceFromTheBlockageThreshold" class="java.lang.Double">3.0</attribute>
             <attribute name="blockageRecencyThreshold" class="java.lang.Integer">25</attribute>
-            <attribute name="blockageAngleThreshold" class="java.lang.Integer">60</attribute>
+            <attribute name="blockageAngleThreshold" class="java.lang.Integer">30</attribute>
         </attributes>
         <plan selected="yes">
-            <activity type="home" x="5000.0" y="5000.0" end_time="02:00:00" />
+            <activity type="home" x="0000.0" y="5000.0" end_time="00:40:00" />
             <leg mode="car" />
-            <activity type="work" x="5000.0" y="0000.0" end_time="02:10:00" />
+            <activity type="work" x="5000.0" y="0000.0" end_time="01:00:00" />
             <leg mode="car" />
             <activity type="home" x="0000.0" y="0000.0" />
         </plan>
@@ -80,14 +80,32 @@
             <attribute name="BDIAgentType" class="java.lang.String">
                 io.github.agentsoz.dee.agents.TrafficAgent
             </attribute>
-            <attribute name="distanceFromTheBlockageThreshold" class="java.lang.Double">5.0</attribute>
+            <attribute name="distanceFromTheBlockageThreshold" class="java.lang.Double">3</attribute>
             <attribute name="blockageRecencyThreshold" class="java.lang.Integer">25</attribute>
             <attribute name="blockageAngleThreshold" class="java.lang.Integer">60</attribute>
         </attributes>
         <plan selected="yes">
-            <activity type="home" x="5000.0" y="5000.0" end_time="02:00:00" />
+            <activity type="home" x="1000.0" y="5000.0" end_time="00:30:00" />
             <leg mode="car" />
-            <activity type="work" x="5000.0" y="0000.0" end_time="02:10:00" />
+            <activity type="work" x="5000.0" y="0000.0" end_time="01:40:00" />
+            <leg mode="car" />
+            <activity type="home" x="5000.0" y="2000.0" />
+        </plan>
+    </person>
+
+    <person id="5">
+        <attributes>
+            <attribute name="BDIAgentType" class="java.lang.String">
+                io.github.agentsoz.dee.agents.TrafficAgent
+            </attribute>
+            <attribute name="distanceFromTheBlockageThreshold" class="java.lang.Double">1.0</attribute>
+            <attribute name="blockageRecencyThreshold" class="java.lang.Integer">25</attribute>
+            <attribute name="blockageAngleThreshold" class="java.lang.Integer">60</attribute>
+        </attributes>
+        <plan selected="yes">
+            <activity type="home" x="0000.0" y="5000.0" end_time="00:50:00" />
+            <leg mode="car" />
+            <activity type="work" x="5000.0" y="0000.0" end_time="01:20:00" />
             <leg mode="car" />
             <activity type="home" x="0000.0" y="0000.0" />
         </plan>

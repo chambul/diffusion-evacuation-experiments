@@ -54,7 +54,7 @@ public class PlanDecideAssessment extends Plan {
 
     PlanStep[] steps = {
             () -> {
-                ((TrafficAgent) getAgent()).memorise(TrafficAgent.MemoryEventType.DECIDED.name(), TrafficAgent.MemoryEventValue.ASSESS.name() + getGoal() + "|" + this.getClass().getSimpleName());
+//                ((TrafficAgent) getAgent()).memorise(TrafficAgent.MemoryEventType.DECIDED.name(), TrafficAgent.MemoryEventValue.ASSESS.name() + getGoal() + "|" + this.getClass().getSimpleName());
                 ((TrafficAgent) getAgent()).setAssessSituation(false);
 
 

@@ -31,14 +31,14 @@ public class Blockage extends Location{
 
 
     private double lastUpdatedTime;
-    private double distToBlockage;
+    private double distToBlockage = -1.0;
     private boolean congestionNearBlockage;
     private double latestObservedTime; // latest time that the blockage was observed
     private double latestInfoReceivedTime; // latest time that an information is received about the blockage from SN
-    private recency  recencyOfBlockage;
+    private recency  recencyOfBlockage=recency.OLD;
     private boolean blockageInCurrentDirection;
     private boolean noBlockageImpact;
-    private double reconsiderTime;
+    private double reconsiderTime=-1.0;
 
     public enum recency{
         RECENT,

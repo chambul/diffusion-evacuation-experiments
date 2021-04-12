@@ -8,9 +8,9 @@
             diffusionModels="ic"
             networkType="rand-reg"
             coord_file="not-needed-if-using-random"
-            log_file="test/output/io/github/agentsoz/dee/grid/diffusion.log"
+            log_file="test/output/io/github/agentsoz/dee/GridTest/gridWorldTest/diffusion.log"
             log_level="d"
-            out_file="test/output/io/github/agentsoz/dee/grid/diffusion.out"
+            out_file="test/output/io/github/agentsoz/dee/GridTest/gridWorldTest/diffusion.out"
     />
 
     <!-- network configurations-->
@@ -45,7 +45,7 @@
         <step_size>30</step_size>
         <seeding_strategy seed="53">random</seeding_strategy>
         <diffusion_probability sigma="0.00">0.7</diffusion_probability>
-        <out_file>./test/output/io/github/agentsoz/dee/grid/diffusion.out</out_file>
+        <out_file>./test/output/io/github/agentsoz/dee/GridTest/gridWorldTest/diffusion.out</out_file>
         <contents type="information"></contents>
     </ic>
 

@@ -40,7 +40,6 @@ import org.slf4j.LoggerFactory;
 
 
 import java.io.PrintStream;
-import java.nio.file.WatchEvent;
 import java.util.*;
 import java.util.List;
 
@@ -70,7 +69,7 @@ import java.util.List;
 public class TrafficAgent extends BushfireAgent {
 
 
-    private final Logger logger = LoggerFactory.getLogger("io.github.agentsoz.dee");
+    private final Logger logger = LoggerFactory.getLogger(JillBDIModel.class);
 
     //    static final String LOCATION_HOME = "home";
 //    static final String LOCATION_EVAC_PREFERRED = "evac";
@@ -90,7 +89,7 @@ public class TrafficAgent extends BushfireAgent {
     private boolean reroutedOnce = false; // checks if the agent has rerouted once.
     //   private boolean sharedBlockageSNInfo = false;
     private int blockageRecencyThreshold=0; // in minutes
-    private double distanceFromTheBlockageThreshold; // km
+    private double distanceFromTheBlockageThreshold; //  specified in km in configs, converted to meters when assigning
     private int blockageAngleThreshold = 0; // degrees
 
     // reconsider times
@@ -98,6 +97,10 @@ public class TrafficAgent extends BushfireAgent {
     static final double RECONSIDER_SOONER_TIME = 5.0*60;
     static final double RECONSIDER_REGULAR_TIME = 15.0*60;
 
+    //counters
+    protected  static int proactive_reroute_count =0;
+    protected static int reactive_reroute_count = 0;
+    protected static boolean onetime = true; // to print the dee model stats only once
 
     enum MemoryEventType {
         BELIEVED,
@@ -295,6 +298,12 @@ public class TrafficAgent extends BushfireAgent {
      */
     @Override
     public void finish() {
+        // an agent gets two blocked percepts between two consequative seconds
+        if(onetime) {
+            logger.info("model stats: proactive reroute count: {} | reactive reroute count: {}", proactive_reroute_count, reactive_reroute_count / 2);
+            onetime = false;
+        }
+
     }
 
     /**
@@ -311,16 +320,23 @@ public class TrafficAgent extends BushfireAgent {
         if (perceptID == null || perceptID.isEmpty()) {
             return;
         } // first process time percept as other percepts are using current time.
-        else if (perceptID.equals(PerceptList.TIME)) {
-            if (parameters instanceof Double) {
-                //time = (double) parameters;
-                updateBlockageInfoBasedOnTime((double) parameters);
+        else if (perceptID.equals(PerceptList.TIME)) { // time percept is received every second.
+            time = (double) parameters;
+            if(blockageList.isEmpty()){
+                return;
             }
-            return;
+            else if (parameters instanceof Double) {
+                for(Blockage blockage: blockageList) {
+                    //reconsider time needs to be set from other events accordingly. if not set, then no need to do anything with time percept.
+                    if (blockage.getLastUpdatedTime() + blockage.getReconsiderTime() == time) {
+                        updateBlockageInfoBasedOnTime(time, blockage);
+                    }
+                }
+            }
         }
 
         // save it to memory
-        if(!perceptID.equals(Constants.DIFFUSION_CONTENT)) {
+        if(!perceptID.equals(Constants.DIFFUSION_CONTENT) && !perceptID.equals(PerceptList.TIME)) {
             memorise(MemoryEventType.PERCEIVED.name(), perceptID + ":" + parameters.toString());
         }
 
@@ -339,10 +355,10 @@ public class TrafficAgent extends BushfireAgent {
                     memorise(MemoryEventType.PERCEIVED.name(), perceptID + ":" + content);
 
                 }
-//                else if(content.equals(DeePerceptList.BLOCKAGE_UPDATES)){
-//
-//                    processSNBlockageUpdates(contents.get(content));
-//                }
+                else if(contentType.equals(DeePerceptList.BLOCKAGE_UPDATES)){
+                    Object[] params = contents.get(contentType);
+                    processSNBlockageUpdates(params);
+                }
                 else{
                     logger.error("unknown social network content type received for BDI agent {}: {} ", getId(),contentType);
                 }
@@ -406,12 +422,21 @@ public class TrafficAgent extends BushfireAgent {
 
             // blockage influence,  should only send one/first time, road blockage at X
             String blockageInfo = "road blockage at " + newBlockage.getName() ; //+ "," + time
-            putBlockageInfluencetoDiffusionContent(DeePerceptList.BLOCKAGE_INFLUENCE,blockageInfo);
+            String[] params1 = {blockageInfo};
+            putBlockageInfluencetoDiffusionContent(DeePerceptList.BLOCKAGE_INFLUENCE,params1);
+
+            //update blockage observed time. this also may happen one time
+            String blockageUpdate = String.valueOf(time);
+            String[] params2 = {blockageName,blockageUpdate};
+            putBlockageInfluencetoDiffusionContent(DeePerceptList.BLOCKAGE_UPDATES,params2);
+
         }
 
-        //  for every blocked percept, update blockage time, create content and
+        // iniitialise blockage object
         Blockage blockage = getBlockageObjectFromName(blockageName);
         blockage.setLatestBlockageObservedTime(time); // time known of the actual event
+        blockage.setLastUpdatedTime(time);
+        blockage.setReconsiderTime(RECONSIDER_REGULAR_TIME);
 
         //SN tasks
 
@@ -429,6 +454,7 @@ public class TrafficAgent extends BushfireAgent {
         //Finally, issue  a BDI action
         replanCurrentDriveTo(Constants.EvacRoutingMode.carGlobalInformation);
         this.setReroutedOnce(true);
+        reactive_reroute_count++;
 
         // perceive congestion and blockage events always
         registerPercepts(new String[] {Constants.BLOCKED, Constants.CONGESTION});
@@ -443,20 +469,20 @@ public class TrafficAgent extends BushfireAgent {
 //    }
 
 
-//    private void processSNBlockageUpdates(Object[] params) { // expected parameters: Blcoakge name ,time
-//        if (params == null ) { // || !(params instanceof String
-//            logger.error("unknown blockage update received for agent {}: null or incorrect length ", getId());
-//            return;
-//        }
-//
-//       // String[] tokens = params.split(",");
-//
-//        String blockageName = (String) params[0];
-//        double latestTimeFromSN =  (double) params[1];
-//
-//        Blockage blockage = getBlockageObjectFromName(blockageName);
-//        blockage.setLatestBlockageObservedTime(latestTimeFromSN); // update most recent time received from
-//    }
+    private void processSNBlockageUpdates(Object[] params) { // expected parameters: Blcoakge name ,time
+        if (params == null ) { // || !(params instanceof String
+            logger.error("unknown blockage update received for agent {}: null or incorrect length ", getId());
+            return;
+        }
+
+       // String[] tokens = params.split(",");
+
+        String blockageName = (String) params[0];
+        double latestTimeFromSN =  (double) params[1];
+
+        Blockage blockage = getBlockageObjectFromName(blockageName);
+        blockage.setLatestBlockageObservedTime(latestTimeFromSN); // update most recent time received from
+    }
 
     private void processSNBlockageInfo(String content) {
 
@@ -484,16 +510,20 @@ public class TrafficAgent extends BushfireAgent {
             }
 
             Blockage blockage = getBlockageObjectFromName(blockageName);
-           if(blockage.getLatestObservedTime() < newObservedTime){ // update if later than the current observed time
-               blockage.setLatestBlockageObservedTime(newObservedTime); // time blockage event was observed
-           }
+//           if(blockage.getLatestObservedTime() < newObservedTime){ // update if later than the current observed time
+//               blockage.setLatestBlockageObservedTime(newObservedTime); // time blockage event was observed
+//           }
             blockage.setLatestInfoReceivedTime(time); // update received time to the latest, which is now
+            blockage.setLastUpdatedTime(time);
             this.assessSituation = true;
 
         }
         catch(ArrayIndexOutOfBoundsException e) {
             logger.error("Cannot find blockage name by splitting received content", e.getMessage());
 
+        }
+        catch(NullPointerException e){
+            logger.error("null value", e.getMessage());
         }
 
     }
@@ -530,7 +560,7 @@ public class TrafficAgent extends BushfireAgent {
 
         for (Blockage blockage : blockageList) {
 
-            calcAndUpdateDistanceToBlockage(blockage); // first update distances
+            calculateAndGetCurrentDistanceToBlockage(blockage); // first update distances
             if (blockage.getDistToBlockage() <= distanceFromTheBlockageThreshold) {
                 blockage.setCongestionNearBlockage(true);
                 this.assessSituation = true;
@@ -538,34 +568,25 @@ public class TrafficAgent extends BushfireAgent {
         }
     }
 
-    private void updateBlockageInfoBasedOnTime(double curTime) { // Process time percept
+    private void updateBlockageInfoBasedOnTime(double t, Blockage blockage) { // Process time percept
 
-        time = curTime;
-
-        if (blockageList.isEmpty()) {
-            return;
-        }
-
-        for (Blockage blockage : blockageList) {
-            if (blockage.getLastUpdatedTime() + blockage.getReconsiderTime() == time) {
-
-                calcAndUpdateDistanceToBlockage(blockage);
-                blockage.setLastUpdatedTime(time);
+                calculateAndGetCurrentDistanceToBlockage(blockage);
+                blockage.setLastUpdatedTime(t);
+                blockage.setReconsiderTime(-1.0); // reset reconsider time so that this method wont be called periodicallly.
 
                 this.assessSituation = true;
 
-
-            }
-        }
     }
 
     // Using beeline distance (straightline between two points) which is more natural and not computationally expensive
-    private void calcAndUpdateDistanceToBlockage(Blockage blockage) {
+    // distance in meters
+    protected double calculateAndGetCurrentDistanceToBlockage(Blockage blockage) {
         Location currentLoc = ((Location[]) this.getQueryPerceptInterface().queryPercept(
                 String.valueOf(this.getId()), PerceptList.REQUEST_LOCATION, null))[0];
 
         double dist = Location.distanceBetween(currentLoc, blockage);
         blockage.setDistToBlockage(dist);
+        return dist;
     }
 
 
@@ -587,19 +608,36 @@ public class TrafficAgent extends BushfireAgent {
         return angle1-angle2;
     }
      */
-    public double getSmallestAngleBetweenTwoLines(Location line1P1, Location line1P2, Location line2P1, Location line2P2 ) {
 
-        // calculate angle of blockage, based on the line connecting current location and destination
-        double angle1 = Math.atan2(line1P1.getY() - line1P2.getY(), line1P1.getX() - line1P2.getX());
+    // arctan is the angle in euclidean space, given in radians (conversion o cartisian coordinates to polar coordinates).
+    //atan2 returns the theta componant of the polar cordinate(r, theta)
+    // use cur locatio coords as 0,0 calculate the angle between curloc-dest and curloc-blockage lines.
+    //this method always returns the smallest angle between the two lines (does not consider the direction clockwise or anti-clockwise), tested in testBlockageInDirectionEstimation() in TestDeeUtils
+    public double getSmallestAngleBetweenTwoLines(Location curLoc, Location blockageLoc, Location destLoc ) {
 
-        //evaluate direction of line connecting current location and blockage
-        double angle2 = Math.atan2(line2P1.getY() - line2P2.getY(), line2P1.getX() - line2P2.getX());
-        double angleDiffInAntiClockwiseDirection = Math.abs(Math.toDegrees(angle1 - angle2)); // anti-clokwise angle
-        double angleDiffInClockwiseDirection = 360 - angleDiffInAntiClockwiseDirection; // clockwise angle
+        // calculate angle based on the line connecting current location and destination
+        double angle1 = Math.atan2(destLoc.getY() - curLoc.getY(), destLoc.getX() - curLoc.getX());
 
-        return Math.min(angleDiffInAntiClockwiseDirection,angleDiffInClockwiseDirection); // return the smallest from the two angles
+        //calculate angle based on the line connecting current location and blockage
+        double angle2 = Math.atan2(blockageLoc.getY() - curLoc.getY(), blockageLoc.getX() - curLoc.getX());
+
+        // return the abs value as we dont care about the direction (clockwise/anti-clockwise) of the angle.
+        return Math.abs(Math.toDegrees(angle1 - angle2));
 
     }
+//    public double getSmallestAngleBetweenTwoLines(Location line1P1, Location line1P2, Location line2P1, Location line2P2 ) {
+//
+//        // calculate angle of blockage, based on the line connecting current location and destination
+//        double angle1 = Math.atan2(line1P1.getY() - line1P2.getY(), line1P1.getX() - line1P2.getX());
+//
+//        //evaluate direction of line connecting current location and blockage
+//        double angle2 = Math.atan2(line2P1.getY() - line2P2.getY(), line2P1.getX() - line2P2.getX());
+//        double angleDiffInAntiClockwiseDirection = Math.abs(Math.toDegrees(angle1 - angle2)); // anti-clokwise angle
+//        double angleDiffInClockwiseDirection = 360 - angleDiffInAntiClockwiseDirection; // clockwise angle
+//
+//        return Math.min(angleDiffInAntiClockwiseDirection,angleDiffInClockwiseDirection); // return the smallest from the two angles
+//
+//    }
 
 
 
@@ -664,25 +702,16 @@ public class TrafficAgent extends BushfireAgent {
     }
 
     //type: DeePerceptList.BLOCKAGE_INFLUENCE
-    private void putBlockageInfluencetoDiffusionContent(String contentType, String content) {
+    private void putBlockageInfluencetoDiffusionContent(String contentType, String[] params) {
         DiffusionContent dc =  getOrCreateDiffusionContent();
-        String[] params = {content};
         dc.getContentsMapFromBDIModel().put(contentType,params);
 
         memorise(MemoryEventType.ACTIONED.name(), contentType
-                + ":" + content);
+                + ":" + params.toString());
         setPublishDiffusionContentToTrue(); // publish to data server
     }
 
-    //type: DeePerceptList.BLOCKAGE_UPDATES
-//    private void putBlockageTimeToDiffusionContent(String contentType, String blockage, double time) {
-//        Object[] params = {blockage, time};
-//        getOrCreateDiffusionContent().getContentsMapFromBDIModel().put(contentType,params);
-//
-//        memorise(MemoryEventType.ACTIONED.name(), contentType // blockage information
-//                + ":" + params.toString());
-//        setPublishDiffusionContentToTrue(); //publish to data server
-//    }
+
 
     // type: DeePerceptList.BLOCKAGE_INFO_BROADCAST
     private void putBroadcastContenttoDiffusionContent(String type, String content) {
@@ -754,7 +783,7 @@ public class TrafficAgent extends BushfireAgent {
                         if (i + 1 < args.length) {
                             i++;
                             try {
-                                distanceFromTheBlockageThreshold = Double.parseDouble(args[i]);
+                                distanceFromTheBlockageThreshold = Double.parseDouble(args[i]) * 1000; // convert to meters
                                 logger.trace("distanceFromTheBlockageThreshold: {}", distanceFromTheBlockageThreshold);
                             } catch (Exception e) {
                                 logger.error("Could not parse double '" + args[i] + "'", e);

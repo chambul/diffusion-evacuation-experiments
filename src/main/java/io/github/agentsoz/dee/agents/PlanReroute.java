@@ -24,7 +24,6 @@ package io.github.agentsoz.dee.agents;
 
 import io.github.agentsoz.dee.blockage.Blockage;
 import io.github.agentsoz.ees.Constants;
-import io.github.agentsoz.ees.agents.bushfire.BushfireAgent;
 import io.github.agentsoz.jill.lang.Agent;
 import io.github.agentsoz.jill.lang.Goal;
 import io.github.agentsoz.jill.lang.Plan;
@@ -50,7 +49,7 @@ public class PlanReroute extends Plan {
 
         for (Blockage blockage: agent.getBlockageList()) {
 
-            if( blockage.getDistToBlockage() <= agent.getDistanceFromTheBlockageThreshold() && blockage.isBlockageInCurrentDirection() == true &&
+            if( agent.calculateAndGetCurrentDistanceToBlockage(blockage) <= agent.getDistanceFromTheBlockageThreshold() && blockage.isBlockageInCurrentDirection() == true &&
                     (blockage.isCongestionNearBlockage() == true || blockage.getRecencyOfBlockage() == Blockage.recency.RECENT) ) {
                 applicable =  true;
                 rerouteBlockage = blockage;
@@ -70,6 +69,7 @@ public class PlanReroute extends Plan {
                 ((TrafficAgent) getAgent()).memorise(TrafficAgent.MemoryEventType.ACTIONED.name(), TrafficAgent.MemoryEventValue.REROUTE.name() +  ":" + getGoal() + "|" + this.getClass().getSimpleName() + "=" + true);
                 isReplanning = agent.replanCurrentDriveTo(Constants.EvacRoutingMode.carGlobalInformation);
                 agent.setReroutedOnce(true);
+                TrafficAgent.proactive_reroute_count++;
 
             },
             () -> {

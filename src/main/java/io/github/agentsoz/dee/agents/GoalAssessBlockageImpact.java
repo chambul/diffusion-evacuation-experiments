@@ -27,7 +27,7 @@ import io.github.agentsoz.jill.lang.Goal;
 import io.github.agentsoz.jill.lang.GoalInfo;
 
 @GoalInfo(hasPlans = {
-        "io.github.agentsoz.dee.agents.PlanDontAssess",
+//        "io.github.agentsoz.dee.agents.PlanDontAssess",
         "io.github.agentsoz.dee.agents.PlanDecideAssessment"})
 public class GoalAssessBlockageImpact extends Goal {
     public GoalAssessBlockageImpact(String name) {
