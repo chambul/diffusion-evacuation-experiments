@@ -382,6 +382,7 @@ public class TrafficAgent extends BushfireAgent {
 //        checkBarometersAndTriggerResponseAsNeeded();
 
         if (assessSituation && !travelPlanCompleted && !reroutedOnce) {
+
             post(new GoalAssessBlockageImpact("assess blockage impact")); //
          //   post(new GoalReplanToDestination("replan journey"));
 //            post(new GoalTest("test goal"));
