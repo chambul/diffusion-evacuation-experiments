@@ -69,8 +69,10 @@ public class PlanReconsiderAgain extends Plan {
 
         }
 
-        ((TrafficAgent) getAgent()).memorise(TrafficAgent.MemoryEventType.DECIDED.name(), TrafficAgent.MemoryEventValue.IS_PLAN_APPLICABLE.name()
-                + ":" + this.getClass().getSimpleName() + "=" + applicable);
+        if(applicable){
+            ((TrafficAgent) getAgent()).memorise(TrafficAgent.MemoryEventType.DECIDED.name(), TrafficAgent.MemoryEventValue.IS_PLAN_APPLICABLE.name()
+                    + ":" + this.getClass().getSimpleName() + "=" + applicable);
+        }
 
         return applicable;
     }

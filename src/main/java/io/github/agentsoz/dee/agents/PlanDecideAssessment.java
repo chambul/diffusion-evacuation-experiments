@@ -41,8 +41,10 @@ public class PlanDecideAssessment extends Plan {
 
     public boolean context() {
        boolean applicable =  ( ((TrafficAgent) getAgent()).getBlockageList().size() != 0);
-        ((TrafficAgent) getAgent()).memorise(TrafficAgent.MemoryEventType.DECIDED.name(), TrafficAgent.MemoryEventValue.IS_PLAN_APPLICABLE.name()
-                + ":" + getGoal() + "|" + this.getClass().getSimpleName() + "=" + applicable);
+       if(applicable){
+           ((TrafficAgent) getAgent()).memorise(TrafficAgent.MemoryEventType.DECIDED.name(), TrafficAgent.MemoryEventValue.IS_PLAN_APPLICABLE.name()
+                   + ":" + getGoal() + "|" + this.getClass().getSimpleName() + "=" + applicable);
+       }
 
         return applicable;
     }

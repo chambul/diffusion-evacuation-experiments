@@ -88,7 +88,7 @@ public class TrafficAgent extends BushfireAgent {
     private boolean travelPlanCompleted = false; // checks if the agent is doing/completed the final activity.
     private boolean reroutedOnce = false; // checks if the agent has rerouted once.
     private boolean inActivity = true; // initially set to true as act end/start percepts are registered at 61secs.
-    private boolean  assessWhenDeparting = false;
+    protected boolean  assessWhenDeparting = false;
     //   private boolean sharedBlockageSNInfo = false;
     private int blockageRecencyThreshold=0; // in minutes
     private double distanceFromTheBlockageThreshold; //  specified in km in configs, converted to meters when assigning
@@ -342,7 +342,8 @@ public class TrafficAgent extends BushfireAgent {
         }
 
         // save it to memory
-        if(!perceptID.equals(Constants.DIFFUSION_CONTENT) && !perceptID.equals(PerceptList.TIME)) {
+        if(!perceptID.equals(Constants.DIFFUSION_CONTENT) && !perceptID.equals(PerceptList.TIME)
+                && !perceptID.equals(PerceptList.ACTIVITY_ENDED) && !perceptID.equals(PerceptList.ACTIVITY_STARTED)) {
             memorise(MemoryEventType.PERCEIVED.name(), perceptID + ":" + parameters.toString());
         }
 
@@ -374,13 +375,13 @@ public class TrafficAgent extends BushfireAgent {
             if(blockageList.isEmpty()){
                 return;
             }
-            else{
+            else if(!reroutedOnce){
                 checkCongestionNearBlockage();
-                registerPercepts(new String [] {PerceptList.CONGESTION}); // #FIXME use conditions to register
             }
 
-        } else if (perceptID.equals(PerceptList.BLOCKED)) { // 1. current link 2. blocked link
+            registerPercepts(new String [] {PerceptList.CONGESTION});
 
+        } else if (perceptID.equals(PerceptList.BLOCKED)) { // 1. current link 2. blocked link
             processBlockedPercept((Map<String,String>)parameters );
             registerPercepts(new String[] {Constants.BLOCKED});
         }
@@ -388,7 +389,17 @@ public class TrafficAgent extends BushfireAgent {
             if(perceptID.equals(Constants.ACTIVITY_ENDED)) {
                 inActivity=false;
                 if(assessWhenDeparting){
-                    assessSituation = true;
+//                    assessSituation = true;
+                    replanCurrentDriveTo(Constants.EvacRoutingMode.carGlobalInformation);
+                    setReroutedOnce(true);
+                    proactive_reroute_count++;
+                    memorise(MemoryEventType.ACTIONED.name(),
+                            MemoryEventValue.REROUTE.name()
+                                    + ": departing now; actioned the postponed reoute ");
+
+                    //all done
+                    assessWhenDeparting = false;
+
                 }
 
             }
@@ -409,16 +420,16 @@ public class TrafficAgent extends BushfireAgent {
 //        checkBarometersAndTriggerResponseAsNeeded();
 
         if (assessSituation && !travelPlanCompleted && !reroutedOnce) {
-            if(inActivity){ // post goal when departing
-                assessWhenDeparting = true;
-            }
-            else{
-                post(new GoalAssessBlockageImpact("assess blockage impact")); //
-                assessWhenDeparting = false;
+//            if(inActivity){ // post goal when departing
+//                assessWhenDeparting = true;
+//            }
+//            else{
+                post(new GoalAssessBlockageImpact("Assess")); //
+//                assessWhenDeparting = false;
 //            post(new GoalReplanToDestination("replan journey"));
 //            post(new GoalTest("test goal"));
 //            replanCurrentDriveTo(Constants.EvacRoutingMode.carGlobalInformation);
-            }
+//            }
 
         }
 
@@ -864,7 +875,9 @@ public class TrafficAgent extends BushfireAgent {
     public ActionContent.State getLastDriveActionStatus() {
         return lastDriveActionStatus;
     }
-
+    public boolean isInActivity(){
+        return this.inActivity;
+    }
     public double getTime() {
         return time;
     }

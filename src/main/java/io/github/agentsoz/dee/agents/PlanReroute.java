@@ -53,12 +53,13 @@ public class PlanReroute extends Plan {
                     (blockage.isCongestionNearBlockage() == true || blockage.getRecencyOfBlockage() == Blockage.recency.RECENT) ) {
                 applicable =  true;
                 rerouteBlockage = blockage;
+                ((TrafficAgent) getAgent()).memorise(TrafficAgent.MemoryEventType.DECIDED.name(), TrafficAgent.MemoryEventValue.IS_PLAN_APPLICABLE.name()
+                        + ":" + getGoal() + "|" + this.getClass().getSimpleName() + "=" + applicable);
             }
 
         }
 
-        ((TrafficAgent) getAgent()).memorise(TrafficAgent.MemoryEventType.DECIDED.name(), TrafficAgent.MemoryEventValue.IS_PLAN_APPLICABLE.name()
-                + ":" + getGoal() + "|" + this.getClass().getSimpleName() + "=" + applicable);
+
 
         return applicable;
     }
@@ -66,10 +67,18 @@ public class PlanReroute extends Plan {
 
     PlanStep[] steps = {
             () -> {
-                ((TrafficAgent) getAgent()).memorise(TrafficAgent.MemoryEventType.ACTIONED.name(), TrafficAgent.MemoryEventValue.REROUTE.name() +  ":" + getGoal() + "|" + this.getClass().getSimpleName() + "=" + true);
-                isReplanning = agent.replanCurrentDriveTo(Constants.EvacRoutingMode.carGlobalInformation);
-                agent.setReroutedOnce(true);
-                TrafficAgent.proactive_reroute_count++;
+               if(agent.isInActivity()){
+                   agent.assessWhenDeparting =true;
+                   isReplanning=false;
+                   return;
+               }
+               else{ // agent is driving
+                   ((TrafficAgent) getAgent()).memorise(TrafficAgent.MemoryEventType.ACTIONED.name(), TrafficAgent.MemoryEventValue.REROUTE.name() +  ":" + getGoal() + "|" + this.getClass().getSimpleName() + "=" + true);
+                   isReplanning = agent.replanCurrentDriveTo(Constants.EvacRoutingMode.carGlobalInformation);
+                   agent.setReroutedOnce(true);
+                   TrafficAgent.proactive_reroute_count++;
+               }
+
 
             },
             () -> {
@@ -81,11 +90,11 @@ public class PlanReroute extends Plan {
                     // Suspend will happen once this step is finished
                 }
             },
-            () -> {
-                ((TrafficAgent) getAgent()).memorise(TrafficAgent.MemoryEventType.BELIEVED.name(),
-                        TrafficAgent.MemoryEventValue.STATE_CHANGED.name()
-                                + ": replanned current route to avoid blockage");
-            },
+//            () -> {
+//                ((TrafficAgent) getAgent()).memorise(TrafficAgent.MemoryEventType.BELIEVED.name(),
+//                        TrafficAgent.MemoryEventValue.STATE_CHANGED.name()
+//                                + ": replanned current route to avoid blockage");
+//            },
 
 
 
