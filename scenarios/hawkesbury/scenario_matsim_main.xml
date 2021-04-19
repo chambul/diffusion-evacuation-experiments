@@ -36,7 +36,7 @@
 	</module>
 
 	<module name="plans">
-		<param name="inputPlansFile" value="matsim-plans-100.xml" />
+		<param name="inputPlansFile" value="matsim-plans-10.xml" />
 		<!--<param name="inputPlansFile" value="ees-BushfireAgents.xml" />-->
 	</module>
 

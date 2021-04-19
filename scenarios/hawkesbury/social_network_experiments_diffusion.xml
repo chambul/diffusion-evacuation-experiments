@@ -68,8 +68,8 @@
            https://github.com/agentsoz/bdi-abm-integration/issues/8 and
            https://github.com/agentsoz/bdi-abm-integration/issues/35 -->
       <opt id="congestionEvaluationInterval">180</opt>
-      <opt id="congestionToleranceThreshold">0.33</opt>
-      <opt id="congestionReactionProbability">0.0</opt> <!-- disable congestion replanning -->
+      <opt id="congestionToleranceThreshold">0.1</opt>
+      <opt id="congestionReactionProbability">1.0</opt>
     </model>
 
     <model id="disruption">

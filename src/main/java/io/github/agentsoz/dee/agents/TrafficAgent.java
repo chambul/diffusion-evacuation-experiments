@@ -87,6 +87,8 @@ public class TrafficAgent extends BushfireAgent {
     private boolean assessSituation = false;
     private boolean travelPlanCompleted = false; // checks if the agent is doing/completed the final activity.
     private boolean reroutedOnce = false; // checks if the agent has rerouted once.
+    private boolean inActivity = true; // initially set to true as act end/start percepts are registered at 61secs.
+    private boolean  assessWhenDeparting = false;
     //   private boolean sharedBlockageSNInfo = false;
     private int blockageRecencyThreshold=0; // in minutes
     private double distanceFromTheBlockageThreshold; //  specified in km in configs, converted to meters when assigning
@@ -317,11 +319,15 @@ public class TrafficAgent extends BushfireAgent {
 
         resetDiffusionContent(); //set Diffusion content to null.
 
+
         if (perceptID == null || perceptID.isEmpty()) {
             return;
         } // first process time percept as other percepts are using current time.
         else if (perceptID.equals(PerceptList.TIME)) { // time percept is received every second.
             time = (double) parameters;
+            if(time==61.0){ // first time percept, register for activity start/end. so all cativity end times must  atleast end at 00:02:00
+                registerPercepts(new String[] {Constants.ACTIVITY_ENDED,Constants.ACTIVITY_STARTED,PerceptList.CONGESTION});
+            }
             if(blockageList.isEmpty()){
                 return;
             }
@@ -364,15 +370,36 @@ public class TrafficAgent extends BushfireAgent {
                 }
             }
 
-
-
-
         } else if (perceptID.equals(PerceptList.CONGESTION)) {
-            checkCongestionNearBlockage();
+            if(blockageList.isEmpty()){
+                return;
+            }
+            else{
+                checkCongestionNearBlockage();
+                registerPercepts(new String [] {PerceptList.CONGESTION}); // #FIXME use conditions to register
+            }
+
         } else if (perceptID.equals(PerceptList.BLOCKED)) { // 1. current link 2. blocked link
 
             processBlockedPercept((Map<String,String>)parameters );
-            registerPercepts(new String[] {Constants.BLOCKED, Constants.CONGESTION});
+            registerPercepts(new String[] {Constants.BLOCKED});
+        }
+        else if(perceptID.equals(Constants.ACTIVITY_ENDED) || perceptID.equals(Constants.ACTIVITY_STARTED)){
+            if(perceptID.equals(Constants.ACTIVITY_ENDED)) {
+                inActivity=false;
+                if(assessWhenDeparting){
+                    assessSituation = true;
+                }
+
+            }
+            else{ // ACTIVITY_STARTED
+                inActivity = true;
+
+            }
+
+            if(!travelPlanCompleted || !reroutedOnce) {
+                registerPercepts(new String[] {Constants.ACTIVITY_STARTED, Constants.ACTIVITY_ENDED});
+            }
         }
 
         // handle percept spread on social network
@@ -382,11 +409,17 @@ public class TrafficAgent extends BushfireAgent {
 //        checkBarometersAndTriggerResponseAsNeeded();
 
         if (assessSituation && !travelPlanCompleted && !reroutedOnce) {
-
-            post(new GoalAssessBlockageImpact("assess blockage impact")); //
+            if(inActivity){ // post goal when departing
+                assessWhenDeparting = true;
+            }
+            else{
+                post(new GoalAssessBlockageImpact("assess blockage impact")); //
+                assessWhenDeparting = false;
 //            post(new GoalReplanToDestination("replan journey"));
 //            post(new GoalTest("test goal"));
 //            replanCurrentDriveTo(Constants.EvacRoutingMode.carGlobalInformation);
+            }
+
         }
 
 
@@ -555,9 +588,9 @@ public class TrafficAgent extends BushfireAgent {
 
     private void checkCongestionNearBlockage() {
 
-        if (blockageList.isEmpty()) {
-            return;
-        }
+//        if (blockageList.isEmpty()) {
+//            return;
+//        }
 
         for (Blockage blockage : blockageList) {
 
