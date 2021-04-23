@@ -5,13 +5,31 @@
 		<attributes>
 			<attribute class="java.lang.String" name="BDIAgentType">io.github.agentsoz.dee.agents.TrafficAgent</attribute>
 			<attribute class="java.lang.Double" name="distanceFromTheBlockageThreshold">5.0</attribute>
-			<attribute class="java.lang.Integer" name="blockageRecencyThreshold">30</attribute>
+			<attribute class="java.lang.Integer" name="blockageRecencyThreshold">45</attribute>
 			<attribute class="java.lang.Integer" name="blockageAngleThreshold">60</attribute>
 		</attributes>
-		<plan selected="yes">
-			<activity end_time="00:02:00" link="335" start_time="00:00:00" type="Evacuation" x="150.723418843" y="-33.6041740859"/>
-			<leg dep_time="00:02:00" mode="car"/>
-			<activity link="110" type="Safe" x="150.935009228077" y="-33.8081127291702" end_time="01:00:00" />
+		<plan>
+			<activity type="Evacuation" x="150.723418843" y="-33.6041740859" start_time="00:00:00" end_time="00:20:00"/>
+			<leg mode="car">
+			</leg>
+			<activity type="Safe" x="150.935009228077" y="-33.8081127291702"/>
 		</plan>
 	</person>
+
+
+	<person id="1">
+		<attributes>
+			<attribute class="java.lang.String" name="BDIAgentType">io.github.agentsoz.dee.agents.TrafficAgent</attribute>
+			<attribute class="java.lang.Double" name="distanceFromTheBlockageThreshold">5.0</attribute>
+			<attribute class="java.lang.Integer" name="blockageRecencyThreshold">45</attribute>
+			<attribute class="java.lang.Integer" name="blockageAngleThreshold">60</attribute>
+		</attributes>
+		<plan>
+			<activity type="Evacuation" link="335" facility="0" x="150.723418843" y="-33.6041740859" start_time="00:00:00" end_time="00:47:00"/>
+			<leg mode="car" dep_time="00:47:00">
+			</leg>
+			<activity type="Safe" link="110" facility="80" x="150.935009228077" y="-33.8081127291702"/>
+		</plan>
+	</person>
+
 </population>

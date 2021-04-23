@@ -22,7 +22,7 @@
     <randRegNetwork
 
             normalise="true"
-            avg_links="6"
+            avg_links="3"
 
     />
 
@@ -42,8 +42,8 @@
     <!--seed = percentage of initially active agents (%)-->
     <!--diffusion_probaility: mean diffusion probability that is varied using a standard deviation (sigma) to randomly draw probabilities from a gaussian distribution-->
     <ic>
-        <step_size>10</step_size>
-        <seeding_strategy seed="53">random</seeding_strategy>
+        <step_size>30</step_size>
+        <seeding_strategy seed="0">random</seeding_strategy>
         <diffusion_probability sigma="0.00">0.95</diffusion_probability>
         <out_file>./test/output/io/github/agentsoz/dee/HawkesburyTest/hawkesburyTest/diffusion.out</out_file>
         <contents type="information"></contents>

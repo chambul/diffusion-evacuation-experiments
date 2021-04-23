@@ -55,7 +55,7 @@
       <!-- MATSim output directory relative to examples/bushfire directory (will overrule the setting in MATSim config) -->
       <opt id="outputDir">test/output/io/github/agentsoz/dee/HawkesburyTest/hawkesburyTest/matsim</opt>
       <!-- MATSim XML config XML file relative to examples/bushfire directory -->
-      <opt id="configXml">scenarios/hawkesbury/scenario_matsim_main.xml</opt>
+      <opt id="configXml">scenarios/hawkesbury/matsim_main.xml</opt>
       <!-- Maximum distance at which the fire can be seen (in metres)-->
       <opt id="maxDistanceForFireVisual">1000</opt>
       <!-- Maximum distance at which smoke can be seen (in metres)-->
@@ -68,7 +68,7 @@
            https://github.com/agentsoz/bdi-abm-integration/issues/8 and
            https://github.com/agentsoz/bdi-abm-integration/issues/35 -->
       <opt id="congestionEvaluationInterval">180</opt>
-      <opt id="congestionToleranceThreshold">0.1</opt>
+      <opt id="congestionToleranceThreshold">0.2</opt>
       <opt id="congestionReactionProbability">1.0</opt>
     </model>
 

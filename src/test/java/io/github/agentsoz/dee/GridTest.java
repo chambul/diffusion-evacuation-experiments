@@ -25,6 +25,7 @@ package io.github.agentsoz.dee;
 import io.github.agentsoz.ees.Run;
 import io.github.agentsoz.socialnetwork.util.Global;
 import io.github.agentsoz.util.TestUtils;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.matsim.testcases.MatsimTestUtils;
 import org.slf4j.Logger;
@@ -39,6 +40,7 @@ public class GridTest {
     //@Rule public MatsimTestUtils utils = new MatsimTestUtils() ;
     public MatsimTestUtils utils = new MatsimTestUtils();
 
+    @Ignore
     @Test
     public void gridWorldTest() {
 

@@ -54,7 +54,8 @@ public class PlanReroute extends Plan {
                 applicable =  true;
                 rerouteBlockage = blockage;
                 ((TrafficAgent) getAgent()).memorise(TrafficAgent.MemoryEventType.DECIDED.name(), TrafficAgent.MemoryEventValue.IS_PLAN_APPLICABLE.name()
-                        + ":" + getGoal() + "|" + this.getClass().getSimpleName() + "=" + applicable);
+                        + ":" + getGoal() + "|" + this.getClass().getSimpleName() + "=" + applicable + "congestion="
+                +blockage.isCongestionNearBlockage() + " | recency=" + blockage.getRecencyOfBlockage());
             }
 
         }
