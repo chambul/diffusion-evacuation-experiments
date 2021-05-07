@@ -302,7 +302,7 @@ public class TrafficAgent extends BushfireAgent {
     public void finish() {
         // an agent gets two blocked percepts between two consequative seconds
         if(onetime) {
-            logger.info("model stats: proactive reroute count: {} | reactive reroute count: {}", proactive_reroute_count, reactive_reroute_count / 2);
+            logger.info("model stats: proactive reroute count: {} | reactive reroute count: {}", proactive_reroute_count, reactive_reroute_count);
             onetime = false;
         }
 
@@ -382,7 +382,9 @@ public class TrafficAgent extends BushfireAgent {
             registerPercepts(new String [] {PerceptList.CONGESTION});
 
         } else if (perceptID.equals(PerceptList.BLOCKED)) { // 1. current link 2. blocked link
-            processBlockedPercept((Map<String,String>)parameters );
+            if(!reroutedOnce) { // same agent receives 2 blocked percepts
+                processBlockedPercept((Map<String,String>)parameters );
+            }
             registerPercepts(new String[] {Constants.BLOCKED});
         }
         else if(perceptID.equals(Constants.ACTIVITY_ENDED) || perceptID.equals(Constants.ACTIVITY_STARTED)){
@@ -466,7 +468,7 @@ public class TrafficAgent extends BushfireAgent {
             blockageList.add(newBlockage);
 
             // blockage influence,  should only send one/first time, road blockage at X
-            String blockageInfo = "road blockage at " + newBlockage.getName() ; //+ "," + time
+            String blockageInfo =  newBlockage.getName() ; //"road blockage at " +
             String[] params1 = {blockageInfo};
             putBlockageInfluencetoDiffusionContent(DeePerceptList.BLOCKAGE_INFLUENCE,params1);
 

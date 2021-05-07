@@ -31,5 +31,5 @@ for person in pop_root.findall("person"):
 #print(ET.tostring(sample_tree.getroot(), pretty_print=True).decode("utf-8"))
 outFile = 'sample.xml'
 with open(outFile, "w") as f:
-    f.write('<?xml version="1.0" encoding="utf-8"?> \n <!DOCTYPE population SYSTEM "http://www.matsim.org/files/dtd/population_v6.dtd"> \n')
+    f.write('<!DOCTYPE population SYSTEM "http://www.matsim.org/files/dtd/population_v6.dtd"> \n<?xml version="1.0" encoding="utf-8"?> \n')
     f.write(ET.tostring(sample_tree.getroot(), pretty_print=True,encoding="utf-8"))
