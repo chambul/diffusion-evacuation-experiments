@@ -76,6 +76,7 @@ public class TrafficAgent extends BushfireAgent {
 //    static final String LOCATION_INVAC_PREFERRED = "invac";
     //internal variables
     private final String memory = "memory";
+    private static String BLOCKAGE_NAME = " ";
     private PrintStream writer = null;
     private QueryPerceptInterface queryInterface;
     private EnvironmentActionInterface envActionInterface;
@@ -455,6 +456,11 @@ public class TrafficAgent extends BushfireAgent {
 //                String.valueOf(this.getId()), PerceptList.REQUEST_LOCATION, null))[0];
 
         String blockageName = Blockage.findBlockageNameFromBlockedLink(blockedLinkID);
+        if(BLOCKAGE_NAME == " ") {
+            logger.info(" Hit a blockage; initialising name to ", blockageName);
+        }
+        BLOCKAGE_NAME = blockageName; // assuming only one blockage, so that all agents can get this name
+
         if (blockageName == null) {
             logger.error("no blockage name found for agent {} at time {}. Blocked Link id: {}", getId(), time, blockedLinkID);
             return;
@@ -546,17 +552,17 @@ public class TrafficAgent extends BushfireAgent {
 
 //            String blockageName = tokens[1]; // grossmands
 //            double newObservedTime = Double.valueOf(tokens[2]); // time
-                String blockageName= "grid_network_blockage";
+//                String blockageName= "grid_network_blockage";
                 double newObservedTime  = time;
-            if (!isBlockageExistsInBlockageList(blockageName)) { // first time hearing about the blockage, create new blockage and add to list
-                Blockage newBlockage = Blockage.createBlockageFromName(blockageName);
+            if (!isBlockageExistsInBlockageList(BLOCKAGE_NAME)) { // first time hearing about the blockage, create new blockage and add to list
+                Blockage newBlockage = Blockage.createBlockageFromName(BLOCKAGE_NAME);
                 if (newBlockage == null) {
-                    logger.error("could not find the blockage {} in the blockage list", blockageName);
+                    logger.error("could not find the blockage {} in the blockage list", BLOCKAGE_NAME);
                 }
                 blockageList.add(newBlockage);
             }
 
-            Blockage blockage = getBlockageObjectFromName(blockageName);
+            Blockage blockage = getBlockageObjectFromName(BLOCKAGE_NAME);
 //           if(blockage.getLatestObservedTime() < newObservedTime){ // update if later than the current observed time
 //               blockage.setLatestBlockageObservedTime(newObservedTime); // time blockage event was observed
 //           }

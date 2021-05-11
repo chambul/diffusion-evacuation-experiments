@@ -26,18 +26,18 @@
 
 	<module name="global">
 		<param name="randomSeed" value="482564" />
-		<param name="coordinateSystem" value="Atlantis" />
+		<param name="coordinateSystem" value="GK4" />
 		<param name="numberOfThreads" value="1" />
 	</module>
 
 	<module name="network">
-		<param name="inputNetworkFile" value="network.xml" />
+		<param name="inputNetworkFile" value="network_gk4.xml" />
 		<param name= "timeVariantNetwork" value= "false" />
 		<!--<param name= "inputChangeEventsFile" value= "scenario_matsim_network_change_events.xml.gz" />-->
 	</module>
 
 	<module name="plans">
-		<param name="inputPlansFile" value="matsim-plans-20k.xml.gz" />
+		<param name="inputPlansFile" value="matsim-plans-gk4-3k.xml.gz" />
 	</module>
 
 	<module name="controler">

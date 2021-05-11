@@ -62,7 +62,7 @@ public class Blockage extends Location{
         add( new Location(DataTypes.GROSSMANDS,783437.6291368047,5748322.732670321) ); // from node of link 11207 - distnace is arond 550m
         add(new Location(DataTypes.GREAT_OCEAN_ROAD,788600.3567188493,5753735.008117045)); // from node of 12340-12338-12336-12334-12332 -distance is around 450m
         add(new Location("grid_network_blockage",2000.0,0));
-        add(new Location("hawkesbury_blockage_link352",150.892076947,-33.7752260091277)); // nodes 250: closest to where the agent is stuck
+        add(new Location("hawkesbury_blockage_link352",304809.0,6260769.0)); // nodes 250: closest to where the agent is stuck
         add(new Location("hawkesbury_blockage_link221",150.76031966978286,-33.69374727323568)); // node x,y coords as stuck at node 162, start of the link
     }};
 
