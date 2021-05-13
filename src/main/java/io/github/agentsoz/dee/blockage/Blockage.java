@@ -53,6 +53,9 @@ public class Blockage extends Location{
         put("grid_network_blockage", new ArrayList<String>( Arrays.asList("2-3","4-5r","12-18")) ); //#FIXME grid network blockage
         put("hawkesbury_blockage_link352", new ArrayList<String>( Arrays.asList("352")));
         put("hawkesbury_blockage_link221", new ArrayList<String>( Arrays.asList("221")));
+        put("hawkesbury_blockage_link349", new ArrayList<String>( Arrays.asList("349","328")));
+        put("hawkesbury_blockage_link467", new ArrayList<String>( Arrays.asList("467","444")));
+
 
     }};
 
@@ -64,6 +67,8 @@ public class Blockage extends Location{
         add(new Location("grid_network_blockage",2000.0,0));
         add(new Location("hawkesbury_blockage_link352",304809.0,6260769.0)); // nodes 250: closest to where the agent is stuck
         add(new Location("hawkesbury_blockage_link221",150.76031966978286,-33.69374727323568)); // node x,y coords as stuck at node 162, start of the link
+        add(new Location("hawkesbury_blockage_link349",296286.0,6272535.0));
+        add(new Location("hawkesbury_blockage_link467",295596.0,6273491.0));
     }};
 
 

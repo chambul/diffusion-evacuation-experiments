@@ -15,10 +15,15 @@ function basic_stats() {
 
   #stdout
   ct0=$(grep "error" $stdout)
-  printf " checking for errors in stdout (printed below if any): \n $ct0 \n "
+  printf " checking for errors in stdout (printed below if any): \n $ct0 \n \n"
 
+  ct01=$(grep "shutdown completed" $stdout)
+  printf " checking for for a successful shutdown: \n $ct01 \n "
 
   #matsim outputs
+  ct011=$(zgrep "stuckAndAbort" $events)
+  printf " checking for any stuck agents: \n $ct011 \n "
+
   ct1=$(zgrep "person" $events | cut -d '"' -f 6 | sort | uniq | wc -l)
   printf "total_matsim_agents: $ct1 \n " > $basic_stat
 
@@ -28,7 +33,7 @@ function basic_stats() {
   ct3=$( zgrep "Safe" $events | wc -l)
   printf "safe_activity_starts: $ct3 \n" >> $basic_stat
 
-  ct4=$( zgrep "tuck" $events | wc -l)
+  ct4=$( zgrep "stuckAndAbort" $events | wc -l)
   printf "stuck_agents: $ct4 \n" >> $basic_stat
 
 

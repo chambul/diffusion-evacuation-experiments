@@ -1,0 +1,14 @@
+evacuation routes = ; entry points = ;exit points=; reoute cost (approx.) =
+97: number of agents traversing= evacuation routes = 14; entry points = ;exit points=1; reoute cost (approx.) = 7km
+*467/444: number of agents traversing=5210; evacuation routes = 13; entry points = 2;exit points=1; reoute cost (approx.) = 18km
+**349/328: number of agents traversing=6860; evacuation routes = 19 ; entry points = 5;exit points=2; reoute cost (approx.) = 17km
+*463: number of agents traversing= 6860; evacuation routes = 19; entry points = 2;exit points=2; reoute cost (approx.) = 20km / 10.5km
+268:
+
+
+-most busiest ones are towards the end of the network, leading to the 5 safe points.
+-picked several links that are in the middle of the network and have a considerable level of reroute cost (in terms of distance).
+- 463: agents go to either 273(up) or 110 (down). so they use the alternative to their left (~10km) and reach at the end of 463.
+- but blocking 349 they have no choice other than to go all the way round.
+
+-reroute  distance cost: shorter the blocked link, and longer the alternative route/s results in higher costs

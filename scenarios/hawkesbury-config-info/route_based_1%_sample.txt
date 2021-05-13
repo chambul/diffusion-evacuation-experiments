@@ -1,0 +1,216 @@
+total routes found:  80
+total agents founds:  38343
+selecting agent ids randomly based on percentages...   384
+population percentage:  1.24403411314  sample size:  4
+population percentage:  1.7891140495  sample size:  6
+population percentage:  0.545079936364  sample size:  2
+population percentage:  1.61959158125  sample size:  6
+population percentage:  0.459014683254  sample size:  1
+population percentage:  1.90386772031  sample size:  7
+population percentage:  1.24403411314  sample size:  4
+population percentage:  0.521607594607  sample size:  2
+population percentage:  2.01340531518  sample size:  7
+population percentage:  2.11511879613  sample size:  8
+population percentage:  1.90386772031  sample size:  7
+population percentage:  2.01079727721  sample size:  7
+population percentage:  0.190386772031  sample size:  0
+population percentage:  0.602456771771  sample size:  2
+population percentage:  1.19708942962  sample size:  4
+population percentage:  0.281668101088  sample size:  1
+population percentage:  1.63523980909  sample size:  6
+population percentage:  2.01340531518  sample size:  7
+population percentage:  2.01079727721  sample size:  7
+population percentage:  1.64567196098  sample size:  6
+population percentage:  1.78128993558  sample size:  6
+population percentage:  1.63523980909  sample size:  6
+population percentage:  0.40424588582  sample size:  1
+population percentage:  1.81519442923  sample size:  6
+population percentage:  0.516391518661  sample size:  1
+population percentage:  2.11511879613  sample size:  8
+population percentage:  0.40424588582  sample size:  1
+population percentage:  1.96906866964  sample size:  7
+population percentage:  1.61959158125  sample size:  6
+population percentage:  1.06929556894  sample size:  4
+population percentage:  1.41877265733  sample size:  5
+population percentage:  1.96906866964  sample size:  7
+population percentage:  0.0156482278382  sample size:  0
+population percentage:  0.414678037712  sample size:  1
+population percentage:  1.48397360666  sample size:  5
+population percentage:  0.302532404872  sample size:  1
+population percentage:  1.96906866964  sample size:  7
+population percentage:  1.67436037869  sample size:  6
+population percentage:  0.771979240018  sample size:  2
+population percentage:  0.672873797042  sample size:  2
+population percentage:  0.375557468117  sample size:  1
+population percentage:  0.443366455416  sample size:  1
+population percentage:  1.90386772031  sample size:  7
+population percentage:  0.891948986777  sample size:  3
+population percentage:  1.7891140495  sample size:  6
+population percentage:  1.53613436612  sample size:  5
+population percentage:  1.56482278382  sample size:  6
+population percentage:  2.01340531518  sample size:  7
+population percentage:  0.4642307592  sample size:  1
+<!DOCTYPE population SYSTEM "http://www.matsim.org/files/dtd/population_v6.dtd">
+<?xml version="1.0" encoding="utf-8"?>
+<population>
+  <person id="10030">
+    <attributes>
+      <attribute name="BDIAgentType" class="java.lang.String">io.github.agentsoz.dee.agents.TrafficAgent</attribute>
+      <attribute name="blockageAngleThreshold" class="java.lang.Integer">60</attribute>
+      <attribute name="blockageRecencyThreshold" class="java.lang.Integer">45</attribute>
+      <attribute name="distanceFromTheBlockageThreshold" class="java.lang.Double">5.0</attribute>
+    </attributes>
+    <plan selected="yes">
+      <activity type="Evacuation" x="284069.0" y="6262918.0" start_time="00:00:00" end_time="05:17:00">
+                        </activity>
+      <leg mode="car">
+                        </leg>
+      <activity type="Safe" x="299887.0" y="6247043.0">
+                        </activity>
+    </plan>
+  </person>
+  <person id="10207">
+    <attributes>
+      <attribute name="BDIAgentType" class="java.lang.String">io.github.agentsoz.dee.agents.TrafficAgent</attribute>
+      <attribute name="blockageAngleThreshold" class="java.lang.Integer">60</attribute>
+      <attribute name="blockageRecencyThreshold" class="java.lang.Integer">45</attribute>
+      <attribute name="distanceFromTheBlockageThreshold" class="java.lang.Double">5.0</attribute>
+    </attributes>
+    <plan selected="yes">
+      <activity type="Evacuation" x="284069.0" y="6262918.0" start_time="00:00:00" end_time="05:34:00">
+                        </activity>
+population percentage:  2.01340531518  sample size:  7
+population percentage:  1.96906866964  sample size:  7
+population percentage:  0.401637847847  sample size:  1
+population percentage:  1.96906866964  sample size:  7
+population percentage:  2.11511879613  sample size:  8
+population percentage:  0.239939493519  sample size:  0
+population percentage:  1.41877265733  sample size:  5
+population percentage:  0.0078241139191  sample size:  0
+population percentage:  1.61959158125  sample size:  6
+population percentage:  1.19708942962  sample size:  4
+population percentage:  0.31818063271  sample size:  1
+population percentage:  1.78128993558  sample size:  6
+population percentage:  1.65871215085  sample size:  6
+population percentage:  1.78128993558  sample size:  6
+population percentage:  1.96906866964  sample size:  7
+population percentage:  0.824139999478  sample size:  3
+population percentage:  0.195602847977  sample size:  0
+population percentage:  1.3640038599  sample size:  5
+population percentage:  1.53613436612  sample size:  5
+population percentage:  0.560728164202  sample size:  2
+population percentage:  1.96906866964  sample size:  7
+population percentage:  1.3640038599  sample size:  5
+population percentage:  0.286884177034  sample size:  1
+population percentage:  1.78128993558  sample size:  6
+population percentage:  1.67436037869  sample size:  6
+population percentage:  0.594632657851  sample size:  2
+population percentage:  0.487703100957  sample size:  1
+population percentage:  2.11511879613  sample size:  8
+population percentage:  0.526823670553  sample size:  2
+population percentage:  1.90386772031  sample size:  7
+population percentage:  0.40424588582  sample size:  1
+total percentages considered (should be 100%):  100.0
+expected sample input plan size  384
+actual selected sample size  345
+sample input plan size:  345
+chamindas-MBP:gen_haw_plans chaminda$ less sample.xml
+chamindas-MBP:gen_haw_plans chaminda$ python analyse_hawkesbury_plans_and_gen_sample.py output_plans.xml matsim-plans-gk4-38k.xml 384
+analysing output plans..
+total routes found:  80
+total agents founds:  38343
+selecting agent ids randomly based on percentages...   384
+population percentage:  1.24403411314  sample size:  5.0
+Traceback (most recent call last):
+  File "analyse_hawkesbury_plans_and_gen_sample.py", line 76, in <module>
+    sample_id_list = get_percentage_id_list(route_based_count,int(tot_agents),int(sample_size))
+  File "analyse_hawkesbury_plans_and_gen_sample.py", line 26, in get_percentage_id_list
+    l = random.sample(list,sample_fraction)
+  File "/System/Library/Frameworks/Python.framework/Versions/2.7/lib/python2.7/random.py", line 328, in sample
+    result = [None] * k
+TypeError: can't multiply sequence by non-int of type 'float'
+chamindas-MBP:gen_haw_plans chaminda$ python analyse_hawkesbury_plans_and_gen_sample.py output_plans.xml matsim-plans-gk4-38k.xml 384
+analysing output plans..
+total routes found:  80
+total agents founds:  38343
+selecting agent ids randomly based on percentages...   384
+population percentage:  1.24403411314  sample size:  5
+population percentage:  1.7891140495  sample size:  7
+population percentage:  0.545079936364  sample size:  3
+population percentage:  1.61959158125  sample size:  7
+population percentage:  0.459014683254  sample size:  2
+population percentage:  1.90386772031  sample size:  8
+population percentage:  1.24403411314  sample size:  5
+population percentage:  0.521607594607  sample size:  3
+population percentage:  2.01340531518  sample size:  8
+population percentage:  2.11511879613  sample size:  9
+population percentage:  1.90386772031  sample size:  8
+population percentage:  2.01079727721  sample size:  8
+population percentage:  0.190386772031  sample size:  1
+population percentage:  0.602456771771  sample size:  3
+population percentage:  1.19708942962  sample size:  5
+population percentage:  0.281668101088  sample size:  2
+population percentage:  1.63523980909  sample size:  7
+population percentage:  2.01340531518  sample size:  8
+population percentage:  2.01079727721  sample size:  8
+population percentage:  1.64567196098  sample size:  7
+population percentage:  1.78128993558  sample size:  7
+population percentage:  1.63523980909  sample size:  7
+population percentage:  0.40424588582  sample size:  2
+population percentage:  1.81519442923  sample size:  7
+population percentage:  0.516391518661  sample size:  2
+population percentage:  2.11511879613  sample size:  9
+population percentage:  0.40424588582  sample size:  2
+population percentage:  1.96906866964  sample size:  8
+population percentage:  1.61959158125  sample size:  7
+population percentage:  1.06929556894  sample size:  5
+population percentage:  1.41877265733  sample size:  6
+population percentage:  1.96906866964  sample size:  8
+population percentage:  0.0156482278382  sample size:  1
+population percentage:  0.414678037712  sample size:  2
+population percentage:  1.48397360666  sample size:  6
+population percentage:  0.302532404872  sample size:  2
+population percentage:  1.96906866964  sample size:  8
+population percentage:  1.67436037869  sample size:  7
+population percentage:  0.771979240018  sample size:  3
+population percentage:  0.672873797042  sample size:  3
+population percentage:  0.375557468117  sample size:  2
+population percentage:  0.443366455416  sample size:  2
+population percentage:  1.90386772031  sample size:  8
+population percentage:  0.891948986777  sample size:  4
+population percentage:  1.7891140495  sample size:  7
+population percentage:  1.53613436612  sample size:  6
+population percentage:  1.56482278382  sample size:  7
+population percentage:  2.01340531518  sample size:  8
+population percentage:  0.4642307592  sample size:  2
+population percentage:  2.01340531518  sample size:  8
+population percentage:  1.96906866964  sample size:  8
+population percentage:  0.401637847847  sample size:  2
+population percentage:  1.96906866964  sample size:  8
+population percentage:  2.11511879613  sample size:  9
+population percentage:  0.239939493519  sample size:  1
+population percentage:  1.41877265733  sample size:  6
+population percentage:  0.0078241139191  sample size:  1
+population percentage:  1.61959158125  sample size:  7
+population percentage:  1.19708942962  sample size:  5
+population percentage:  0.31818063271  sample size:  2
+population percentage:  1.78128993558  sample size:  7
+population percentage:  1.65871215085  sample size:  7
+population percentage:  1.78128993558  sample size:  7
+population percentage:  1.96906866964  sample size:  8
+population percentage:  0.824139999478  sample size:  4
+population percentage:  0.195602847977  sample size:  1
+population percentage:  1.3640038599  sample size:  6
+population percentage:  1.53613436612  sample size:  6
+population percentage:  0.560728164202  sample size:  3
+population percentage:  1.96906866964  sample size:  8
+population percentage:  1.3640038599  sample size:  6
+population percentage:  0.286884177034  sample size:  2
+population percentage:  1.78128993558  sample size:  7
+population percentage:  1.67436037869  sample size:  7
+population percentage:  0.594632657851  sample size:  3
+population percentage:  0.487703100957  sample size:  2
+population percentage:  2.11511879613  sample size:  9
+population percentage:  0.526823670553  sample size:  3
+population percentage:  1.90386772031  sample size:  8
+population percentage:  0.40424588582  sample size:  2

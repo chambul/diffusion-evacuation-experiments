@@ -1,4 +1,5 @@
 #author Chaminda Bulumulla
+## make sure to use population file with GK4 cordinates (can use scenarios/hawkesbury/38k file and generate sample in scripts dir)
 from lxml import etree as ET
 import sys # for arg handling
 

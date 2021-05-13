@@ -7,6 +7,11 @@ import optparse
 import os
 
 
+args = len(sys.argv) - 1
+if args == 0:
+    print("call the script with following options: -s: sn/bl/both ; -d: e.g. ../../results-chapter4/May05")
+    exit()
+
 parser = optparse.OptionParser()
 
 parser.add_option('-s', "--scenario",action="store", dest="scenario", help="option for one scenario sn/bl/both")
@@ -30,6 +35,8 @@ elif scenario == "sn":
 output_dir_scenario = input_dir + "/plots-" + scenario
 output_dir_comparison = tt_dir + "/plots"
 
+
+#input
 matsim_journeys_file =  "output/matsim/output_matsim_journeys.txt"
 blocked_percepts_file = "blocked_times.out"
 diffusion_file =  "output/diffusion.out"
@@ -59,8 +66,18 @@ def readFile(dir,filename,delim,headerVal):
 
 def plot_distance_distribution(jounrneys_df, scenario,figure_index,output_dir):
     jounrneys_df['distance'] = jounrneys_df['distance'].div(1000).round(2) # covert meters into km
-    print "Descriptive statistics of distance distribution:",scenario
-    print jounrneys_df['distance'].describe()
+    p =  "Descriptive statistics of distance distribution:",scenario
+    stats = jounrneys_df['distance'].describe()
+    print p
+    print str(stats)
+    outf = output_dir + "/" + 'distribution_stats.txt'
+    if os.path.exists(outf):
+        os.remove(outf) #remove previous distro stats
+    dist_file = open(outf, "a")
+    dist_file.write(str(p))
+    dist_file.write("\n")
+    dist_file.write(str(stats))
+    dist_file.close()
 
     plt.figure(figure_index) # now plot the histrogram of 1D distance distribution
     if scenario == "bl":
@@ -78,8 +95,17 @@ def plot_distance_distribution(jounrneys_df, scenario,figure_index,output_dir):
 
 def plot_time_distribution(df, scenario,figure_index,output_dir):
     df['in_vehicle_time'] = df['in_vehicle_time'].div(60).round(2) # covert seconds into mins
-    print "Descriptive statistics of travel time distribution:",scenario
-    print df['in_vehicle_time'].describe()
+    p = "Descriptive statistics of travel time distribution:",scenario
+    print p
+    stats = df['in_vehicle_time'].describe()
+    print str(stats)
+    outf = output_dir + "/" + 'distribution_stats.txt'
+    dist_file = open(outf, "a")
+    dist_file.write("\n")
+    dist_file.write(str(p))
+    dist_file.write("\n")
+    dist_file.write(str(stats))
+    dist_file.close()
 
     plt.figure(figure_index) # now plot the histrogram of 1D distance distribution
     plt.hist(df['in_vehicle_time'], alpha=0.5)
@@ -136,6 +162,8 @@ def gen_scenario_plots(figure_index):
     journeys_df = readFile(input_dir,matsim_journeys_file,"\t",True)
     if journeys_df is not None:
         print "journeys_df size ",len(journeys_df)
+        # FIXME make this first, 'distribution_stats.txt' delete if exists
+
         journeys_df = plot_distance_distribution(journeys_df,scenario,figure_index,output_dir_scenario)
 
         #Baseline - distance distribution
@@ -159,12 +187,14 @@ def gen_scenario_plots(figure_index):
     return journeys_df, blocked_percepts_df, diff_df
 
 def gen_comparison_blocked_percept_plots(df_bl,df_sn,out_dir, figure_index):
-    print "--------------------------COMPARISON 1: Timing of Blocked percepts --------------"
+    print "--------------------------COMPARISON : Timing of Blocked percepts --------------"
     plt.figure(figure_index) # to differentiate figures
     #ok to plot lines connecting dots
     plt.plot(df_bl['time'], df_bl['count'],'-ok', markersize=0.3, linewidth=1.5, color='red', label="baseline")
     plt.plot(df_sn['time'], df_sn['count'],'-ok', markersize=0.3, linewidth=1.5, color='blue', label="social")
-    plt.legend()
+    #plot legend out of plot
+    plt.legend(bbox_to_anchor=(1,0), loc="lower right") # upper/lower left/right
+    # plt.legend()
     plt.title('Total number of agents that encounter the blockage over time')
     plt.ylabel('Agent count')
     plt.xlabel('Simulation time (minutes)')
@@ -173,19 +203,19 @@ def gen_comparison_blocked_percept_plots(df_bl,df_sn,out_dir, figure_index):
     plt.savefig(out_dir + "/" + 'blocked_percept_times_comparison.png')
 
 def gen_comparison_distance_plots(df_bl,df_sn,out_dir, figure_index):
-    print "--------------------------COMPARISON 1: Timing of distance distributions --------------"
+    print "--------------------------COMPARISON : distance distributions --------------"
     plt.figure(figure_index) # to differentiate figures
     plt.hist(df_bl['distance'], alpha=0.3, color="red", label="baseline")
     plt.hist(df_sn['distance'], alpha=0.3, color="blue", label="social")
     plt.legend()
     plt.title('Travel distance comparison')
-    plt.xlabel('Travel time (minutes)')
+    plt.xlabel('Travel distance (km)')
 
     print "saving travel plot as travel_distribution_comparison.png"
     plt.savefig(out_dir + "/" + 'distance_distribution_comparison.png')
 
 def gen_comparison_travel_plots(df_bl,df_sn,out_dir, figure_index):
-    print "--------------------------COMPARISON 1: Timing of travel distributions --------------"
+    print "--------------------------COMPARISON : Travel time distributions --------------"
     plt.figure(figure_index) # to differentiate figures
     plt.hist(df_bl['in_vehicle_time'], alpha=0.3, color="red", label="baseline")
     plt.hist(df_sn['in_vehicle_time'], alpha=0.3, color="blue", label="social")
@@ -196,7 +226,37 @@ def gen_comparison_travel_plots(df_bl,df_sn,out_dir, figure_index):
     print "saving travel plot as travel_distribution_comparison.png"
     plt.savefig(out_dir + "/" + 'time_distribution_comparison.png')
 
+def gen_comparison_travel_time_diff_plot(df_bl,df_sn,out_dir,figure_index):
+    print "--------------------------COMPARISON : Travel time differences --------------"
+    times_bl = df_bl[['person_id', 'in_vehicle_time']]
+    times_sn = df_sn[['person_id', 'in_vehicle_time']]
+    # if len(times_bl) == len (times_sn):
+    #     print "number of agents in baseline and social cases differ, aborting"
+    #     exit()
+    diff_df = pd.merge(times_bl, times_sn.rename(columns={'in_vehicle_time':'in_vehicle_time_sn'}), on='person_id',  how='left')
+    diff_df['time_diff'] = diff_df['in_vehicle_time'] -diff_df['in_vehicle_time_sn'] # baseline - social
+    bins = [-30,-0.1,0.1,15, 30, 45, 60, 75]
+    diff_df['time_diff_binned'] = pd.cut(diff_df['time_diff'], bins)
+    outf = out_dir + "/" +  'time-differences.csv'
+    diff_df.to_csv(outf, sep="\t")
+    s = pd.cut(diff_df['time_diff'], bins=bins).value_counts()
+    print (s)
 
+def gen_comparison_travel_dist_diff_plot(df_bl,df_sn,out_dir,figure_index):
+    print "--------------------------COMPARISON : distance differences --------------"
+    dist_bl = df_bl[['person_id', 'distance']]
+    dist_sn = df_sn[['person_id', 'distance']]
+    # if len(times_bl) == len (times_sn):
+    #     print "number of agents in baseline and social cases differ, aborting"
+    #     exit()
+    diff_df = pd.merge(dist_bl, dist_sn.rename(columns={'distance':'distance_sn'}), on='person_id',  how='left')
+    diff_df['dist_diff'] = diff_df['distance'] - diff_df['distance_sn'] # baseline - social
+    bins = [-30,-0.1,0.1,15, 30, 45, 60, 75]
+    diff_df['dist_diff_binned'] = pd.cut(diff_df['dist_diff'], bins)
+    outf = out_dir + "/" +  'distance-differences.csv'
+    diff_df.to_csv(outf, sep="\t")
+    s = pd.cut(diff_df['dist_diff'], bins=bins).value_counts()
+    print (s)
 
 #---------- run analyse functions-------------
 if scenario == "both":
@@ -225,11 +285,15 @@ if scenario == "both":
     #comparision
     # print blocked_percepts_df_sn
     # print journeys_df_sn
+
     if not os.path.isdir(output_dir_comparison):
         os.makedirs(output_dir_comparison)
     gen_comparison_blocked_percept_plots(blocked_percepts_df_bl,blocked_percepts_df_sn,output_dir_comparison, 10)
     gen_comparison_distance_plots(journeys_df_bl,journeys_df_sn,output_dir_comparison,11)
     gen_comparison_travel_plots(journeys_df_bl,journeys_df_sn,output_dir_comparison,12)
+    gen_comparison_travel_time_diff_plot(journeys_df_bl,journeys_df_sn,output_dir_comparison,13)
+    gen_comparison_travel_dist_diff_plot(journeys_df_bl,journeys_df_sn,output_dir_comparison,14)
+
 
 elif scenario == "bl":
     res = gen_scenario_plots(1)

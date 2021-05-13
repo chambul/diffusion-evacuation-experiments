@@ -37,7 +37,7 @@
 	</module>
 
 	<module name="plans">
-		<param name="inputPlansFile" value="matsim-plans-gk4-3k.xml.gz" />
+		<param name="inputPlansFile" value="matsim-plans-gk4-1_percent_sample.xml" />
 	</module>
 
 	<module name="controler">
@@ -59,8 +59,8 @@
 
 		<param name = "snapshotperiod"	value = "00:00:20"/> <!-- 00:00:00 means NO snapshot writing, 00:00:30 means every 30 secs -->
 
-		<param name= "flowCapacityFactor" value= "1.0" />
-		<param name= "storageCapacityFactor" value= "1.0" />
+		<param name= "flowCapacityFactor" value= "0.04" />
+		<param name= "storageCapacityFactor" value= "0.04" />
 
 		<param name="numberOfThreads" value="1" />
 	</module>
