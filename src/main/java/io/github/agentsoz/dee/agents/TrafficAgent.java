@@ -96,9 +96,9 @@ public class TrafficAgent extends BushfireAgent {
     private int blockageAngleThreshold = 0; // degrees
 
     // reconsider times
-    static final double RECONSIDER_LATER_TIME = 30.0*60;
-    static final double RECONSIDER_SOONER_TIME = 5.0*60;
-    static final double RECONSIDER_REGULAR_TIME = 15.0*60;
+    static final double RECONSIDER_LATER_TIME = 15.0*60;
+    static final double RECONSIDER_SOONER_TIME = 3.0*60;
+    static final double RECONSIDER_REGULAR_TIME = 5.0*60;
 
     //counters
     protected  static int proactive_reroute_count =0;
@@ -345,7 +345,10 @@ public class TrafficAgent extends BushfireAgent {
         // save it to memory
         if(!perceptID.equals(Constants.DIFFUSION_CONTENT) && !perceptID.equals(PerceptList.TIME)
                 && !perceptID.equals(PerceptList.ACTIVITY_ENDED) && !perceptID.equals(PerceptList.ACTIVITY_STARTED)) {
-            memorise(MemoryEventType.PERCEIVED.name(), perceptID + ":" + parameters.toString());
+
+
+            memorise(MemoryEventType.PERCEIVED.name(),
+                    perceptID + ":" + parameters.toString()  );
         }
 
         if (perceptID.equals(PerceptList.ARRIVED)) {
@@ -358,9 +361,10 @@ public class TrafficAgent extends BushfireAgent {
 
                 if(contentType.equals(DeePerceptList.BLOCKAGE_INFLUENCE)){
                     String content= (String)contents.get(contentType)[0];
-                    processSNBlockageInfo(content);
+                    double dist_to_blockage = processSNBlockageInfo(content);
 
                     memorise(MemoryEventType.PERCEIVED.name(), perceptID + ":" + content);
+                    logger.info("agent " + this.getId() +" received blockage info, blockage driving distance is " + dist_to_blockage);
 
                 }
                 else if(contentType.equals(DeePerceptList.BLOCKAGE_UPDATES)){
@@ -456,10 +460,8 @@ public class TrafficAgent extends BushfireAgent {
 //                String.valueOf(this.getId()), PerceptList.REQUEST_LOCATION, null))[0];
 
         String blockageName = Blockage.findBlockageNameFromBlockedLink(blockedLinkID);
-        if(BLOCKAGE_NAME == " ") {
-            logger.info(" Hit a blockage; initialising name to ", blockageName);
-        }
-        BLOCKAGE_NAME = blockageName; // assuming only one blockage, so that all agents can get this name
+
+
 
         if (blockageName == null) {
             logger.error("no blockage name found for agent {} at time {}. Blocked Link id: {}", getId(), time, blockedLinkID);
@@ -470,6 +472,11 @@ public class TrafficAgent extends BushfireAgent {
             Blockage newBlockage = Blockage.createBlockageFromName(blockageName);
             if(newBlockage == null) {
                 logger.error("Cannot create blockage instance, unknown blockage name {}", blockageName);
+            }
+            else if(BLOCKAGE_NAME == " "){
+                    logger.info(" Initialising blockage: {} {} {} ", blockageName, newBlockage.getX(), newBlockage.getY());
+                    BLOCKAGE_NAME = blockageName; // assuming only one blockage, so that all agents can get this name
+
             }
             blockageList.add(newBlockage);
 
@@ -537,12 +544,12 @@ public class TrafficAgent extends BushfireAgent {
         blockage.setLatestBlockageObservedTime(latestTimeFromSN); // update most recent time received from
     }
 
-    private void processSNBlockageInfo(String content) {
-
+    private double processSNBlockageInfo(String content) {
+        double res = -1;
 
         if (content == null || !(content instanceof String)) {
             logger.error("null information received from the SN model for agent {}", getId());
-            return;
+            return res;
         }
 
 
@@ -563,12 +570,16 @@ public class TrafficAgent extends BushfireAgent {
             }
 
             Blockage blockage = getBlockageObjectFromName(BLOCKAGE_NAME);
-//           if(blockage.getLatestObservedTime() < newObservedTime){ // update if later than the current observed time
-//               blockage.setLatestBlockageObservedTime(newObservedTime); // time blockage event was observed
-//           }
+            // get driving distance to blockage location(from node of blockage link)
+            double[] cords = {blockage.getX(),blockage.getY()};
+            double dist =  (double)this.getQueryPerceptInterface().queryPercept(
+                    String.valueOf(this.getId()), PerceptList.REQUEST_DRIVING_DISTANCE_TO, cords);
+
+//            memorise(MemoryEventType.BELIEVED.name(),  " distance to blockage: " + dist);
             blockage.setLatestInfoReceivedTime(time); // update received time to the latest, which is now
             blockage.setLastUpdatedTime(time);
             this.assessSituation = true;
+            res = dist;
 
         }
         catch(ArrayIndexOutOfBoundsException e) {
@@ -579,6 +590,7 @@ public class TrafficAgent extends BushfireAgent {
             logger.error("null value", e.getMessage());
         }
 
+        return res;
     }
 
     // does the agent already know about the blockage
@@ -635,7 +647,7 @@ public class TrafficAgent extends BushfireAgent {
     // distance in meters
     protected double calculateAndGetCurrentDistanceToBlockage(Blockage blockage) {
         Location currentLoc = ((Location[]) this.getQueryPerceptInterface().queryPercept(
-                String.valueOf(this.getId()), PerceptList.REQUEST_LOCATION, null))[0];
+                String.valueOf(this.getId()), PerceptList.REQUEST_LOCATION, null))[1]; // get to node of the current link
 
         double dist = Location.distanceBetween(currentLoc, blockage);
         blockage.setDistToBlockage(dist);

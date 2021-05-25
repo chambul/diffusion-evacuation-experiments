@@ -8,6 +8,9 @@ stdout="stdout.out"
 #outputs
 blocked_out="./blocked_times.out"
 basic_stat="./basic_stats.out"
+info_received_times="./info_received_times.out"
+info_received_distences="./info_received_distance_from_blockage.out"
+
 
 
 function basic_stats() {
@@ -53,6 +56,7 @@ function basic_stats() {
   ct7=$(grep "reactive" $stdout | cut -d ' ' -f 18)
   printf "reactive_reroutes: $ct7 \n" >> $basic_stat
 
+  # grep "Initialising blockage" $stdout | cut -d ' ' -f 11,12,13 > $blockage_info
 
   #diffusion outputs
   if [ -f $diff_log ];
@@ -60,6 +64,14 @@ function basic_stats() {
         printf "diffusion.log found.."
         ct8=$(grep "inactive agents" $diff_log | cut -d ':' -f 2)
         printf "inactive_agents: $ct8 \n" >> $basic_stat
+
+        # no sorting done assuming that there wont be any duplicates
+        grep "diffusion_content" $jill_out | cut -d ' ' -f 2,4 > $info_received_times
+
+        ct88=$(cat $info_received_times | wc -l)
+        printf "info_recevied_agents: $ct88 \n" >> $basic_stat
+
+        grep "received blockage info, blockage driving distance is" $stdout | cut -d ' ' -f9,17 > $info_received_distences
 
         printf " final active agents : \n"
         head -1 $diff_out
@@ -72,6 +84,8 @@ function basic_stats() {
 
   # extract 2nd and 4th cols, sort them based on col4 (ids) remove duplicates (-u) compare according to string numerical value (-n)
   grep "blocked" $jill_out | cut -d ' ' -f 2,4 | sort -k2 -n -u > $blocked_out
+
+  # grep "diffusion_content" output/jill.out |  cut -d ' ' -f 4,14,15 > $info_received_locations
 
 }
 

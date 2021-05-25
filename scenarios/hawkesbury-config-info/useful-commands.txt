@@ -1,2 +1,5 @@
 to fix the sequence of person IDs in the population sample file created from the MATSim GUI, if it is helpful.
 cat plansin.xml | awk '/person id=/{s=sprintf("\"%d\"", i++); gsub(/\".*\"/, s)} 1' > plansout.xml
+
+
+xmlstarlet ed -L --update "//population/person/attributes/attribute[@name='distanceFromTheBlockageThreshold']" --value "20.0" ../../scenarios/hawkesbury/matsim-plans-gk4-zones-5.xml

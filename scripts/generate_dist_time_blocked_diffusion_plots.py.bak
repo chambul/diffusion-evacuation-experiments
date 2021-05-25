@@ -5,7 +5,7 @@ import pandas as pd
 import matplotlib.pyplot as plt
 import optparse
 import os
-import numpy as np
+
 
 args = len(sys.argv) - 1
 if args == 0:
@@ -56,17 +56,6 @@ diffusion_df = pd.DataFrame()
 #comparison
 blockage_aware_times_df = pd.DataFrame() # times of agents that hear about the blockage through SN and also hitting
 blockage_aware_distances_df = pd.DataFrame() # distances when agents receive blockage info or when hit the blockage
-
-def check_and_remove_nans(df):
-    print "check for nans..."
-    is_NaN = df.isnull()
-    row_has_NaN = is_NaN.any(axis=1)
-    rows_with_NaN = df[row_has_NaN]
-    print(rows_with_NaN)
-    print "removing nans if any..."
-    df = df.dropna()
-    print " removed nans..."
-    return df
 
 def readFile(dir,filename,delim,headerVal):
     file = dir + "/" + filename
@@ -272,7 +261,7 @@ def gen_comparison_distance_plots(df_bl,df_sn,out_dir, figure_index):
     plt.title('Travel distance comparison')
     plt.xlabel('Travel distance (km)')
     plt.ylabel('Agent count')
-
+    
     print "saving travel plot as travel_distribution_comparison.png"
     plt.savefig(out_dir + "/" + 'distance_distribution_comparison.png')
 
@@ -298,18 +287,14 @@ def gen_comparison_travel_time_diff_plot(df_bl,df_sn,out_dir,filename,figure_ind
     #     exit()
     diff_df = pd.merge(times_bl, times_sn.rename(columns={'in_vehicle_time':'in_vehicle_time_sn'}), on='person_id',  how='left')
     diff_df['time_diff'] = diff_df['in_vehicle_time'] -diff_df['in_vehicle_time_sn'] # baseline - social
-    diff_df = check_and_remove_nans(diff_df)
-
-    bins = [-30,-15,-5,5,15, 30, 45, 60, 75]
+    bins = [-30,-5,5,15, 30, 45, 60, 75]
     diff_df['time_diff_binned'] = pd.cut(diff_df['time_diff'], bins)
     outf = out_dir + "/" +  filename + '.csv'
     diff_df.to_csv(outf, sep="\t")
-    s = pd.cut(diff_df['time_diff'], bins=bins).value_counts().sort_index()
+    s = pd.cut(diff_df['time_diff'], bins=bins).value_counts()
     print (s)
 
     plt.figure(figure_index) # to differentiate figures
-
-
     plt.hist(diff_df['time_diff'], color="blue")
     plt.title('Travel time differences')
     plt.ylabel('Agent count')
@@ -328,12 +313,11 @@ def gen_comparison_travel_dist_diff_plot(df_bl,df_sn,out_dir,filename, figure_in
     #     exit()
     diff_df = pd.merge(dist_bl, dist_sn.rename(columns={'distance':'distance_sn'}), on='person_id',  how='left')
     diff_df['dist_diff'] = diff_df['distance'] - diff_df['distance_sn'] # baseline - social
-    diff_df = check_and_remove_nans(diff_df)
-    bins = [-10,-5,-1,1,5,10,15,20,25,30,35,40,45,50]
+    bins = [-10,-5,-1,1,5,10,15,20,25]
     diff_df['dist_diff_binned'] = pd.cut(diff_df['dist_diff'], bins)
     outf = out_dir + "/" +  filename + '.csv'
     diff_df.to_csv(outf, sep="\t")
-    s = pd.cut(diff_df['dist_diff'], bins=bins).value_counts().sort_index()
+    s = pd.cut(diff_df['dist_diff'], bins=bins).value_counts()
     print (s)
 
     plt.figure(figure_index) # to differentiate figures
@@ -367,25 +351,15 @@ def gen_comparison_blockage_aware_times_diff_plot(df_bl,df_sn,out_dir,figure_ind
     time_diff = time_diff.astype({"id": int,"diff": float})
     time_diff['diff'] = time_diff['diff'].round(2)
     # print time_diff
-    bins = [-30,-5,5,30,60,90,120,150,180,210,240,270,300,330,360,390,420]
+    bins = [-30,-5,5,30,60,90,120,150,180,210]
     time_diff['time_diff_binned'] = pd.cut(time_diff['diff'], bins)
     outf = out_dir + "/" +  'blockage_aware_time_differences.csv'
     time_diff.to_csv(outf, sep="\t")
-    s = pd.cut(time_diff['diff'], bins=bins).value_counts().sort_index()
+    s = pd.cut(time_diff['diff'], bins=bins).value_counts()
     print (s)
 
     plt.figure(figure_index) # now plot the histrogram of 1D distance distribution
-    binwidth = 10 # number of bins = 10
-
-    # plt.hist(time_diff['diff'], color='steelblue', bins=np.arange(min(time_diff['diff']), max(time_diff['diff']) + binwidth, binwidth))
-    plt.hist(time_diff['diff'], color='steelblue', bins=bins)
-    plt.axvline(time_diff['diff'].mean(), color='black', linestyle='dashed', linewidth=1)
-    min_ylim, max_ylim = plt.ylim()
-    print_stats=time_diff['diff'].describe()[['mean','std','min','max']].reset_index().to_string(header=None, index=None)
-    plt.text(time_diff['diff'].mean()*1.1, max_ylim*0.8,print_stats)
-    # plt.text(time_diff['diff'].mean()*1.1, max_ylim*0.8, 'Std: {:.2f}'.format(time_diff['diff'].std()))
-
-    # plt.hist(time_diff['diff'])
+    plt.hist(time_diff['diff'])
     plt.title('Difference in time of agents becoming aware about the blockage')
     plt.xlabel('Time (minutes)')
     plt.ylabel('Agent count')
@@ -402,7 +376,7 @@ def gen_comparison_time_distance_diff_plots_for_early_aware_agents(jny_bl,jny_sn
                 jny_bl = jny_bl.drop(jny_bl[jny_bl['person_id'] == id].index)
                 jny_sn = jny_sn.drop(jny_sn[jny_sn['person_id'] == id].index)
 
-        print "removed agents who go to know later than in the baseline, now df sizes: baseline:", len(jny_bl), " sn:", len(jny_sn)
+        print "removed agents who go to know later than in the baseline, now df sizes:", len(jny_bl), len(jny_sn)
         gen_comparison_travel_time_diff_plot(jny_bl,jny_sn,output_dir_comparison,'time_differences_early_aware_agents',figure_index)
         figure_index = figure_index +1
         gen_comparison_travel_dist_diff_plot(jny_bl,jny_sn,out_dir,'distance_differences_early_aware_agents',figure_index)
@@ -416,7 +390,8 @@ def gen_comparison_blockage_aware_distance_diff_plot(df_bl,df_sn,out_dir,figure_
     dist_diff = pd.DataFrame()
     id_set_bl = set(df_bl['id'])
     id_set_sn = set(df_sn['id']) #blockage aware agents
-    print " Removing agents received info in SN but not blocked in BL:",len(id_set_sn.difference(id_set_bl))
+    print " Removing agents received info in SN but not blocked in BL:"
+    print (id_set_sn.difference(id_set_bl))
     for id in id_set_sn: # iterate through this and remove agents that are not in df_bl
         # print type(id)
         if id not in id_set_bl:  # comparing against only agents got blocked in the baseline
@@ -424,23 +399,16 @@ def gen_comparison_blockage_aware_distance_diff_plot(df_bl,df_sn,out_dir,figure_
 
 
 
-    bins = [-10,-5,-1,1,5,10,15,20,25,30,35,40,45,50]
-    df_sn['distances'] = df_sn['distances'].round(2)
-    df_sn['distances_binned'] = pd.cut(df_sn['distances'], bins)
+    # bins = [-10,-5,-1,1,5,10,15,20,25]
+    # df_sn['distances'] = df_sn['distances'].round(2)
+    # df_sn['distances_binned'] = pd.cut(df_sn['distances'], bins)
     # outf = out_dir + "/" +  'blockage_aware_distance_differences.csv'
     # df_sn.to_csv(outf, sep="\t")
-    s = pd.cut(df_sn['distances'], bins=bins).value_counts().sort_index()
-    print (s)
+    # s = pd.cut(df_sn['distances'], bins=bins).value_counts()
+    # print (s)
 
     plt.figure(figure_index) # now plot the histrogram of 1D distance distribution
-    binwidth = 2.5 # number of bins = 10
-    plt.hist(df_sn['distances'], color='steelblue', bins=np.arange(min(df_sn['distances']), max(df_sn['distances']) + binwidth, binwidth))
-    plt.axvline(df_sn['distances'].mean(), color='black', linestyle='dashed', linewidth=1)
-    min_xlim, max_xlim = plt.xlim()
-    min_ylim, max_ylim = plt.ylim()
-    print_stats=df_sn['distances'].describe()[['mean','std','min','max']].reset_index().to_string(header=None, index=None)
-    plt.text(max_xlim*0.5, max_ylim*0.8,print_stats)
-    # plt.hist(df_sn['distances'])
+    plt.hist(df_sn['distances'])
     plt.title('Difference in distance of agents becoming  aware about the blockage')
     plt.xlabel('Distance (km)')
     plt.ylabel('Agent count')

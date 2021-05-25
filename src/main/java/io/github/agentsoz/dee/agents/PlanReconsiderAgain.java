@@ -56,22 +56,29 @@ public class PlanReconsiderAgain extends Plan {
                 applicable = true;
 
             }
-           else if( agent.getDistanceFromTheBlockageThreshold() < blockage.getDistToBlockage() && blockage.getDistToBlockage() <= 3*agent.getDistanceFromTheBlockageThreshold() ) { // reconsider in a while
+           else if( agent.getDistanceFromTheBlockageThreshold() < blockage.getDistToBlockage() && blockage.getDistToBlockage() <= 2*agent.getDistanceFromTheBlockageThreshold() ) { // reconsider in a while
                reconsider_time = agent.getReconsiderRegularTime();
                 applicable = true;
 
             }
-           else if (blockage.getDistToBlockage() > 3*agent.getDistanceFromTheBlockageThreshold()){ // reconsider later
+           else if (blockage.getDistToBlockage() > 2*agent.getDistanceFromTheBlockageThreshold()){ // reconsider later
                reconsider_time = agent.getReconsiderLaterTime();
                 applicable = true;
 
             }
-
+            ((TrafficAgent) getAgent()).memorise(TrafficAgent.MemoryEventType.DECIDED.name(),
+                    "distance to blockage: " +blockage.getDistToBlockage() +
+                            " | blockage ahead? : " +blockage.isBlockageInCurrentDirection()  +
+                        " | congested: " +     blockage.isCongestionNearBlockage() +
+                        " | info recency: "    + blockage.getRecencyOfBlockage() +
+                            "| reconsider in " + reconsider_time + "seconds");
         }
 
         if(applicable){
             ((TrafficAgent) getAgent()).memorise(TrafficAgent.MemoryEventType.DECIDED.name(), TrafficAgent.MemoryEventValue.IS_PLAN_APPLICABLE.name()
                     + ":" + this.getClass().getSimpleName() + "=" + applicable);
+
+
         }
 
         return applicable;
@@ -84,7 +91,7 @@ public class PlanReconsiderAgain extends Plan {
 
     PlanStep[] steps = {
             () -> {
-                ((TrafficAgent) getAgent()).memorise(TrafficAgent.MemoryEventType.DECIDED.name(), TrafficAgent.MemoryEventValue.RECONSIDER_AGAIN.name() +  ":" + getGoal() + "| reconsider in " + reconsider_time + "seconds");
+
                  reconsiderBlockage.setReconsiderTime(reconsider_time);
 
             },

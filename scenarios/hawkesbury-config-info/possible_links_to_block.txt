@@ -12,3 +12,37 @@ evacuation routes = ; entry points = ;exit points=; reoute cost (approx.) =
 - but blocking 349 they have no choice other than to go all the way round.
 
 -reroute  distance cost: shorter the blocked link, and longer the alternative route/s results in higher costs
+- reroute cost:
+as long as they are on the evac route, it wont cost much to reroute.
+for social agents there are more options for reroute, whereas in the baseline there is only one.
+If agents have to drive back for the reroute, then there will be some cost for reroute.
+
+congestion:
+- there is not enough agents to create congestion, as agents evac in batches. so roads outside evacuation routes are usually empty.
+-  due to a bockage in one evac route, agents merge into another evac route with travelling agents, increasing congestion
+
+
+196/385: high impact blockage
+relevant evacuation routes/ cohorts: 5
+ 190 451 405 8 289 196 350 355': 642,  x = 281212.0 DO NOT HIT THE BLOCKAGE, Other 4 are selected
+ '377 568 241 560 370 38 8 289 196 350 355': 772, x= 283172.0  start times = 00:23:00 - 01:10:00"
+ '433 38 8 289 196 350 355': 523, x= 283373.0  start times =  04:02:00 - 04:49:00
+ '52 370 38 8 289 196 350 355': 642, x = 282257.0   start times =  02:14:00 - 03:12:00
+ '68 405 8 289 196 350 355': 523} x =  283864.0   start times = 03:17:00 - 04:04:00
+
+
+
+link 483/559: low and medium impact blockage
+'119 22 568 241 560 370 38 8 516 483 179 340 554 557 317': 771, x = 281686.0 start times = 02:36:00 - 03:53:00 (selected-low)
+ '200 152 8 516 483 179 340 554 557 317': 627, x = 284557.0 start times= 7:21 - 7:48
+ '27 460 85 311 488 370 38 8 516 483 179 340 554 557 317': 772, x = 284773.0 start times = 04:02:00 - 05:12:00  (selected-low)
+ '299 488 370 38 8 516 483 179 340 554 557 317': 771, x = 284069.0 start times = 05:11:00 - 06:21:00
+ '399 22 568 241 560 370 38 8 516 483 179 340 554 557 317': 772, x = 282617.0 start times = 01:18:00 - 02:35:00  (selected-low)
+ '42 274 152 8 516 483 179 340 554 557 317': 627, x=285209.0 start times= 06:53:00 - 07:21:00
+ '62 22 568 241 560 370 38 8 516 483 179 340 554 557 317': 772, x=282378.0  start times = 00:00:00 - 01:17:00  (selected-low)
+'426 547 470 274 152 8 516 483 179 340 554 557 317': 631, x= 286339.0 start times =  06:28:00 - 06:56:00
+
+
+ routes that go through 289 link
+ '68 405 8 289 196 350 355': 523
+ '42 274 152 8 516 483 179 340 554 557 317': 627

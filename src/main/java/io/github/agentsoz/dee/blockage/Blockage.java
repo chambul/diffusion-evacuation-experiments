@@ -55,6 +55,10 @@ public class Blockage extends Location{
         put("hawkesbury_blockage_link221", new ArrayList<String>( Arrays.asList("221")));
         put("hawkesbury_blockage_link349", new ArrayList<String>( Arrays.asList("349","328")));
         put("hawkesbury_blockage_link467", new ArrayList<String>( Arrays.asList("467","444")));
+        put("hawkesbury_blockage_link483", new ArrayList<String>( Arrays.asList("483","559")));
+        put("hawkesbury_blockage_link196", new ArrayList<String>( Arrays.asList("196","385")));
+        put("hawkesbury_blockage_link340", new ArrayList<String>( Arrays.asList("340","550")));
+
 
 
     }};
@@ -69,6 +73,10 @@ public class Blockage extends Location{
         add(new Location("hawkesbury_blockage_link221",150.76031966978286,-33.69374727323568)); // node x,y coords as stuck at node 162, start of the link
         add(new Location("hawkesbury_blockage_link349",296286.0,6272535.0));
         add(new Location("hawkesbury_blockage_link467",295596.0,6273491.0));
+        add(new Location("hawkesbury_blockage_link483",292381.0,6259601.0)); // node 90
+        add(new Location("hawkesbury_blockage_link196",287042.0,6250781.0)); // node 92
+        add(new Location("hawkesbury_blockage_link340",301361.0,6258159.0)); // node 171
+
     }};
 
 
