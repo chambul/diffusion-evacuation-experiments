@@ -41,7 +41,7 @@ public class HawkesburyTest {
     @Test
     public void hawkesburyTest() {
 
-        Global.setRandomSeed(4711); // deterministic results for testing
+//        Global.setRandomSeed(4711); // deterministic results for testing
 
         utils.setTestClassAndMethod(this.getClass(), "hawkesburyTest"); // set test class and method name
         //	utils.getorSetOutputDirectory(); // set output dir path

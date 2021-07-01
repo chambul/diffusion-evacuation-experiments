@@ -77,6 +77,8 @@ public class TrafficAgent extends BushfireAgent {
     //internal variables
     private final String memory = "memory";
     private static String BLOCKAGE_NAME = " ";
+    private  static long seedLimit = 0;
+    private  static int seedSize = 0;
     private PrintStream writer = null;
     private QueryPerceptInterface queryInterface;
     private EnvironmentActionInterface envActionInterface;
@@ -304,6 +306,7 @@ public class TrafficAgent extends BushfireAgent {
         // an agent gets two blocked percepts between two consequative seconds
         if(onetime) {
             logger.info("model stats: proactive reroute count: {} | reactive reroute count: {}", proactive_reroute_count, reactive_reroute_count);
+            logger.info("number of agents spread info when hit (seed) {}",seedSize);
             onetime = false;
         }
 
@@ -476,19 +479,27 @@ public class TrafficAgent extends BushfireAgent {
             else if(BLOCKAGE_NAME == " "){
                     logger.info(" Initialising blockage: {} {} {} ", blockageName, newBlockage.getX(), newBlockage.getY());
                     BLOCKAGE_NAME = blockageName; // assuming only one blockage, so that all agents can get this name
-
+                    int popSize = newBlockage.getPopulationSizeBasedOnBlockageName(blockageName);//#fixme remove hardcoded agent pop sizes
+                    if(popSize == 0){
+                        logger.warn("seed size is 0, no dynamic seeding will occur!");
+                    }
+                    seedLimit = Math.round(popSize*0.05);
+                    logger.info("Blockage population seed limit: " + seedLimit);
             }
             blockageList.add(newBlockage);
 
             // blockage influence,  should only send one/first time, road blockage at X
-            String blockageInfo =  newBlockage.getName() ; //"road blockage at " +
-            String[] params1 = {blockageInfo};
-            putBlockageInfluencetoDiffusionContent(DeePerceptList.BLOCKAGE_INFLUENCE,params1);
+            if(seedSize < seedLimit){
+                String blockageInfo =  newBlockage.getName() ; //"road blockage at " +
+                String[] params1 = {blockageInfo};
+                putBlockageInfluencetoDiffusionContent(DeePerceptList.BLOCKAGE_INFLUENCE,params1);
 
-            //update blockage observed time. this also may happen one time
-            String blockageUpdate = String.valueOf(time);
-            String[] params2 = {blockageName,blockageUpdate};
-            putBlockageInfluencetoDiffusionContent(DeePerceptList.BLOCKAGE_UPDATES,params2);
+                //update blockage observed time. this also may happen one time
+                String blockageUpdate = String.valueOf(time);
+                String[] params2 = {blockageName,blockageUpdate};
+                putBlockageInfluencetoDiffusionContent(DeePerceptList.BLOCKAGE_UPDATES,params2);
+                seedSize++;
+            }
 
         }
 
@@ -520,7 +531,9 @@ public class TrafficAgent extends BushfireAgent {
         registerPercepts(new String[] {Constants.BLOCKED, Constants.CONGESTION});
 
         //finally, publish diffusion content updates
-        sendDiffusionContentToBDIModel();
+        if(seedSize <= 250){
+            sendDiffusionContentToBDIModel();
+        }
 
     }
 

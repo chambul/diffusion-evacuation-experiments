@@ -2,11 +2,11 @@
 
     <!-- Social Network Model Configurations -->
     <!-- Specify the diffusion model: lt=Linear Threshold model, ic= Independant Cascade model, clt= Competitive LT model-->
-    <!-- specify the network strucuture: random= random ER MODEL), sw=small world model, rand-reg=random-regular model -->
+    <!-- specify the network strucuture: sw(p=0) =  regular, random= random ER MODEL), sw=small world model, rand-reg=RANDOM-regular model -->
     <!-- spcify the logfile path and log level (i=info, d=debug, t=trace) -->
     <snModel
             diffusionModels="ic"
-            networkType="rand-reg"
+            networkType="sw"
             coord_file="not-needed-if-using-random"
             log_file="test/output/io/github/agentsoz/dee/HawkesburyTest/hawkesburyTest/diffusion.log"
             log_level="d"
@@ -16,22 +16,22 @@
     <!-- network configurations-->
     <randomNetwork
             normalise="true"
-            avg_links="2"
+            avg_links="5"
     />
 
     <randRegNetwork
 
             normalise="true"
-            avg_links="9"
+            avg_links="13"
 
     />
 
     <!--specify distance in km-->
     <swNetwork
             normalise="true"
-            distance="0.8"
-            avg_links="3"
-            rewire_probability="0.0"
+            distance="0.25"
+            avg_links="5"
+            rewire_probability="0.1"
 
     />
 
@@ -44,7 +44,7 @@
     <ic>
         <step_size>15</step_size>
         <seeding_strategy seed="0">random</seeding_strategy>
-        <diffusion_probability sigma="0.00">0.75</diffusion_probability>
+        <diffusion_probability sigma="0.00">0.6</diffusion_probability>
         <out_file>./test/output/io/github/agentsoz/dee/HawkesburyTest/hawkesburyTest/diffusion.out</out_file>
         <contents type="information"></contents>
     </ic>

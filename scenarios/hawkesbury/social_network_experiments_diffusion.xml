@@ -28,6 +28,7 @@
   xsi:schemaLocation="https://github.com/agentsoz/bdi-abm-integration ../xsd/ees.xsd"
   version="v2.0">
 
+
   <!-- global configuration sent to all models -->
   <global>
     <!-- random seed to be used for all models; set to -1 if not used -->
@@ -76,7 +77,7 @@
 
     <model id="disruption">
       <!-- Disruptions JSON file relative to examples/bushfire directory -->
-      <opt id="fileJson">scenarios/hawkesbury/scenario_disruptions.json</opt>
+      <opt id="fileJson">scenarios/hawkesbury/scenario_disruptions_med.json</opt>
     </model>
 
     <model id="diffusion">

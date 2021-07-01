@@ -27,13 +27,12 @@ import io.github.agentsoz.ees.Config;
 import io.github.agentsoz.ees.JillBDIModel;
 import io.github.agentsoz.ees.Run;
 import io.github.agentsoz.ees.util.Utils;
+import io.github.agentsoz.util.Location;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
+import java.util.concurrent.ThreadLocalRandom;
 
 import static io.github.agentsoz.ees.Run.DATASERVER;
 
@@ -48,6 +47,42 @@ public class Main {
     static final String eModelBdi = "bdi";
     static final String eModelDiffusion = "diffusion";
     private static final Logger log = LoggerFactory.getLogger(Main.class);
+
+    public static double[] getRandomUTMCoords(double easting, double northing) //x,y
+    {
+        double[] utm={-1,-1};
+
+        double radius = Math.sqrt(2776/170) *1000.0 ;  //sqrt of (Hawkesbury region Area/#SA 1 areas) * 1000(km->m)
+
+        double max_northing = northing + radius ;
+        double min_northing = northing - radius ;
+        double max_easting = easting + radius ;
+        double min_easting = easting  -radius ;
+
+        Random r = new Random();
+        double randNorthing = min_northing + (max_northing - min_northing) * r.nextDouble();
+        double randEasting = min_easting + (max_easting - min_easting) * r.nextDouble();
+
+
+
+        log.debug("random northing : "+randNorthing);
+        log.debug("random easting : "+randEasting);
+
+        if(randNorthing <= 0 || randEasting <= 0)
+        {
+            log.warn("generated UTM coords contain negative values, aborting with -1 -1 ");
+            return utm;
+
+        }
+
+        else
+        {
+            utm[0]=randEasting;
+            utm[1]=randNorthing;
+
+            return utm;
+        }
+    }
 
     public static void main(String[] args) {
 
@@ -66,13 +101,30 @@ public class Main {
         log.info("Reading BDI agents from MATSim population file");
         Map<Integer, List<String[]>> bdiMap = Utils.getAgentsFromMATSimPlansFile(cfg.getModelConfig(eModelMatsim).get("configXml"));
         JillBDIModel.removeNonBdiAgentsFrom(bdiMap);
+        Map<Integer,double[]> agentCordsMap = new HashMap<>();
+
+
+        for(int id : bdiMap.keySet()){
+            List<String[]> planElements = bdiMap.get(id);
+            String[] cds = planElements.get(4)[1].split(",");
+            Double[] cords = {Double.valueOf(cds[0]),Double.valueOf(cds[1])};
+            double[] new_loc = getRandomUTMCoords(cords[0],cords[1]);
+            Location evac_location = new Location("evac_location",cords[0],cords[1]);
+//            log.info("distance = " + Location.distanceBetween(evac_location,new Location("home",new_loc[0],new_loc[1]))); //FIXME remove these variants
+            agentCordsMap.put(id,new_loc);
+
+        }
+        log.info("extracted ABM agent locations, map size "+agentCordsMap.size());
+
 
         // Run it
         new Run()
                 .withModel(DataServer.getInstance(DATASERVER))
                 .withModel(new BlockageInformationDiffusionModel(cfg.getModelConfig(eModelDiffusion),
                         DataServer.getInstance(DATASERVER),
-                        new ArrayList<>(Arrays.asList(Utils.getAsSortedStringArray(bdiMap.keySet())))))
+//                        new ArrayList<>(Arrays.asList(Utils.getAsSortedStringArray(bdiMap.keySet())))
+                        agentCordsMap
+                ))
                 .start(cfg, bdiMap);
     }
 }

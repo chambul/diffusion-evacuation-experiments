@@ -31,6 +31,7 @@ import io.github.agentsoz.ees.Constants;
 import io.github.agentsoz.ees.DiffusionContent;
 import io.github.agentsoz.ees.DiffusionDataContainer;
 import io.github.agentsoz.ees.DiffusionModel;
+import io.github.agentsoz.ees.util.Utils;
 import io.github.agentsoz.socialnetwork.ICModel;
 import io.github.agentsoz.socialnetwork.SNConfig;
 import io.github.agentsoz.socialnetwork.SocialAgent;
@@ -65,8 +66,11 @@ public class BlockageInformationDiffusionModel extends DiffusionModel implements
     private Time.TimestepUnit timestepUnit = Time.TimestepUnit.SECONDS;
     private String configFile = null;
     private List<String> agentsIds = null;
+    private double startTimeInSeconds = -1;
+
 
     HashMap<String,HashMap<String,Double>> blockageTimesMap;
+    Map<Integer,double[]> agentCordinateLocations ;
 //    HashMap<String,Double> latestBlockageTimes;
 
     public BlockageInformationDiffusionModel(String configFile) {
@@ -81,15 +85,20 @@ public class BlockageInformationDiffusionModel extends DiffusionModel implements
         blockageTimesMap =  new HashMap<>();
     }
 
+    public BlockageInformationDiffusionModel(Map<String, String> opts, DataServer dataServer, Map<Integer,double[]> agentCoordsMap) {
+        super(opts, dataServer, new ArrayList<>(Arrays.asList(Utils.getAsSortedStringArray(agentCoordsMap.keySet()))));
+        agentCordinateLocations = agentCoordsMap;
+        blockageTimesMap =  new HashMap<>();
+    }
 
-    @Override
-    public void init(List<String> idList) {
+
+    public void init() { // init agents with given geo locations from the ABM side
 
         this.getSnManager().setupSNConfigsAndLogs(); // first, setup configs and create log
-        for (String id : idList) {
+        for (Integer id : agentCordinateLocations.keySet()) {
             // this.snManager.createSocialAgent(id);
-            int agentID = Integer.parseInt(id);
-            this.getSnManager().getAgentMap().put(agentID, new SocialTrafficAgent(agentID));
+            double[] homeLoc = agentCordinateLocations.get(id);
+            this.getSnManager().getAgentMap().put(id, new SocialTrafficAgent(id,homeLoc[0],homeLoc[1]));
         }
         this.getSnManager().genNetworkAndDiffModels(); // setup configs, gen network and diffusion models
         this.getSnManager().printSNModelconfigs();
@@ -99,6 +108,15 @@ public class BlockageInformationDiffusionModel extends DiffusionModel implements
 
     }
 
+    public void start() {
+        if (this.getSnManager() != null) {
+            init(); // init agents with given geo locations from the ABM side
+            setTimestepUnit(Time.TimestepUnit.MINUTES);
+            this.getDataServer().registerTimedUpdate(Constants.DIFFUSION_DATA_CONTAINER_FROM_DIFFUSION_MODEL, this, Time.convertTime(startTimeInSeconds, Time.TimestepUnit.SECONDS, timestepUnit));
+        } else {
+            this.getSnManager().getSocialNetworkDiffusionLogger().warn("started but will be idle forever!!");
+        }
+    }
 
     /*
             1. Update social states (Same as Diffusion model)

@@ -112,6 +112,20 @@ public class Blockage extends Location{
 //        return name;
 //    }
 
+    public int getPopulationSizeBasedOnBlockageName(String name){
+        int result = 0;
+        if(name.equals("hawkesbury_blockage_link483")){
+            result =  3087;
+        }
+        else if (name.equals("hawkesbury_blockage_link340")){
+            result = 2656;
+        }
+        else if(name.equals("hawkesbury_blockage_link196")){
+            result = 2460;
+        }
+
+        return  result;
+    }
 
     // get name of the blockage using linkid
     public static String findBlockageNameFromBlockedLink(String linkId){

@@ -39,6 +39,8 @@ function basic_stats() {
   ct4=$( zgrep "stuckAndAbort" $events | wc -l)
   printf "stuck_agents: $ct4 \n" >> $basic_stat
 
+  ct66=$(zless $events | tail -2 | head -1 | cut -d '"' -f 2)
+  printf "evac_time: $ct66 \n" >> $basic_stat
 
   # Jill/BDI outputs
   #same agent can receive multiple congestion percepts, so not removing duplicates

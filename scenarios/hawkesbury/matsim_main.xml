@@ -37,7 +37,7 @@
 	</module>
 
 	<module name="plans">
-		<param name="inputPlansFile" value="matsim-plans-gk4-zones-4-link196-high.xml" />
+		<param name="inputPlansFile" value="matsim-plans-gk4-zones-4-link483-med.xml" />
 	</module>
 
 	<module name="controler">

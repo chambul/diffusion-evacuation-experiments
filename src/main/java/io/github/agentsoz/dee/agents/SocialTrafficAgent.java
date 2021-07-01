@@ -29,6 +29,10 @@ public class SocialTrafficAgent extends io.github.agentsoz.socialnetwork.SocialA
         super(id);
     }
 
+    public SocialTrafficAgent(int id, double x, double y){
+        super(id,x,y);
+    }
+
     public double getLastKnownBlockageTime() {
         return lastKnownBlockageTime;
     }

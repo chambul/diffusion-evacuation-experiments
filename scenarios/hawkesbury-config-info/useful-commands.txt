@@ -3,3 +3,20 @@ cat plansin.xml | awk '/person id=/{s=sprintf("\"%d\"", i++); gsub(/\".*\"/, s)}
 
 
 xmlstarlet ed -L --update "//population/person/attributes/attribute[@name='distanceFromTheBlockageThreshold']" --value "20.0" ../../scenarios/hawkesbury/matsim-plans-gk4-zones-5.xml
+
+cd to the latest directory
+cd $(ls -t | head -n 1)
+
+
+combine multiple files (e.g. images ) into a single pdf:
+convert May26-*/plots-comparison/blocked_percept_times_comparison.png  blocked-agents-over-time-regular-network.pdf
+
+
+search for any text you want to find:e.g. inactive agents, info received agents.
+grep "removed agents" May26-*/analysis.out -> shows the file paths too, so we know the cases
+
+
+cat files with the file path (for instance to find the scenario/dir):
+tail -n +1  May31*/*/basic_stats.out
+
+tail -n +1  Jun01-10*/*/basic_stats.out | grep "proactive" -> to just get exactly what you want rather  than looking at the whole file
